@@ -25,7 +25,8 @@ import {
   Smartphone,
   Download,
   Upload,
-  ChevronDown
+  ChevronDown,
+  Menu
 } from 'lucide-react';
 
 import { 
@@ -47,6 +48,7 @@ import CallDispositionModal from './components/CallDispositionModal';
 import GoogleFormBlastCenter from './components/GoogleFormBlastCenter';
 import PublishedDriveBoard from './components/PublishedDriveBoard';
 import HRPhoneConnectModal from './components/HRPhoneConnectModal';
+import InstallAppModal from './components/InstallAppModal';
 import {
   GlobalNewDriveModal,
   GlobalNewTpoModal,
@@ -208,6 +210,7 @@ export default function App() {
 
   // Web App & PWA Shell States
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [commandQuery, setCommandQuery] = useState('');
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -216,6 +219,7 @@ export default function App() {
   const [isFullscreen, setIsFullscreen] = useState(Boolean(document.fullscreenElement));
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isAppInstalled, setIsAppInstalled] = useState(false);
+  const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
 
   // Global Quick Action Modals & Dropdown
   const [isGlobalNewMenuOpen, setIsGlobalNewMenuOpen] = useState(false);
@@ -262,16 +266,8 @@ export default function App() {
     return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
   }, []);
 
-  const handleInstallApp = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        setDeferredPrompt(null);
-      }
-    } else {
-      addToast('Web App is active. You can install or pin this window via your browser address bar menu ("Install TalentConnect").', 'info');
-    }
+  const handleInstallApp = () => {
+    setIsInstallModalOpen(true);
   };
 
   // 2. Fullscreen Toggle
@@ -797,8 +793,15 @@ export default function App() {
 
   return (
     <div className="app-container">
-      {/* Sidebar Navigation */}
-      <aside className={`sidebar ${isSidebarCollapsed ? 'collapsed' : ''}`}>
+      {/* Mobile Sidebar Backdrop */}
+      <div 
+        className={`mobile-sidebar-backdrop ${isMobileSidebarOpen ? 'active' : ''}`} 
+        onClick={() => setIsMobileSidebarOpen(false)} 
+        aria-hidden="true"
+      />
+
+      {/* Sidebar Navigation (Desktop and Off-Canvas Mobile Drawer) */}
+      <aside className={`sidebar ${isSidebarCollapsed && !isMobileSidebarOpen ? 'collapsed' : ''} ${isMobileSidebarOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-brand">
           <div className="brand-icon">
             TA
@@ -807,13 +810,21 @@ export default function App() {
             <div className="brand-title">TalentConnect</div>
             <div className="brand-subtitle">Campus Recruitment CRM</div>
           </div>
+          <button 
+            type="button"
+            className="btn-icon mobile-sidebar-close-btn"
+            onClick={() => setIsMobileSidebarOpen(false)}
+            title="Close navigation menu"
+          >
+            <X size={15} />
+          </button>
         </div>
 
         <nav className="sidebar-nav">
           <div className="nav-section-title">Main</div>
 
           <button 
-            onClick={() => setActiveTab('dashboard')}
+            onClick={() => { setActiveTab('dashboard'); setIsMobileSidebarOpen(false); }}
             className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
             title="Dashboard Overview"
           >
@@ -822,7 +833,7 @@ export default function App() {
           </button>
 
           <button 
-            onClick={() => setActiveTab('googleFormBlast')}
+            onClick={() => { setActiveTab('googleFormBlast'); setIsMobileSidebarOpen(false); }}
             className={`nav-item ${activeTab === 'googleFormBlast' ? 'active' : ''}`}
             title="Google Sheets Intake"
           >
@@ -832,7 +843,7 @@ export default function App() {
           </button>
 
           <button 
-            onClick={() => setActiveTab('liveBoard')}
+            onClick={() => { setActiveTab('liveBoard'); setIsMobileSidebarOpen(false); }}
             className={`nav-item ${activeTab === 'liveBoard' ? 'active' : ''}`}
             title="Posted Students"
           >
@@ -842,7 +853,7 @@ export default function App() {
           </button>
 
           <button 
-            onClick={() => setActiveTab('drives')}
+            onClick={() => { setActiveTab('drives'); setIsMobileSidebarOpen(false); }}
             className={`nav-item ${activeTab === 'drives' ? 'active' : ''}`}
             title="Campus Drives"
           >
@@ -854,7 +865,7 @@ export default function App() {
           <div className="nav-section-title">Outreach & Calls</div>
 
           <button 
-            onClick={() => setActiveTab('tpos')}
+            onClick={() => { setActiveTab('tpos'); setIsMobileSidebarOpen(false); }}
             className={`nav-item ${activeTab === 'tpos' ? 'active' : ''}`}
             title="College TPOs"
           >
@@ -864,7 +875,7 @@ export default function App() {
           </button>
 
           <button 
-            onClick={() => setActiveTab('followups')}
+            onClick={() => { setActiveTab('followups'); setIsMobileSidebarOpen(false); }}
             className={`nav-item ${activeTab === 'followups' ? 'active' : ''}`}
             title="Follow-Ups"
           >
@@ -876,7 +887,7 @@ export default function App() {
           </button>
 
           <button 
-            onClick={() => setActiveTab('calls')}
+            onClick={() => { setActiveTab('calls'); setIsMobileSidebarOpen(false); }}
             className={`nav-item ${activeTab === 'calls' ? 'active' : ''}`}
             title="Call Logs"
           >
@@ -885,6 +896,35 @@ export default function App() {
             <span className="nav-badge">{callSessions.length}</span>
           </button>
         </nav>
+
+        {/* PWA Install Button in Drawer */}
+        <div style={{ padding: '8px 12px', borderTop: '1px solid #f1f5f9' }}>
+          <button
+            type="button"
+            onClick={() => {
+              setIsMobileSidebarOpen(false);
+              handleInstallApp();
+            }}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              background: '#09090b',
+              color: '#ffffff',
+              padding: '9px 12px',
+              borderRadius: '8px',
+              border: 'none',
+              fontWeight: 700,
+              fontSize: '0.8rem',
+              cursor: 'pointer'
+            }}
+          >
+            <Smartphone size={14} />
+            <span>Install Web App</span>
+          </button>
+        </div>
 
         {/* Current User Card in Sidebar with Logout */}
         <div className="sidebar-user">
@@ -920,24 +960,34 @@ export default function App() {
       <div className="main-content">
         {/* App Top Header */}
         <header className="top-header">
-          {/* Left: Sidebar Collapse Toggle + Breadcrumbs */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {/* Left: Mobile Hamburger Menu + Desktop Sidebar Collapse + Breadcrumbs */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button 
+              type="button"
+              onClick={() => setIsMobileSidebarOpen(true)}
+              className="btn-icon mobile-menu-btn"
+              style={{ width: '32px', height: '32px' }}
+              title="Open Navigation Menu"
+            >
+              <Menu size={16} />
+            </button>
+
             <button 
               type="button"
               onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              className="btn-icon"
+              className="btn-icon desktop-sidebar-toggle"
               style={{ width: '32px', height: '32px' }}
               title={isSidebarCollapsed ? "Expand sidebar ([)" : "Collapse sidebar ([)"}
             >
               {isSidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
             </button>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '0.78rem', color: '#71717a', fontWeight: 600 }}>Workspace</span>
-              <span style={{ color: '#cbd5e1', fontSize: '0.8rem' }}>/</span>
-              <h1 className="page-title" style={{ fontSize: '0.92rem', margin: 0, fontWeight: 700 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span className="header-desktop-only" style={{ fontSize: '0.78rem', color: '#71717a', fontWeight: 600 }}>Workspace</span>
+              <span className="header-desktop-only" style={{ color: '#cbd5e1', fontSize: '0.8rem' }}>/</span>
+              <h1 className="page-title" style={{ fontSize: '0.88rem', margin: 0, fontWeight: 700 }}>
                 {activeTab === 'dashboard' && 'Dashboard Overview'}
-                {activeTab === 'googleFormBlast' && 'Google Sheets & WhatsApp Student Intake'}
+                {activeTab === 'googleFormBlast' && 'Intake Hub'}
                 {activeTab === 'liveBoard' && 'Posted Students'}
                 {activeTab === 'drives' && 'Campus Drives'}
                 {activeTab === 'tpos' && 'College TPOs'}
@@ -965,7 +1015,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={handleResetCleanData}
-                className="btn-secondary btn-black-sm"
+                className="btn-secondary btn-black-sm header-desktop-only"
                 style={{ padding: '6px 11px', fontSize: '0.78rem', gap: '5px', color: '#ef4444', borderColor: '#fca5a5' }}
                 title="Wipe database to clean empty state (sets all sections to 0)"
               >
@@ -1108,19 +1158,6 @@ export default function App() {
               </button>
             )}
 
-            {/* Live Sync / Online Status Pill */}
-            {isOnline ? (
-              <div className="app-live-pill" title="Real-time multi-tab workspace synchronization active">
-                <span className="pulse-dot-green"></span>
-                <span>Live Sync</span>
-              </div>
-            ) : (
-              <div className="app-offline-pill" title="Working offline. All updates cached locally">
-                <span className="pulse-dot-amber"></span>
-                <span>Offline</span>
-              </div>
-            )}
-
             {/* PWA Install App Button */}
             <button
               type="button"
@@ -1132,11 +1169,24 @@ export default function App() {
               <span>{isAppInstalled ? 'App Ready' : 'Install App'}</span>
             </button>
 
+            {/* Live Sync / Online Status Pill (Desktop only to prevent header wrap) */}
+            {isOnline ? (
+              <div className="app-live-pill header-desktop-only" title="Real-time multi-tab workspace synchronization active">
+                <span className="pulse-dot-green"></span>
+                <span>Live Sync</span>
+              </div>
+            ) : (
+              <div className="app-offline-pill header-desktop-only" title="Working offline. All updates cached locally">
+                <span className="pulse-dot-amber"></span>
+                <span>Offline</span>
+              </div>
+            )}
+
             {/* Fullscreen Toggle */}
             <button
               type="button"
               onClick={toggleFullscreen}
-              className="btn-icon"
+              className="btn-icon header-desktop-only"
               style={{ width: '32px', height: '32px' }}
               title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
             >
@@ -1189,6 +1239,7 @@ export default function App() {
             <button
               type="button"
               onClick={() => setIsPhoneConnectModalOpen(true)}
+              className="hr-phone-header-chip header-desktop-only"
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -1245,7 +1296,7 @@ export default function App() {
 
             <button 
               onClick={handleLogout}
-              className="btn-secondary btn-black-sm"
+              className="btn-secondary btn-black-sm header-desktop-only"
               style={{ padding: '5px 10px', fontSize: '0.78rem' }}
               title="Sign out of your account"
             >
@@ -1719,14 +1770,16 @@ export default function App() {
       {/* Mobile Web App Bottom Navigation Bar */}
       <nav className="mobile-bottom-nav">
         <button 
-          onClick={() => setActiveTab('dashboard')} 
+          type="button"
+          onClick={() => { setActiveTab('dashboard'); setIsMobileSidebarOpen(false); }} 
           className={`mobile-nav-btn ${activeTab === 'dashboard' ? 'active' : ''}`}
         >
           <BarChart3 size={18} />
           <span>Dashboard</span>
         </button>
         <button 
-          onClick={() => setActiveTab('googleFormBlast')} 
+          type="button"
+          onClick={() => { setActiveTab('googleFormBlast'); setIsMobileSidebarOpen(false); }} 
           className={`mobile-nav-btn ${activeTab === 'googleFormBlast' ? 'active' : ''}`}
         >
           <FileSpreadsheet size={18} />
@@ -1734,33 +1787,39 @@ export default function App() {
           {unblastedResponsesCount > 0 && <span className="mobile-badge">{unblastedResponsesCount}</span>}
         </button>
         <button 
-          onClick={() => setActiveTab('liveBoard')} 
+          type="button"
+          onClick={() => { setActiveTab('liveBoard'); setIsMobileSidebarOpen(false); }} 
           className={`mobile-nav-btn ${activeTab === 'liveBoard' ? 'active' : ''}`}
         >
           <Globe size={18} />
-          <span>Posted</span>
+          <span>Students</span>
           {students.length > 0 && <span className="mobile-badge">{students.length}</span>}
         </button>
         <button 
-          onClick={() => setActiveTab('drives')} 
+          type="button"
+          onClick={() => { setActiveTab('drives'); setIsMobileSidebarOpen(false); }} 
           className={`mobile-nav-btn ${activeTab === 'drives' ? 'active' : ''}`}
         >
           <Calendar size={18} />
           <span>Drives</span>
+          {drives.length > 0 && <span className="mobile-badge">{drives.length}</span>}
         </button>
         <button 
-          onClick={() => setActiveTab('tpos')} 
-          className={`mobile-nav-btn ${activeTab === 'tpos' ? 'active' : ''}`}
+          type="button"
+          onClick={() => { setActiveTab('calls'); setIsMobileSidebarOpen(false); }} 
+          className={`mobile-nav-btn ${activeTab === 'calls' ? 'active' : ''}`}
         >
-          <Building2 size={18} />
-          <span>TPOs</span>
+          <PhoneCall size={18} />
+          <span>Calls</span>
+          {callSessions.length > 0 && <span className="mobile-badge">{callSessions.length}</span>}
         </button>
         <button 
-          onClick={() => setActiveTab('followups')} 
-          className={`mobile-nav-btn ${activeTab === 'followups' ? 'active' : ''}`}
+          type="button"
+          onClick={() => setIsMobileSidebarOpen(true)} 
+          className={`mobile-nav-btn ${isMobileSidebarOpen ? 'active' : ''}`}
         >
-          <Clock size={18} />
-          <span>Follow-up</span>
+          <Menu size={18} />
+          <span>Menu</span>
         </button>
       </nav>
 
@@ -1844,6 +1903,25 @@ export default function App() {
         currentPhone={hrPhoneNumber}
         onSavePhone={handleSaveHrPhone}
         currentUser={currentUser}
+      />
+
+      {/* PWA / Web App Installation Guide Modal */}
+      <InstallAppModal 
+        isOpen={isInstallModalOpen}
+        onClose={() => setIsInstallModalOpen(false)}
+        deferredPrompt={deferredPrompt}
+        onNativeInstall={() => {
+          if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then(({ outcome }) => {
+              if (outcome === 'accepted') {
+                setDeferredPrompt(null);
+                addToast('TalentConnect installed as native app!', 'success');
+              }
+              setIsInstallModalOpen(false);
+            });
+          }
+        }}
       />
     </div>
   );
