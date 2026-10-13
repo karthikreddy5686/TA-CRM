@@ -548,6 +548,15 @@ input, select, textarea, button {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Responsive Visibility Utilities */
+.mobile-only {
+  display: none !important;
+}
+
+.desktop-only {
+  display: block;
+}
+
 /* Metrics Grid */
 .metrics-grid {
   display: grid;
@@ -1694,6 +1703,15 @@ input, select, textarea, button {
     width: 32px !important;
     height: 32px !important;
     flex-shrink: 0 !important;
+  }
+
+  /* Responsive Visibility on Mobile Screens */
+  .mobile-only {
+    display: flex !important;
+  }
+
+  .desktop-only {
+    display: none !important;
   }
 
   /* Prevent iOS Safari 16px auto-zoom */

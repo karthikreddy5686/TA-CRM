@@ -53,7 +53,9 @@ import {
   GlobalNewDriveModal,
   GlobalNewTpoModal,
   GlobalQuickCallModal,
-  GlobalNewFollowUpModal
+  GlobalNewFollowUpModal,
+  GlobalAddStudentModal,
+  GlobalActionSheetModal
 } from './components/GlobalModals';
 
 export default function App() {
@@ -221,9 +223,10 @@ export default function App() {
   const [isAppInstalled, setIsAppInstalled] = useState(false);
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
 
-  // Global Quick Action Modals & Dropdown
+  // Global Quick Action Modals & Action Sheet
   const [isGlobalNewMenuOpen, setIsGlobalNewMenuOpen] = useState(false);
   const [isGlobalDriveModalOpen, setIsGlobalDriveModalOpen] = useState(false);
+  const [isGlobalStudentModalOpen, setIsGlobalStudentModalOpen] = useState(false);
   const [isGlobalTpoModalOpen, setIsGlobalTpoModalOpen] = useState(false);
   const [isGlobalQuickCallModalOpen, setIsGlobalQuickCallModalOpen] = useState(false);
   const [isGlobalFollowUpModalOpen, setIsGlobalFollowUpModalOpen] = useState(false);
@@ -1024,126 +1027,18 @@ export default function App() {
               </button>
             )}
 
-            {/* Global Quick Action Menu */}
-            <div style={{ position: 'relative' }}>
-              <button
-                type="button"
-                onClick={() => setIsGlobalNewMenuOpen(!isGlobalNewMenuOpen)}
-                className="btn-black btn-black-sm"
-                style={{ padding: '6px 10px', fontSize: '0.8rem', gap: '5px', fontWeight: 700 }}
-                title="Global Create & Management Actions"
-              >
-                <Plus size={14} />
-                <span className="header-desktop-only">+ New Action</span>
-                <span className="header-mobile-only">New</span>
-                <ChevronDown size={12} className="header-desktop-only" />
-              </button>
-
-              {isGlobalNewMenuOpen && (
-                <div className="global-action-menu">
-                  <button
-                    type="button"
-                    className="global-action-item"
-                    onClick={() => {
-                      setIsGlobalDriveModalOpen(true);
-                      setIsGlobalNewMenuOpen(false);
-                    }}
-                  >
-                    <Calendar size={15} color="#09090b" />
-                    <span>New Campus Drive</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className="global-action-item"
-                    onClick={() => {
-                      setIsGlobalTpoModalOpen(true);
-                      setIsGlobalNewMenuOpen(false);
-                    }}
-                  >
-                    <Building2 size={15} color="#09090b" />
-                    <span>New College TPO Lead</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className="global-action-item"
-                    onClick={() => {
-                      setIsGlobalQuickCallModalOpen(true);
-                      setIsGlobalNewMenuOpen(false);
-                    }}
-                  >
-                    <PhoneCall size={15} color="#09090b" />
-                    <span>Quick Dial Call / Video</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className="global-action-item"
-                    onClick={() => {
-                      setIsGlobalFollowUpModalOpen(true);
-                      setIsGlobalNewMenuOpen(false);
-                    }}
-                  >
-                    <Clock size={15} color="#09090b" />
-                    <span>New Follow-Up Task</span>
-                  </button>
-
-                  <div className="global-action-divider" />
-
-                  <button
-                    type="button"
-                    className="global-action-item"
-                    onClick={() => {
-                      handleLoadDemoData();
-                      setIsGlobalNewMenuOpen(false);
-                    }}
-                  >
-                    <Sparkles size={15} color="#8b5cf6" />
-                    <span>Load Working Demo Data</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className="global-action-item"
-                    onClick={() => {
-                      handleExportBackup();
-                      setIsGlobalNewMenuOpen(false);
-                    }}
-                  >
-                    <Download size={15} color="#0284c7" />
-                    <span>Export Backup (JSON)</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className="global-action-item"
-                    onClick={() => {
-                      if (importFileRef.current) importFileRef.current.click();
-                      setIsGlobalNewMenuOpen(false);
-                    }}
-                  >
-                    <Upload size={15} color="#16a34a" />
-                    <span>Import Backup (JSON)</span>
-                  </button>
-
-                  <div className="global-action-divider" />
-
-                  <button
-                    type="button"
-                    className="global-action-item"
-                    style={{ color: '#ef4444' }}
-                    onClick={() => {
-                      handleResetCleanData();
-                      setIsGlobalNewMenuOpen(false);
-                    }}
-                  >
-                    <Trash2 size={15} color="#ef4444" />
-                    <span>Reset to Clean Database</span>
-                  </button>
-                </div>
-              )}
-            </div>
+            {/* Global Quick Action Trigger */}
+            <button
+              type="button"
+              onClick={() => setIsGlobalNewMenuOpen(true)}
+              className="btn-black btn-black-sm"
+              style={{ padding: '6px 11px', fontSize: '0.8rem', gap: '5px', fontWeight: 700 }}
+              title="Global Create & Management Actions"
+            >
+              <Plus size={14} />
+              <span className="header-desktop-only">+ New Action</span>
+              <span className="header-mobile-only">New</span>
+            </button>
 
             {/* Quick Demo Data Pill if database is empty */}
             {drives.length === 0 && (
@@ -1313,6 +1208,11 @@ export default function App() {
                 onSelectTab={setActiveTab}
                 onLoadDemoData={handleLoadDemoData}
                 onResetCleanData={handleResetCleanData}
+                onOpenNewDriveModal={() => setIsGlobalDriveModalOpen(true)}
+                onOpenNewStudentModal={() => setIsGlobalStudentModalOpen(true)}
+                onOpenNewTpoModal={() => setIsGlobalTpoModalOpen(true)}
+                onOpenQuickCallModal={() => setIsGlobalQuickCallModalOpen(true)}
+                onOpenQuickActions={() => setIsGlobalNewMenuOpen(true)}
               />
             ) : (
               <InternDashboard 
@@ -1865,6 +1765,32 @@ export default function App() {
         users={users}
         tpos={tpos}
         students={students}
+      />
+
+      {/* Global Add Single Candidate Modal */}
+      <GlobalAddStudentModal 
+        isOpen={isGlobalStudentModalOpen}
+        onClose={() => setIsGlobalStudentModalOpen(false)}
+        onSubmit={(newStudent) => {
+          setStudents(prev => [newStudent, ...prev]);
+          addToast(`Candidate "${newStudent.name}" added to drive!`, 'success');
+        }}
+        drives={drives}
+      />
+
+      {/* Global Quick Action Sheet Modal */}
+      <GlobalActionSheetModal 
+        isOpen={isGlobalNewMenuOpen}
+        onClose={() => setIsGlobalNewMenuOpen(false)}
+        onOpenNewDrive={() => setIsGlobalDriveModalOpen(true)}
+        onOpenAddStudent={() => setIsGlobalStudentModalOpen(true)}
+        onOpenNewTpo={() => setIsGlobalTpoModalOpen(true)}
+        onOpenQuickCall={() => setIsGlobalQuickCallModalOpen(true)}
+        onOpenFollowUp={() => setIsGlobalFollowUpModalOpen(true)}
+        onGoToIntake={() => setActiveTab('googleFormBlast')}
+        onLoadDemoData={handleLoadDemoData}
+        onResetData={handleResetCleanData}
+        hasData={drives.length > 0 || students.length > 0 || tpos.length > 0}
       />
 
       {/* Floating or Modal WebRTC Call Session Engine */}

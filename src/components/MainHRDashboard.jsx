@@ -8,7 +8,11 @@ import {
   Phone,
   Sparkles,
   ArrowRight,
-  Trash2
+  Trash2,
+  Plus,
+  UserPlus,
+  FileSpreadsheet,
+  ChevronRight
 } from 'lucide-react';
 import { formatDuration } from '../data/mockData';
 
@@ -22,7 +26,12 @@ export default function MainHRDashboard({
   onStartCall,
   onSelectTab,
   onLoadDemoData,
-  onResetCleanData
+  onResetCleanData,
+  onOpenNewDriveModal,
+  onOpenNewStudentModal,
+  onOpenNewTpoModal,
+  onOpenQuickCallModal,
+  onOpenQuickActions
 }) {
   const [internFilter, setInternFilter] = useState('ALL');
   const [callTypeFilter, setCallTypeFilter] = useState('ALL');
@@ -60,32 +69,93 @@ export default function MainHRDashboard({
 
   return (
     <div>
-      {/* Top Banner */}
+      {/* Unified Simple Header Card */}
       <div className="dashboard-banner" style={{ 
         background: '#ffffff', 
         border: '1px solid #e2e8f0', 
         borderRadius: '14px', 
-        padding: '20px 24px',
-        marginBottom: '20px',
+        padding: '16px 20px',
+        marginBottom: '16px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         flexWrap: 'wrap',
-        gap: '14px',
+        gap: '12px',
         boxShadow: 'var(--shadow-card)',
         width: '100%',
         boxSizing: 'border-box'
       }}>
         <div>
-          <h1 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#09090b', letterSpacing: '-0.02em' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+            <span style={{ 
+              background: drives.length > 0 ? '#ecfdf5' : '#f1f5f9', 
+              color: drives.length > 0 ? '#065f46' : '#52525b', 
+              padding: '2px 8px', 
+              borderRadius: '20px', 
+              fontSize: '0.68rem', 
+              fontWeight: 800,
+              letterSpacing: '0.04em'
+            }}>
+              {drives.length > 0 ? '● WORKSPACE ACTIVE' : '○ EMPTY STATE (0)'}
+            </span>
+            <span style={{ fontSize: '0.78rem', color: '#71717a' }}>
+              {drives.length} Drives • {students.length} Candidates • {tpos.length} TPOs
+            </span>
+          </div>
+          <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#09090b', letterSpacing: '-0.02em', margin: 0 }}>
             HR Dashboard
           </h1>
-          <p style={{ color: '#52525b', fontSize: '0.85rem', marginTop: '2px' }}>
+          <p style={{ color: '#52525b', fontSize: '0.84rem', marginTop: '2px' }}>
             Track intern calling hours, college outreach, and campus recruitment drives.
           </p>
         </div>
 
+        {/* Dashboard Direct Action Buttons (All 100% Functional) */}
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+          {onOpenNewDriveModal && (
+            <button 
+              type="button" 
+              onClick={onOpenNewDriveModal} 
+              className="btn-black btn-black-sm"
+              style={{ fontWeight: 700 }}
+              title="Schedule a new campus recruitment drive"
+            >
+              <Plus size={14} /> + New Drive
+            </button>
+          )}
+
+          {onOpenNewStudentModal && (
+            <button 
+              type="button" 
+              onClick={onOpenNewStudentModal} 
+              className="btn-secondary btn-black-sm"
+              title="Add a candidate directly to the student list"
+            >
+              <UserPlus size={14} /> + Add Student
+            </button>
+          )}
+
+          <button 
+            type="button" 
+            onClick={() => onSelectTab('googleFormBlast')} 
+            className="btn-secondary btn-black-sm"
+            title="Import student rows from Google Sheets or WhatsApp"
+          >
+            <FileSpreadsheet size={14} /> Import Sheets
+          </button>
+
+          {drives.length === 0 && onLoadDemoData && (
+            <button 
+              type="button" 
+              onClick={onLoadDemoData} 
+              className="btn-secondary btn-black-sm"
+              style={{ color: '#8b5cf6', borderColor: '#c4b5fd' }}
+              title="Load sample recruitment data across all tabs"
+            >
+              <Sparkles size={14} /> Load Demo Data
+            </button>
+          )}
+
           {(drives.length > 0 || students.length > 0 || tpos.length > 0) && onResetCleanData && (
             <button 
               type="button" 
@@ -94,83 +164,11 @@ export default function MainHRDashboard({
               style={{ color: '#ef4444', borderColor: '#fca5a5' }} 
               title="Reset all recruitment records to clean empty state (0)"
             >
-              <Trash2 size={13} /> Reset All to 0
+              <Trash2 size={13} /> Reset to 0
             </button>
           )}
-          {onLoadDemoData && (
-            <button onClick={onLoadDemoData} className="btn-black btn-black-sm" title="Load sample recruitment data across all tabs">
-              <Sparkles size={13} /> Load Demo Data
-            </button>
-          )}
-          <button onClick={() => onSelectTab('drives')} className="btn-secondary btn-black-sm">
-            <Calendar size={14} /> View Drives ({drives.length})
-          </button>
-          <button onClick={() => onSelectTab('tpos')} className="btn-secondary btn-black-sm">
-            <Building2 size={14} /> College TPOs ({tpos.length})
-          </button>
         </div>
       </div>
-
-      {/* Empty State / Quick-Start Web App Guidance Banner */}
-      {drives.length === 0 && students.length === 0 && tpos.length === 0 && (
-        <div className="guidance-banner" style={{
-          background: 'linear-gradient(135deg, #09090b 0%, #1c1917 100%)',
-          color: '#ffffff',
-          borderRadius: '14px',
-          padding: '22px 24px',
-          marginBottom: '22px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '16px',
-          boxShadow: 'var(--shadow-md)',
-          border: '1px solid #27272a',
-          width: '100%',
-          boxSizing: 'border-box'
-        }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-              <span style={{ 
-                background: '#ffffff', 
-                color: '#09090b', 
-                padding: '2px 8px', 
-                borderRadius: '20px', 
-                fontSize: '0.68rem', 
-                fontWeight: 800,
-                letterSpacing: '0.04em'
-              }}>
-                ⚡ WEB APP GLOBAL MODE
-              </span>
-              <span style={{ fontSize: '0.78rem', color: '#a1a1aa' }}>All systems connected & synchronized</span>
-            </div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: '0 0 4px 0' }}>
-              Load Connected Demo Data or Add Your First Drive
-            </h3>
-            <p style={{ color: '#d4d4d8', fontSize: '0.84rem', maxWidth: '580px', margin: 0 }}>
-              Instantly test in-app calling, Google sheet candidate intake, TPO outreach, drive pipelines, and real-time live boards with pre-configured IIT & BITS recruitment drives.
-            </p>
-          </div>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            {onLoadDemoData && (
-              <button 
-                onClick={onLoadDemoData} 
-                className="btn-black" 
-                style={{ background: '#ffffff', color: '#09090b', fontWeight: 800, padding: '9px 16px' }}
-              >
-                <Sparkles size={14} /> Load Working Demo Data
-              </button>
-            )}
-            <button 
-              onClick={() => onSelectTab('drives')} 
-              className="btn-secondary" 
-              style={{ background: 'transparent', color: '#ffffff', borderColor: '#52525b', padding: '9px 14px' }}
-            >
-              + Create Drive
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* KPI Cards Grid - Clickable for Instant Module Navigation */}
       <div className="metrics-grid">
@@ -259,7 +257,8 @@ export default function MainHRDashboard({
           </span>
         </div>
 
-        <div className="table-wrapper">
+        {/* Desktop View: Full CRM Table */}
+        <div className="table-wrapper desktop-only">
           <table className="crm-table">
             <thead>
               <tr>
@@ -315,7 +314,7 @@ export default function MainHRDashboard({
                           width: `${intern.targetProgress}%`, 
                           height: '100%', 
                           background: intern.targetProgress >= 80 ? '#10b981' : '#09090b',
-                        }}
+                        }} 
                       />
                     </div>
                   </td>
@@ -354,6 +353,75 @@ export default function MainHRDashboard({
             </tbody>
           </table>
         </div>
+
+        {/* Mobile View: Clean, Simple Intern Cards */}
+        <div className="mobile-only" style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {internStats.map((intern, index) => (
+            <div key={intern.id} style={{
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: '10px',
+              padding: '12px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div className={`rank-badge ${index === 0 ? 'top-1' : ''}`} style={{ width: '22px', height: '22px', fontSize: '0.72rem' }}>
+                    #{index + 1}
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#09090b' }}>{intern.name}</div>
+                    <div style={{ fontSize: '0.72rem', color: '#71717a' }}>{intern.title}</div>
+                  </div>
+                </div>
+                <span className={`badge ${intern.status === 'on-call' ? 'badge-amber' : 'badge-green'}`} style={{ fontSize: '0.68rem' }}>
+                  {intern.status === 'on-call' ? 'On Call' : 'Available'}
+                </span>
+              </div>
+
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center', 
+                background: '#ffffff', 
+                padding: '8px 10px', 
+                borderRadius: '8px', 
+                border: '1px solid #e2e8f0' 
+              }}>
+                <div>
+                  <div style={{ fontSize: '0.68rem', color: '#71717a', fontWeight: 600 }}>Talk Time</div>
+                  <div style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, fontSize: '0.925rem', color: '#09090b' }}>
+                    {formatDuration(intern.totalSeconds)}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.68rem', color: '#71717a', fontWeight: 600 }}>Calls</div>
+                  <div style={{ fontWeight: 800, fontSize: '0.85rem' }}>{intern.callCount}</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.68rem', color: '#71717a', fontWeight: 600 }}>Goal</div>
+                  <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>{intern.targetProgress}%</div>
+                </div>
+                <button 
+                  onClick={() => {
+                    onStartCall({
+                      recipientType: 'INTERN_SYNC',
+                      recipientName: intern.name,
+                      recipientDetail: intern.title,
+                      type: 'AUDIO'
+                    });
+                  }}
+                  className="btn-black btn-black-sm"
+                  style={{ padding: '5px 10px', fontSize: '0.72rem', gap: '4px' }}
+                >
+                  <Phone size={11} /> Call
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Call History */}
@@ -361,7 +429,7 @@ export default function MainHRDashboard({
         <div className="card-header-row" style={{ padding: '14px 20px' }}>
           <div>
             <h2 className="card-title" style={{ fontSize: '0.98rem' }}>Call History</h2>
-            <p className="card-subtitle">Calls made inside the app with recorded time</p>
+            <p className="card-subtitle">Calls made inside the app with recorded talk time</p>
           </div>
 
           <div style={{ display: 'flex', gap: '8px' }}>
@@ -390,7 +458,8 @@ export default function MainHRDashboard({
           </div>
         </div>
 
-        <div className="table-wrapper">
+        {/* Desktop View: Full CRM Table */}
+        <div className="table-wrapper desktop-only">
           <table className="crm-table">
             <thead>
               <tr>
@@ -469,6 +538,64 @@ export default function MainHRDashboard({
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile View: Clean Call Record Cards */}
+        <div className="mobile-only" style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {filteredCalls.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '24px 12px', color: '#71717a', fontSize: '0.8rem' }}>
+              No calls logged yet. Dial any candidate or TPO to record talk time.
+            </div>
+          ) : (
+            filteredCalls.map(call => (
+              <div key={call.id} style={{
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: '10px',
+                padding: '10px 12px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '6px'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#09090b' }}>
+                      {call.recipientName}
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: '#71717a' }}>
+                      {call.recipientType} • By {call.internName}
+                    </div>
+                  </div>
+                  <span className={`badge ${
+                    call.disposition === 'DRIVE_CONFIRMED' || call.disposition === 'SCREENING_PASSED'
+                      ? 'badge-green'
+                      : 'badge-amber'
+                  }`} style={{ fontSize: '0.65rem' }}>
+                    {call.disposition ? call.disposition.replace(/_/g, ' ') : 'COMPLETED'}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: '#52525b' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    {call.callType === 'VIDEO' ? <Video size={12} /> : <Phone size={12} />}
+                    {call.callType === 'VIDEO' ? 'Video Meet' : 'Audio Call'}
+                  </span>
+                  <span style={{ 
+                    fontFamily: 'Space Grotesk, sans-serif', 
+                    fontWeight: 700, 
+                    background: '#ffffff', 
+                    border: '1px solid #e2e8f0', 
+                    padding: '2px 6px', 
+                    borderRadius: '4px',
+                    color: '#09090b'
+                  }}>
+                    {formatDuration(call.durationSeconds)}
+                  </span>
+                  <span>{new Date(call.startedAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

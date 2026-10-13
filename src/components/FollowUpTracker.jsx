@@ -176,7 +176,7 @@ export default function FollowUpTracker({
           </div>
         </div>
 
-        <div className="table-wrapper">
+        <div className="table-wrapper desktop-only">
           <table className="crm-table">
             <thead>
               <tr>
@@ -301,6 +301,109 @@ export default function FollowUpTracker({
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile View: Clean Follow-Up Cards */}
+        <div className="mobile-only" style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {filteredFollowUps.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '24px 12px', color: '#71717a', fontSize: '0.8rem' }}>
+              No follow-ups found for selected filters. Tap "+ New Follow-Up" to create one.
+            </div>
+          ) : (
+            filteredFollowUps.map(fup => (
+              <div key={fup.id} style={{
+                background: fup.status === 'COMPLETED' ? '#f1f5f9' : '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: '10px',
+                padding: '12px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+                opacity: fup.status === 'COMPLETED' ? 0.75 : 1
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                    <input 
+                      type="checkbox"
+                      checked={fup.status === 'COMPLETED'}
+                      onChange={() => onToggleCompleteFollowUp(fup.id)}
+                      style={{ width: '16px', height: '16px', accentColor: '#09090b', cursor: 'pointer', marginTop: '2px' }}
+                    />
+                    <div>
+                      <div style={{ 
+                        fontWeight: 800, 
+                        fontSize: '0.9rem', 
+                        color: fup.status === 'COMPLETED' ? '#71717a' : '#09090b',
+                        textDecoration: fup.status === 'COMPLETED' ? 'line-through' : 'none'
+                      }}>
+                        {fup.entityTitle}
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: '#71717a' }}>
+                        {fup.entityType} • Assigned: {fup.internName}
+                      </div>
+                    </div>
+                  </div>
+
+                  <span className={`badge ${
+                    fup.priority === 'URGENT' ? 'badge-red' : fup.priority === 'HIGH' ? 'badge-amber' : 'badge-grey'
+                  }`} style={{ fontSize: '0.65rem' }}>
+                    {fup.priority}
+                  </span>
+                </div>
+
+                {fup.notes && (
+                  <div style={{ fontSize: '0.75rem', color: '#52525b', background: '#ffffff', padding: '6px 10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                    {fup.notes}
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #e2e8f0', paddingTop: '8px' }}>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#09090b' }}>
+                    📅 Due: {fup.scheduledDate}
+                  </span>
+
+                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                    {fup.status === 'PENDING' && (
+                      <>
+                        <button 
+                          onClick={() => onStartCall({
+                            recipientType: fup.entityType,
+                            recipientName: fup.entityTitle,
+                            recipientDetail: fup.notes,
+                            type: 'AUDIO',
+                            followUpId: fup.id
+                          })}
+                          className="btn-black btn-black-sm"
+                          style={{ padding: '3px 8px', fontSize: '0.72rem', gap: '3px' }}
+                        >
+                          <Phone size={11} /> Call
+                        </button>
+
+                        <button 
+                          onClick={() => onSnoozeFollowUp(fup.id, 1)}
+                          className="btn-secondary btn-black-sm"
+                          style={{ padding: '3px 7px', fontSize: '0.72rem' }}
+                        >
+                          +1d
+                        </button>
+                      </>
+                    )}
+
+                    {onDeleteFollowUp && (
+                      <button 
+                        onClick={() => onDeleteFollowUp(fup.id)}
+                        className="btn-icon"
+                        style={{ width: '26px', height: '26px', color: '#ef4444' }}
+                        title="Delete follow-up"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 

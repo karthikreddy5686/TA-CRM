@@ -154,82 +154,140 @@ export default function InternDashboard({
             <p style={{ fontSize: '0.8rem', marginTop: '2px' }}>You are all caught up!</p>
           </div>
         ) : (
-          <div className="table-wrapper">
-            <table className="crm-table">
-              <thead>
-                <tr>
-                  <th>Priority</th>
-                  <th>Contact</th>
-                  <th>Type</th>
-                  <th>Date</th>
-                  <th>Note</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {myFollowUps.map(fup => (
-                  <tr key={fup.id}>
-                    <td>
-                      <span className={`badge ${
-                        fup.priority === 'URGENT' ? 'badge-red' : fup.priority === 'HIGH' ? 'badge-amber' : 'badge-grey'
-                      }`} style={{ fontSize: '0.72rem' }}>
-                        {fup.priority}
-                      </span>
-                    </td>
-
-                    <td>
-                      <div style={{ fontWeight: 700, color: '#09090b', fontSize: '0.875rem' }}>
-                        {fup.entityTitle}
-                      </div>
-                    </td>
-
-                    <td>
-                      <span className="badge badge-grey" style={{ fontSize: '0.7rem' }}>
-                        {fup.entityType}
-                      </span>
-                    </td>
-
-                    <td style={{ fontWeight: 600, fontSize: '0.825rem' }}>
-                      {fup.scheduledDate}
-                    </td>
-
-                    <td style={{ maxWidth: '280px', fontSize: '0.8rem', color: '#52525b' }}>
-                      {fup.notes}
-                    </td>
-
-                    <td>
-                      <div style={{ display: 'flex', gap: '6px' }}>
-                        <button 
-                          onClick={() => {
-                            onStartCall({
-                              recipientType: fup.entityType,
-                              recipientName: fup.entityTitle,
-                              recipientDetail: fup.notes,
-                              type: 'AUDIO',
-                              followUpId: fup.id
-                            });
-                          }}
-                          className="btn-black btn-black-sm"
-                          style={{ padding: '4px 10px', fontSize: '0.75rem' }}
-                        >
-                          <Phone size={12} /> Call
-                        </button>
-
-                        <button 
-                          onClick={() => onCompleteFollowUp(fup.id)}
-                          className="btn-secondary btn-black-sm"
-                          style={{ padding: '4px 8px' }}
-                          title="Mark done"
-                        >
-                          <CheckCircle2 size={12} />
-                        </button>
-                      </div>
-                    </td>
+          <>
+            <div className="table-wrapper desktop-only">
+              <table className="crm-table">
+                <thead>
+                  <tr>
+                    <th>Priority</th>
+                    <th>Contact</th>
+                    <th>Type</th>
+                    <th>Date</th>
+                    <th>Note</th>
+                    <th>Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {myFollowUps.map(fup => (
+                    <tr key={fup.id}>
+                      <td>
+                        <span className={`badge ${
+                          fup.priority === 'URGENT' ? 'badge-red' : fup.priority === 'HIGH' ? 'badge-amber' : 'badge-grey'
+                        }`} style={{ fontSize: '0.72rem' }}>
+                          {fup.priority}
+                        </span>
+                      </td>
+
+                      <td>
+                        <div style={{ fontWeight: 700, color: '#09090b', fontSize: '0.875rem' }}>
+                          {fup.entityTitle}
+                        </div>
+                      </td>
+
+                      <td>
+                        <span className="badge badge-grey" style={{ fontSize: '0.7rem' }}>
+                          {fup.entityType}
+                        </span>
+                      </td>
+
+                      <td style={{ fontWeight: 600, fontSize: '0.825rem' }}>
+                        {fup.scheduledDate}
+                      </td>
+
+                      <td style={{ maxWidth: '280px', fontSize: '0.8rem', color: '#52525b' }}>
+                        {fup.notes}
+                      </td>
+
+                      <td>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <button 
+                            onClick={() => {
+                              onStartCall({
+                                recipientType: fup.entityType,
+                                recipientName: fup.entityTitle,
+                                recipientDetail: fup.notes,
+                                type: 'AUDIO',
+                                followUpId: fup.id
+                              });
+                            }}
+                            className="btn-black btn-black-sm"
+                            style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                          >
+                            <Phone size={12} /> Call
+                          </button>
+
+                          <button 
+                            onClick={() => onCompleteFollowUp(fup.id)}
+                            className="btn-secondary btn-black-sm"
+                            style={{ padding: '4px 8px' }}
+                            title="Mark done"
+                          >
+                            <CheckCircle2 size={12} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile View: Follow-Ups */}
+            <div className="mobile-only" style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {myFollowUps.map(fup => (
+                <div key={fup.id} style={{
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '10px',
+                  padding: '10px 12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#09090b' }}>
+                      {fup.entityTitle}
+                    </div>
+                    <span className={`badge ${
+                      fup.priority === 'URGENT' ? 'badge-red' : fup.priority === 'HIGH' ? 'badge-amber' : 'badge-grey'
+                    }`} style={{ fontSize: '0.65rem' }}>
+                      {fup.priority}
+                    </span>
+                  </div>
+                  {fup.notes && (
+                    <div style={{ fontSize: '0.72rem', color: '#52525b' }}>{fup.notes}</div>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #e2e8f0', paddingTop: '6px' }}>
+                    <span style={{ fontSize: '0.7rem', color: '#71717a' }}>📅 {fup.scheduledDate}</span>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      <button 
+                        onClick={() => {
+                          onStartCall({
+                            recipientType: fup.entityType,
+                            recipientName: fup.entityTitle,
+                            recipientDetail: fup.notes,
+                            type: 'AUDIO',
+                            followUpId: fup.id
+                          });
+                        }}
+                        className="btn-black btn-black-sm"
+                        style={{ padding: '3px 8px', fontSize: '0.72rem' }}
+                      >
+                        <Phone size={11} /> Call
+                      </button>
+                      <button 
+                        onClick={() => onCompleteFollowUp(fup.id)}
+                        className="btn-secondary btn-black-sm"
+                        style={{ padding: '3px 6px' }}
+                      >
+                        <CheckCircle2 size={11} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
@@ -245,7 +303,7 @@ export default function InternDashboard({
           </button>
         </div>
 
-        <div className="table-wrapper">
+        <div className="table-wrapper desktop-only">
           <table className="crm-table">
             <thead>
               <tr>
@@ -309,7 +367,7 @@ export default function InternDashboard({
                           tpoId: tpo.id
                         })}
                         className="btn-secondary btn-black-sm"
-                        style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                        style={{ padding: '4px 8px', fontSize: '0.75rem' }}
                       >
                         <Video size={12} /> Video
                       </button>
@@ -319,6 +377,62 @@ export default function InternDashboard({
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile View: Assigned TPOs */}
+        <div className="mobile-only" style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {myTpos.map(tpo => (
+            <div key={tpo.id} style={{
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: '10px',
+              padding: '10px 12px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#09090b' }}>{tpo.name}</div>
+                  <div style={{ fontSize: '0.72rem', color: '#71717a' }}>{tpo.collegeName}</div>
+                  <div style={{ fontSize: '0.72rem', fontFamily: 'monospace', color: '#52525b' }}>{tpo.phone}</div>
+                </div>
+                <span className={`badge ${
+                  tpo.status === 'DRIVE_CONFIRMED' ? 'badge-green' : tpo.status === 'PITCHED' ? 'badge-amber' : 'badge-grey'
+                }`} style={{ fontSize: '0.65rem' }}>
+                  {tpo.status.replace(/_/g, ' ')}
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px', borderTop: '1px solid #e2e8f0', paddingTop: '6px' }}>
+                <button 
+                  onClick={() => onStartCall({
+                    recipientType: 'TPO',
+                    recipientName: `${tpo.name} (${tpo.collegeName})`,
+                    recipientDetail: `${tpo.designation} • ${tpo.phone}`,
+                    type: 'AUDIO',
+                    tpoId: tpo.id
+                  })}
+                  className="btn-black btn-black-sm"
+                  style={{ padding: '3px 8px', fontSize: '0.72rem', gap: '3px' }}
+                >
+                  <Phone size={11} /> Call
+                </button>
+                <button 
+                  onClick={() => onStartCall({
+                    recipientType: 'TPO',
+                    recipientName: `${tpo.name} (${tpo.collegeName})`,
+                    recipientDetail: `${tpo.designation} • ${tpo.phone}`,
+                    type: 'VIDEO',
+                    tpoId: tpo.id
+                  })}
+                  className="btn-secondary btn-black-sm"
+                  style={{ padding: '3px 8px', fontSize: '0.72rem', gap: '3px' }}
+                >
+                  <Video size={11} /> Video
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

@@ -163,7 +163,7 @@ export default function TPODirectory({
           </div>
         </div>
 
-        <div className="table-wrapper">
+        <div className="table-wrapper desktop-only">
           <table className="crm-table">
             <thead>
               <tr>
@@ -303,6 +303,120 @@ export default function TPODirectory({
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile View: Clean TPO Cards */}
+        <div className="mobile-only" style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {filteredTpos.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '24px 12px', color: '#71717a', fontSize: '0.8rem' }}>
+              No matching placement officers found. Tap "+ Add College TPO" to add one.
+            </div>
+          ) : (
+            filteredTpos.map(tpo => (
+              <div key={tpo.id} style={{
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: '10px',
+                padding: '12px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: '0.925rem', color: '#09090b', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      <Building2 size={15} color="#52525b" />
+                      {tpo.collegeName}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#71717a', marginLeft: '20px' }}>
+                      {tpo.city || 'Campus'} • Assigned: {tpo.assignedInternName || 'Team'}
+                    </div>
+                  </div>
+                  <select 
+                    value={tpo.status}
+                    onChange={(e) => onUpdateTpoStatus(tpo.id, e.target.value)}
+                    style={{
+                      fontSize: '0.7rem',
+                      fontWeight: 700,
+                      padding: '2px 6px',
+                      borderRadius: '6px',
+                      border: '1px solid #cbd5e1',
+                      background: tpo.status === 'DRIVE_CONFIRMED' ? '#ecfdf5' : '#ffffff',
+                      color: tpo.status === 'DRIVE_CONFIRMED' ? '#065f46' : '#09090b'
+                    }}
+                  >
+                    <option value="NEW_LEAD">New Lead</option>
+                    <option value="CONTACTED">Contacted</option>
+                    <option value="PITCHED">Pitched</option>
+                    <option value="DRIVE_CONFIRMED">Confirmed</option>
+                    <option value="NOT_INTERESTED">Declined</option>
+                  </select>
+                </div>
+
+                <div style={{ background: '#ffffff', padding: '8px 10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#09090b' }}>{tpo.name}</div>
+                  <div style={{ fontSize: '0.72rem', color: '#71717a' }}>{tpo.designation}</div>
+                  <div style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: '#52525b', marginTop: '2px' }}>
+                    {tpo.phone} • {tpo.email}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px', alignItems: 'center' }}>
+                  <button 
+                    onClick={() => onStartCall({
+                      recipientType: 'TPO',
+                      recipientName: `${tpo.name} (${tpo.collegeName})`,
+                      recipientDetail: `${tpo.designation} • ${tpo.phone}`,
+                      recipientPhone: tpo.phone,
+                      type: 'AUDIO',
+                      tpoId: tpo.id
+                    })}
+                    className="btn-black btn-black-sm"
+                    style={{ padding: '4px 10px', fontSize: '0.75rem', gap: '4px' }}
+                    title="Call TPO"
+                  >
+                    <Phone size={12} /> Call
+                  </button>
+
+                  <button 
+                    onClick={() => onStartCall({
+                      recipientType: 'TPO',
+                      recipientName: `${tpo.name} (${tpo.collegeName})`,
+                      recipientDetail: `${tpo.designation} • ${tpo.phone}`,
+                      recipientPhone: tpo.phone,
+                      type: 'VIDEO',
+                      tpoId: tpo.id
+                    })}
+                    className="btn-secondary btn-black-sm"
+                    style={{ padding: '4px 8px', fontSize: '0.75rem', gap: '4px' }}
+                    title="Video Meeting"
+                  >
+                    <Video size={12} /> Video
+                  </button>
+
+                  <button 
+                    onClick={() => onScheduleFollowUp(tpo)}
+                    className="btn-icon"
+                    style={{ width: '28px', height: '28px' }}
+                    title="Follow-Up"
+                  >
+                    <Calendar size={12} />
+                  </button>
+
+                  {onDeleteTpo && (
+                    <button 
+                      onClick={() => onDeleteTpo(tpo.id)}
+                      className="btn-icon"
+                      style={{ width: '28px', height: '28px', color: '#ef4444' }}
+                      title="Delete TPO"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 

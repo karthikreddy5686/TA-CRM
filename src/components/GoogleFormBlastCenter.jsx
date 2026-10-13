@@ -421,6 +421,38 @@ export default function GoogleFormBlastCenter({
 
   return (
     <div>
+      {/* 3-Step Simple Flow Guide for Mobile & Desktop */}
+      <div style={{
+        background: '#ffffff',
+        border: '1px solid #e2e8f0',
+        borderRadius: '12px',
+        padding: '10px 14px',
+        marginBottom: '14px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '8px',
+        flexWrap: 'wrap',
+        fontSize: '0.78rem',
+        color: '#52525b',
+        boxShadow: 'var(--shadow-card)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ background: '#09090b', color: '#ffffff', borderRadius: '50%', width: '18px', height: '18px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.68rem', fontWeight: 800 }}>1</span>
+          <span style={{ fontWeight: 700, color: '#09090b' }}>Select Target Drive</span>
+        </div>
+        <span style={{ color: '#cbd5e1' }}>→</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ background: '#09090b', color: '#ffffff', borderRadius: '50%', width: '18px', height: '18px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.68rem', fontWeight: 800 }}>2</span>
+          <span style={{ fontWeight: 700, color: '#09090b' }}>Paste Sheets Cells</span>
+        </div>
+        <span style={{ color: '#cbd5e1' }}>→</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ background: '#09090b', color: '#ffffff', borderRadius: '50%', width: '18px', height: '18px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.68rem', fontWeight: 800 }}>3</span>
+          <span style={{ fontWeight: 700, color: '#09090b' }}>Post & WhatsApp Invites</span>
+        </div>
+      </div>
+
       {/* Target Drive Selector & Drive Creator Bar */}
       <div className="content-card" style={{ marginBottom: '16px', padding: '16px 20px', background: '#f8fafc' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px' }}>
@@ -706,7 +738,7 @@ Columns accepted: Full Name, Roll Number, Email, Phone/WhatsApp, Branch, CGPA"
           </div>
         </div>
 
-        <div className="table-wrapper">
+        <div className="table-wrapper desktop-only">
           <table className="crm-table">
             <thead>
               <tr>
@@ -826,6 +858,107 @@ Columns accepted: Full Name, Roll Number, Email, Phone/WhatsApp, Branch, CGPA"
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile View: Clean Candidate Intake Cards */}
+        <div className="mobile-only" style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {filteredResponses.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '24px 12px', color: '#71717a', fontSize: '0.8rem' }}>
+              No students loaded yet. Paste rows from Google Sheets or tap "+ Add Student" above.
+            </div>
+          ) : (
+            filteredResponses.map(resp => {
+              const isSelected = selectedIds.includes(resp.id);
+              return (
+                <div key={resp.id} style={{
+                  background: isSelected ? '#f1f5f9' : '#f8fafc',
+                  border: isSelected ? '1px solid #09090b' : '1px solid #e2e8f0',
+                  borderRadius: '10px',
+                  padding: '12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={isSelected}
+                        onChange={() => handleToggleSelect(resp.id)}
+                        style={{ cursor: 'pointer', width: '16px', height: '16px', marginTop: '2px', accentColor: '#09090b' }}
+                      />
+                      <div>
+                        <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#09090b' }}>
+                          {resp.name}
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: '#71717a' }}>
+                          {resp.rollNumber} • {resp.branch}
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: '#52525b', fontFamily: 'monospace' }}>
+                          {resp.phone}
+                        </div>
+                      </div>
+                    </div>
+
+                    <span style={{
+                      fontWeight: 700,
+                      background: '#ffffff',
+                      border: '1px solid #e2e8f0',
+                      padding: '2px 7px',
+                      borderRadius: '6px',
+                      fontSize: '0.75rem',
+                      color: '#09090b',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      ⭐ {resp.cgpa} CGPA
+                    </span>
+                  </div>
+
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between', 
+                    borderTop: '1px solid #e2e8f0',
+                    paddingTop: '8px'
+                  }}>
+                    {resp.isBlasted ? (
+                      <span className="badge badge-green" style={{ fontSize: '0.68rem', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                        <CheckCircle2 size={11} /> Posted on Site
+                      </span>
+                    ) : (
+                      <span className="badge badge-amber" style={{ fontSize: '0.68rem' }}>
+                        Ready to Invite
+                      </span>
+                    )}
+
+                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                      <button 
+                        onClick={() => {
+                          setSelectedIds([resp.id]);
+                          setIsBlastModalOpen(true);
+                        }}
+                        className="btn-secondary btn-black-sm"
+                        style={{ fontSize: '0.72rem', padding: '3px 9px' }}
+                      >
+                        Invite
+                      </button>
+
+                      {onDeleteFormResponse && (
+                        <button 
+                          onClick={() => onDeleteFormResponse(resp.id)}
+                          className="btn-icon"
+                          style={{ width: '26px', height: '26px', color: '#ef4444' }}
+                          title="Delete candidate row"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 

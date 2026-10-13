@@ -9,7 +9,12 @@ import {
   X, 
   Users, 
   Sparkles, 
-  CheckCircle2 
+  CheckCircle2,
+  FileSpreadsheet,
+  Trash2,
+  ChevronRight,
+  Plus,
+  PhoneCall
 } from 'lucide-react';
 
 // 1. Global Create Drive Modal
@@ -626,6 +631,370 @@ export function GlobalNewFollowUpModal({
             <button type="submit" className="btn-black">Schedule Task</button>
           </div>
         </form>
+      </div>
+    </div>
+  );
+}
+
+// 5. Global Add Student Modal (Accessible from anywhere)
+export function GlobalAddStudentModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  drives,
+}) {
+  const [name, setName] = useState('');
+  const [rollNumber, setRollNumber] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [branch, setBranch] = useState('Computer Science');
+  const [cgpa, setCgpa] = useState('8.0');
+  const [stage, setStage] = useState('APPLIED');
+  const [targetDriveId, setTargetDriveId] = useState(drives[0]?.id || '');
+  const [customCollege, setCustomCollege] = useState('');
+
+  if (!isOpen) return null;
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+
+    const matchedDrive = drives.find(d => d.id === targetDriveId) || drives[0];
+    const resolvedCollege = matchedDrive ? matchedDrive.collegeName : (customCollege.trim() || 'Engineering College');
+
+    onSubmit({
+      id: `std-${Date.now()}`,
+      driveId: matchedDrive ? matchedDrive.id : `drv-${Date.now()}`,
+      name: name.trim(),
+      rollNumber: rollNumber.trim() || `ROLL-${Date.now().toString().slice(-4)}`,
+      email: email.trim() || `${name.trim().toLowerCase().replace(/\s+/g, '.')}@campus.edu`,
+      phone: phone.trim() || '+91 98765 43210',
+      collegeName: resolvedCollege,
+      branch: branch.trim() || 'Computer Science',
+      cgpa: parseFloat(cgpa) || 7.5,
+      stage: stage || 'APPLIED',
+      internId: 'intern-1',
+      internName: 'Priya Sharma',
+      notes: 'Added manually via Quick Add',
+    });
+
+    onClose();
+    setName('');
+    setRollNumber('');
+    setEmail('');
+    setPhone('');
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-card" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <h3 className="card-title">Add Student Candidate</h3>
+            <p className="card-subtitle">Add a single candidate to your recruitment pipeline</p>
+          </div>
+          <button onClick={onClose} className="btn-icon"><X size={15} /></button>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <div className="modal-body">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div className="form-group">
+                <label className="form-label">Full Name *</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="e.g. Rahul Verma"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div className="form-group">
+                  <label className="form-label">Roll Number</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="e.g. 21CS045"
+                    value={rollNumber}
+                    onChange={e => setRollNumber(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">CGPA</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="10"
+                    className="form-input"
+                    placeholder="8.5"
+                    value={cgpa}
+                    onChange={e => setCgpa(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div className="form-group">
+                  <label className="form-label">Phone Number *</label>
+                  <input
+                    type="tel"
+                    className="form-input"
+                    placeholder="+91 98000 00000"
+                    value={phone}
+                    onChange={e => setPhone(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Email</label>
+                  <input
+                    type="email"
+                    className="form-input"
+                    placeholder="student@college.edu"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div className="form-group">
+                  <label className="form-label">Branch / Department</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Computer Science"
+                    value={branch}
+                    onChange={e => setBranch(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Hiring Stage</label>
+                  <select className="form-select" value={stage} onChange={e => setStage(e.target.value)}>
+                    <option value="APPLIED">1. Applied</option>
+                    <option value="ONLINE_ASSESSMENT">2. Online Test</option>
+                    <option value="TECH_INTERVIEW">3. Tech Interview</option>
+                    <option value="OFFERED">4. Selected / Offer</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Assign to Campus Drive</label>
+                {drives.length > 0 ? (
+                  <select
+                    className="form-select"
+                    value={targetDriveId || drives[0]?.id}
+                    onChange={e => setTargetDriveId(e.target.value)}
+                  >
+                    {drives.map(d => (
+                      <option key={d.id} value={d.id}>
+                        {d.title} ({d.collegeName})
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Enter College Name (e.g. IIT Delhi)"
+                    value={customCollege}
+                    onChange={e => setCustomCollege(e.target.value)}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="modal-footer">
+            <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
+            <button type="submit" className="btn-black">Add Candidate</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// 6. Global Action Sheet Modal (Fixes clipped header dropdown on both mobile and desktop)
+export function GlobalActionSheetModal({
+  isOpen,
+  onClose,
+  onOpenNewDrive,
+  onOpenAddStudent,
+  onOpenNewTpo,
+  onOpenQuickCall,
+  onOpenFollowUp,
+  onGoToIntake,
+  onLoadDemoData,
+  onResetData,
+  hasData,
+}) {
+  if (!isOpen) return null;
+
+  const actions = [
+    {
+      id: 'drive',
+      title: 'New Campus Drive',
+      desc: 'Schedule a drive for colleges (IIT, NIT, BITS...)',
+      icon: <Calendar size={18} color="#09090b" />,
+      onClick: () => { onClose(); onOpenNewDrive(); },
+      badge: 'Recruitment',
+    },
+    {
+      id: 'student',
+      title: 'Add Candidate Student',
+      desc: 'Add an individual candidate directly to roster',
+      icon: <UserPlus size={18} color="#09090b" />,
+      onClick: () => { onClose(); onOpenAddStudent(); },
+      badge: 'Direct Add',
+    },
+    {
+      id: 'intake',
+      title: 'Import from Google Sheets',
+      desc: 'Paste candidate rows from Sheets or WhatsApp',
+      icon: <FileSpreadsheet size={18} color="#059669" />,
+      onClick: () => { onClose(); onGoToIntake(); },
+      badge: 'Fast Intake',
+    },
+    {
+      id: 'tpo',
+      title: 'New College TPO Lead',
+      desc: 'Add campus training & placement official contact',
+      icon: <Building2 size={18} color="#09090b" />,
+      onClick: () => { onClose(); onOpenNewTpo(); },
+      badge: 'Outreach',
+    },
+    {
+      id: 'call',
+      title: 'Quick Dial Call / Video',
+      desc: 'Initiate immediate phone call or video interview',
+      icon: <PhoneCall size={18} color="#2563eb" />,
+      onClick: () => { onClose(); onOpenQuickCall(); },
+      badge: 'Telephony',
+    },
+    {
+      id: 'followup',
+      title: 'Schedule Follow-Up Task',
+      desc: 'Set an outreach deadline or reminder for the team',
+      icon: <Clock size={18} color="#d97706" />,
+      onClick: () => { onClose(); onOpenFollowUp(); },
+      badge: 'Reminder',
+    },
+    {
+      id: 'demo',
+      title: 'Load Working Demo Data',
+      desc: 'Populate sample IIT & BITS recruitment dataset',
+      icon: <Sparkles size={18} color="#8b5cf6" />,
+      onClick: () => { onClose(); onLoadDemoData(); },
+      badge: 'Instant Demo',
+    },
+    ...(hasData ? [{
+      id: 'reset',
+      title: 'Reset All Data to 0',
+      desc: 'Wipe all database records to clean empty state',
+      icon: <Trash2 size={18} color="#ef4444" />,
+      onClick: () => { onClose(); onResetData(); },
+      badge: 'Clean State',
+      danger: true,
+    }] : []),
+  ];
+
+  return (
+    <div className="modal-overlay" onClick={onClose} style={{ zIndex: 1200 }}>
+      <div 
+        className="modal-card" 
+        onClick={e => e.stopPropagation()} 
+        style={{ maxWidth: '480px', width: '96vw' }}
+      >
+        <div className="modal-header" style={{ padding: '16px 18px', borderBottom: '1px solid #e2e8f0' }}>
+          <div>
+            <h3 className="card-title" style={{ fontSize: '1.05rem', fontWeight: 800 }}>⚡ Quick Actions</h3>
+            <p className="card-subtitle" style={{ fontSize: '0.78rem' }}>Create records, start calls, or load recruitment data</p>
+          </div>
+          <button onClick={onClose} className="btn-icon"><X size={16} /></button>
+        </div>
+
+        <div className="modal-body" style={{ padding: '12px 14px', maxHeight: '70vh', overflowY: 'auto' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {actions.map(action => (
+              <button
+                key={action.id}
+                type="button"
+                onClick={action.onClick}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '12px 14px',
+                  background: action.danger ? '#fef2f2' : '#ffffff',
+                  border: '1px solid',
+                  borderColor: action.danger ? '#fecaca' : '#e2e8f0',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  width: '100%',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <div style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '8px',
+                  background: action.danger ? '#fee2e2' : '#f8fafc',
+                  border: '1px solid',
+                  borderColor: action.danger ? '#fca5a5' : '#e2e8f0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  {action.icon}
+                </div>
+
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+                    <span style={{ 
+                      fontWeight: 700, 
+                      fontSize: '0.875rem', 
+                      color: action.danger ? '#991b1b' : '#09090b',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}>
+                      {action.title}
+                    </span>
+                    <span style={{ 
+                      fontSize: '0.65rem', 
+                      padding: '1px 6px', 
+                      borderRadius: '6px',
+                      background: action.danger ? '#fee2e2' : '#f1f5f9',
+                      color: action.danger ? '#991b1b' : '#52525b',
+                      fontWeight: 700,
+                      flexShrink: 0
+                    }}>
+                      {action.badge}
+                    </span>
+                  </div>
+                  <p style={{ 
+                    fontSize: '0.75rem', 
+                    color: action.danger ? '#b91c1c' : '#71717a', 
+                    margin: '2px 0 0',
+                    lineHeight: 1.3
+                  }}>
+                    {action.desc}
+                  </p>
+                </div>
+
+                <ChevronRight size={16} color={action.danger ? '#ef4444' : '#cbd5e1'} style={{ flexShrink: 0 }} />
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
