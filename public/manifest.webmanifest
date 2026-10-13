@@ -1,0 +1,36 @@
+{
+  "name": "TalentConnect TA CRM",
+  "short_name": "TalentConnect",
+  "description": "Campus recruitment CRM web application for talent acquisition teams featuring TPO outreach, student data ingestion, drive trackers, and in-app calling.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "url": "/#dashboard",
+      "description": "View CRM recruitment metrics"
+    },
+    {
+      "name": "Campus Drives",
+      "url": "/#drives",
+      "description": "Manage campus recruitment drives"
+    },
+    {
+      "name": "Google Sheets Intake",
+      "url": "/#googleFormBlast",
+      "description": "Candidate intake & blast center"
+    }
+  ]
+}
