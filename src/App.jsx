@@ -961,7 +961,7 @@ export default function App() {
         {/* App Top Header */}
         <header className="top-header">
           {/* Left: Mobile Hamburger Menu + Desktop Sidebar Collapse + Breadcrumbs */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="top-header-left">
             <button 
               type="button"
               onClick={() => setIsMobileSidebarOpen(true)}
@@ -982,10 +982,10 @@ export default function App() {
               {isSidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
             </button>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div className="top-header-title-wrap">
               <span className="header-desktop-only" style={{ fontSize: '0.78rem', color: '#71717a', fontWeight: 600 }}>Workspace</span>
               <span className="header-desktop-only" style={{ color: '#cbd5e1', fontSize: '0.8rem' }}>/</span>
-              <h1 className="page-title" style={{ fontSize: '0.88rem', margin: 0, fontWeight: 700 }}>
+              <h1 className="page-title">
                 {activeTab === 'dashboard' && 'Dashboard Overview'}
                 {activeTab === 'googleFormBlast' && 'Intake Hub'}
                 {activeTab === 'liveBoard' && 'Posted Students'}
@@ -1005,12 +1005,12 @@ export default function App() {
             title="Open Command Palette (Ctrl+K)"
           >
             <Search size={14} />
-            <span>Search candidates, drives, TPOs...</span>
-            <kbd className="kbd-chip" style={{ marginLeft: 'auto' }}>Ctrl K</kbd>
+            <span className="header-desktop-only">Search candidates, drives, TPOs...</span>
+            <kbd className="kbd-chip header-desktop-only" style={{ marginLeft: 'auto' }}>Ctrl K</kbd>
           </button>
 
           {/* Right: Global Actions, Live Sync, PWA Install, Fullscreen, User Chip */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="top-header-right">
             {(drives.length > 0 || formResponses.length > 0 || students.length > 0 || tpos.length > 0 || callSessions.length > 0) && (
               <button
                 type="button"
@@ -1030,12 +1030,13 @@ export default function App() {
                 type="button"
                 onClick={() => setIsGlobalNewMenuOpen(!isGlobalNewMenuOpen)}
                 className="btn-black btn-black-sm"
-                style={{ padding: '6px 12px', fontSize: '0.8rem', gap: '6px', fontWeight: 700 }}
+                style={{ padding: '6px 10px', fontSize: '0.8rem', gap: '5px', fontWeight: 700 }}
                 title="Global Create & Management Actions"
               >
                 <Plus size={14} />
-                <span>+ New Action</span>
-                <ChevronDown size={12} />
+                <span className="header-desktop-only">+ New Action</span>
+                <span className="header-mobile-only">New</span>
+                <ChevronDown size={12} className="header-desktop-only" />
               </button>
 
               {isGlobalNewMenuOpen && (
@@ -1149,7 +1150,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={handleLoadDemoData}
-                className="btn-secondary btn-black-sm"
+                className="btn-secondary btn-black-sm header-desktop-only"
                 style={{ padding: '5px 10px', fontSize: '0.78rem', gap: '5px', borderColor: '#cbd5e1' }}
                 title="Populate complete working sample data across all modules"
               >
@@ -1166,7 +1167,7 @@ export default function App() {
               title="Install TalentConnect as standalone desktop or mobile web app"
             >
               <Smartphone size={13} />
-              <span>{isAppInstalled ? 'App Ready' : 'Install App'}</span>
+              <span className="header-desktop-only">{isAppInstalled ? 'App Ready' : 'Install App'}</span>
             </button>
 
             {/* Live Sync / Online Status Pill (Desktop only to prevent header wrap) */}
@@ -1260,16 +1261,8 @@ export default function App() {
               <span style={{ fontSize: '0.65rem', background: '#ecfdf5', color: '#065f46', padding: '1px 5px', borderRadius: '10px' }}>Connected</span>
             </button>
 
-            {/* User Profile Info Chip */}
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '8px', 
-              background: '#f8fafc', 
-              border: '1px solid #e2e8f0', 
-              borderRadius: '20px', 
-              padding: '3px 10px 3px 4px' 
-            }}>
+            {/* User Profile Info Chip (Desktop Only) */}
+            <div className="header-desktop-only header-user-chip">
               <div style={{ 
                 width: '24px', 
                 height: '24px', 

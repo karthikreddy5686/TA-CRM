@@ -61,7 +61,7 @@ export default function MainHRDashboard({
   return (
     <div>
       {/* Top Banner */}
-      <div style={{ 
+      <div className="dashboard-banner" style={{ 
         background: '#ffffff', 
         border: '1px solid #e2e8f0', 
         borderRadius: '14px', 
@@ -72,7 +72,9 @@ export default function MainHRDashboard({
         justifyContent: 'space-between',
         flexWrap: 'wrap',
         gap: '14px',
-        boxShadow: 'var(--shadow-card)'
+        boxShadow: 'var(--shadow-card)',
+        width: '100%',
+        boxSizing: 'border-box'
       }}>
         <div>
           <h1 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#09090b', letterSpacing: '-0.02em' }}>
@@ -83,7 +85,7 @@ export default function MainHRDashboard({
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
           {(drives.length > 0 || students.length > 0 || tpos.length > 0) && onResetCleanData && (
             <button 
               type="button" 
@@ -111,7 +113,7 @@ export default function MainHRDashboard({
 
       {/* Empty State / Quick-Start Web App Guidance Banner */}
       {drives.length === 0 && students.length === 0 && tpos.length === 0 && (
-        <div style={{
+        <div className="guidance-banner" style={{
           background: 'linear-gradient(135deg, #09090b 0%, #1c1917 100%)',
           color: '#ffffff',
           borderRadius: '14px',
@@ -123,7 +125,9 @@ export default function MainHRDashboard({
           flexWrap: 'wrap',
           gap: '16px',
           boxShadow: 'var(--shadow-md)',
-          border: '1px solid #27272a'
+          border: '1px solid #27272a',
+          width: '100%',
+          boxSizing: 'border-box'
         }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>

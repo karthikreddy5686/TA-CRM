@@ -486,7 +486,7 @@ export default function GoogleFormBlastCenter({
                   placeholder="e.g. Campus Drive 2026"
                   value={inlineDriveTitle}
                   onChange={(e) => setInlineDriveTitle(e.target.value)}
-                  style={{ width: '200px', padding: '5px 10px', fontSize: '0.825rem' }}
+                  style={{ minWidth: '130px', maxWidth: '100%', flex: '1 1 140px', padding: '5px 10px', fontSize: '0.825rem' }}
                 />
                 <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#09090b', marginLeft: '6px' }}>
                   College:
@@ -497,7 +497,7 @@ export default function GoogleFormBlastCenter({
                   placeholder="e.g. University Campus"
                   value={inlineCollegeName}
                   onChange={(e) => setInlineCollegeName(e.target.value)}
-                  style={{ width: '180px', padding: '5px 10px', fontSize: '0.825rem' }}
+                  style={{ minWidth: '130px', maxWidth: '100%', flex: '1 1 140px', padding: '5px 10px', fontSize: '0.825rem' }}
                 />
               </div>
             )}

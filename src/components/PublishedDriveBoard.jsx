@@ -9,12 +9,7 @@ import {
   Check,
   Building2,
   FileSpreadsheet,
-  Trash2,
-  Smartphone,
-  MessageSquare,
-  Sparkles,
-  Radio,
-  ExternalLink
+  Trash2
 } from 'lucide-react';
 
 export default function PublishedDriveBoard({
@@ -25,9 +20,7 @@ export default function PublishedDriveBoard({
   onDeleteStudent,
   onNavigateToBlast,
   onUpdateCandidateStage,
-  onLoadDemoData,
-  hrPhoneNumber = '+91 98201 55432',
-  onOpenPhoneConnectModal
+  onLoadDemoData
 }) {
   const [selectedDriveId, setSelectedDriveId] = useState(drives[0]?.id || '');
   const [searchTerm, setSearchTerm] = useState('');
@@ -107,7 +100,7 @@ export default function PublishedDriveBoard({
   return (
     <div>
       {/* Drive Summary & Action Bar */}
-      <div className="content-card" style={{ marginBottom: '14px', padding: '16px 20px', background: '#f8fafc' }}>
+      <div className="content-card" style={{ marginBottom: '16px', padding: '16px 20px', background: '#f8fafc' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -158,79 +151,6 @@ export default function PublishedDriveBoard({
         </div>
       </div>
 
-      {/* Real-Time Calling & Laptop Video Interview Hub Bar */}
-      <div style={{
-        background: '#ffffff',
-        border: '1px solid #e2e8f0',
-        borderRadius: '12px',
-        padding: '12px 18px',
-        marginBottom: '14px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '12px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          {/* HR Calling Phone Status */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            background: '#f8fafc',
-            border: '1px solid #e2e8f0',
-            padding: '6px 12px',
-            borderRadius: '8px'
-          }}>
-            <Smartphone size={15} color="#10b981" />
-            <span style={{ fontSize: '0.78rem', color: '#09090b' }}>
-              Connected HR Calling Line: <strong>{hrPhoneNumber}</strong>
-            </span>
-            {onOpenPhoneConnectModal && (
-              <button
-                type="button"
-                onClick={onOpenPhoneConnectModal}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#2563eb',
-                  fontSize: '0.72rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  textDecoration: 'underline',
-                  padding: '0 4px'
-                }}
-              >
-                Change Phone
-              </button>
-            )}
-          </div>
-
-          {/* Mode Highlights */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.75rem', color: '#64748b' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Phone size={12} color="#059669" /> <strong>Phone Calling:</strong> Dial from phone SIM or companion QR
-            </span>
-            <span>•</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Video size={12} color="#2563eb" /> <strong>Interviews:</strong> Laptop webcam & scorecard rubric
-            </span>
-          </div>
-        </div>
-
-        {onOpenPhoneConnectModal && (
-          <button
-            type="button"
-            onClick={onOpenPhoneConnectModal}
-            className="btn-secondary"
-            style={{ fontSize: '0.75rem', padding: '5px 10px', gap: '6px' }}
-          >
-            <Radio size={13} color="#10b981" /> Configure Telephony
-          </button>
-        )}
-      </div>
-
       {/* Candidate Table */}
       <div className="content-card">
         <div className="card-header-row" style={{ padding: '14px 20px' }}>
@@ -277,154 +197,132 @@ export default function PublishedDriveBoard({
                 <th>CGPA</th>
                 <th>Stage</th>
                 <th>Contact</th>
-                <th>Real-Time Interview & Call</th>
+                <th>Interview</th>
               </tr>
             </thead>
             <tbody>
               {filteredStudents.length === 0 ? (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: 'center', padding: '40px 20px', color: '#71717a' }}>
-                    No students found matching your criteria.
+                  <td colSpan={7} style={{ textAlign: 'center', padding: '36px', color: '#71717a' }}>
+                    No students posted yet for this drive. Go to <strong>Google Sheets Intake</strong> and click <strong>"🚀 Blast via WhatsApp & Post to Site"</strong> to publish candidates here.
                   </td>
                 </tr>
               ) : (
-                filteredStudents.map(student => {
-                  const rawPhoneDigits = student.phone ? student.phone.replace(/\D/g, '') : '';
-                  const cleanPhoneLink = rawPhoneDigits.startsWith('91') ? rawPhoneDigits : `91${rawPhoneDigits}`;
+                filteredStudents.map(student => (
+                  <tr key={student.id}>
+                    <td style={{ fontFamily: 'monospace', fontWeight: 700, color: '#09090b', fontSize: '0.85rem' }}>
+                      {student.rollNumber}
+                    </td>
 
-                  return (
-                    <tr key={student.id}>
-                      <td style={{ fontWeight: 600, fontFamily: 'monospace', fontSize: '0.82rem' }}>
-                        {student.rollNumber}
-                      </td>
+                    <td>
+                      <div style={{ fontWeight: 700, color: '#09090b', fontSize: '0.875rem' }}>
+                        {student.name}
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: '#52525b' }}>
+                        {student.email}
+                      </div>
+                    </td>
 
-                      <td>
-                        <div style={{ fontWeight: 700, color: '#09090b', fontSize: '0.85rem' }}>
-                          {student.name}
-                        </div>
-                        <div style={{ fontSize: '0.72rem', color: '#71717a' }}>
-                          {student.email}
-                        </div>
-                      </td>
+                    <td style={{ fontSize: '0.825rem' }}>
+                      {student.branch}
+                    </td>
 
-                      <td style={{ fontSize: '0.8rem' }}>
-                        {student.branch}
-                      </td>
+                    <td>
+                      <span style={{
+                        fontWeight: 700,
+                        background: '#f1f5f9',
+                        padding: '2px 7px',
+                        borderRadius: '4px',
+                        fontSize: '0.8rem'
+                      }}>
+                        {student.cgpa}
+                      </span>
+                    </td>
 
-                      <td style={{ fontSize: '0.8rem', fontWeight: 600 }}>
-                        {student.cgpa || 'N/A'}
-                      </td>
+                    <td>
+                      {onUpdateCandidateStage ? (
+                        <select
+                          className="form-select"
+                          value={student.stage || 'ONLINE_ASSESSMENT'}
+                          onChange={(e) => onUpdateCandidateStage(student.id, e.target.value)}
+                          style={{
+                            fontSize: '0.72rem',
+                            padding: '3px 6px',
+                            fontWeight: 700,
+                            borderRadius: '12px',
+                            width: 'auto',
+                            background: student.stage === 'OFFERED' ? '#ecfdf5' : student.stage === 'TECH_INTERVIEW' ? '#fffbeb' : '#f8fafc',
+                            color: student.stage === 'OFFERED' ? '#065f46' : student.stage === 'TECH_INTERVIEW' ? '#92400e' : '#09090b',
+                            border: '1px solid #cbd5e1'
+                          }}
+                        >
+                          <option value="APPLIED">Applied</option>
+                          <option value="ONLINE_ASSESSMENT">Online Test</option>
+                          <option value="TECH_INTERVIEW">Interview</option>
+                          <option value="OFFERED">Selected / Offered</option>
+                        </select>
+                      ) : (
+                        <span className={`badge ${student.stage === 'OFFERED' || student.stage === 'JOINED'
+                          ? 'badge-green'
+                          : student.stage === 'TECH_INTERVIEW' || student.stage === 'HR_INTERVIEW'
+                            ? 'badge-amber'
+                            : 'badge-grey'
+                          }`} style={{ fontSize: '0.72rem' }}>
+                          {student.stage ? student.stage.replace(/_/g, ' ') : 'ONLINE ASSESSMENT'}
+                        </span>
+                      )}
+                    </td>
 
-                      <td>
-                        {onUpdateCandidateStage ? (
-                          <select
-                            value={student.stage || 'ONLINE_ASSESSMENT'}
-                            onChange={(e) => onUpdateCandidateStage(student.id, e.target.value)}
-                            style={{
-                              fontSize: '0.72rem',
-                              padding: '3px 6px',
-                              fontWeight: 700,
-                              borderRadius: '12px',
-                              width: 'auto',
-                              background: student.stage === 'OFFERED' ? '#ecfdf5' : student.stage === 'TECH_INTERVIEW' ? '#fffbeb' : '#f8fafc',
-                              color: student.stage === 'OFFERED' ? '#065f46' : student.stage === 'TECH_INTERVIEW' ? '#92400e' : '#09090b',
-                              border: '1px solid #cbd5e1'
-                            }}
+                    <td style={{ fontSize: '0.8rem', color: '#52525b', fontFamily: 'monospace' }}>
+                      {student.phone}
+                    </td>
+
+                    <td>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button
+                          onClick={() => onStartCall({
+                            recipientType: 'STUDENT',
+                            recipientName: student.name,
+                            recipientDetail: `${student.branch} • ${student.phone}`,
+                            type: 'VIDEO',
+                            studentId: student.id
+                          })}
+                          className="btn-black btn-black-sm"
+                          style={{ padding: '3px 8px', fontSize: '0.75rem' }}
+                          title="Start Video Interview"
+                        >
+                          <Video size={12} /> Video
+                        </button>
+
+                        <button
+                          onClick={() => onStartCall({
+                            recipientType: 'STUDENT',
+                            recipientName: student.name,
+                            recipientDetail: `${student.branch} • ${student.phone}`,
+                            type: 'AUDIO',
+                            studentId: student.id
+                          })}
+                          className="btn-secondary btn-black-sm"
+                          style={{ padding: '3px 8px', fontSize: '0.75rem' }}
+                          title="Call via Phone"
+                        >
+                          <Phone size={12} /> Call
+                        </button>
+
+                        {onDeleteStudent && (
+                          <button
+                            onClick={() => onDeleteStudent(student.id)}
+                            className="btn-icon"
+                            style={{ width: '26px', height: '26px', color: '#ef4444' }}
+                            title="Delete candidate"
                           >
-                            <option value="APPLIED">Applied</option>
-                            <option value="ONLINE_ASSESSMENT">Online Test</option>
-                            <option value="TECH_INTERVIEW">Interview</option>
-                            <option value="OFFERED">Selected / Offered</option>
-                          </select>
-                        ) : (
-                          <span className={`badge ${student.stage === 'OFFERED' || student.stage === 'JOINED'
-                            ? 'badge-green'
-                            : student.stage === 'TECH_INTERVIEW' || student.stage === 'HR_INTERVIEW'
-                              ? 'badge-amber'
-                              : 'badge-grey'
-                            }`} style={{ fontSize: '0.72rem' }}>
-                            {student.stage ? student.stage.replace(/_/g, ' ') : 'ONLINE ASSESSMENT'}
-                          </span>
+                            <Trash2 size={12} />
+                          </button>
                         )}
-                      </td>
-
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <a 
-                            href={`tel:${student.phone}`} 
-                            style={{ fontSize: '0.8rem', color: '#09090b', fontFamily: 'monospace', textDecoration: 'none' }}
-                            title="Click to dial on phone"
-                          >
-                            {student.phone}
-                          </a>
-                          {student.phone && (
-                            <a
-                              href={`https://wa.me/${cleanPhoneLink}?text=${encodeURIComponent(`Hello ${student.name}, regarding your application for ${activeDrive?.title || 'Campus Drive'}:`)}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="btn-icon"
-                              style={{ width: '22px', height: '22px', color: '#22c55e', border: 'none', background: 'none' }}
-                              title="Open in WhatsApp"
-                            >
-                              <MessageSquare size={13} />
-                            </a>
-                          )}
-                        </div>
-                      </td>
-
-                      <td>
-                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                          {/* Laptop Video Interview */}
-                          <button
-                            onClick={() => onStartCall({
-                              recipientType: 'STUDENT',
-                              recipientName: student.name,
-                              recipientDetail: `${student.branch} • ${student.phone} • ${student.collegeName || activeDrive?.collegeName || 'Campus'}`,
-                              recipientPhone: student.phone,
-                              type: 'VIDEO',
-                              studentId: student.id,
-                              student
-                            })}
-                            className="btn-black btn-black-sm"
-                            style={{ padding: '3px 8px', fontSize: '0.75rem', gap: '4px' }}
-                            title="Start Laptop Video Interview (Webcam + Rubric)"
-                          >
-                            <Video size={12} /> Video
-                          </button>
-
-                          {/* Phone Calling Hub (from HR's Personal Phone) */}
-                          <button
-                            onClick={() => onStartCall({
-                              recipientType: 'STUDENT',
-                              recipientName: student.name,
-                              recipientDetail: `${student.branch} • ${student.phone} • ${student.collegeName || activeDrive?.collegeName || 'Campus'}`,
-                              recipientPhone: student.phone,
-                              type: 'AUDIO',
-                              studentId: student.id,
-                              student
-                            })}
-                            className="btn-secondary btn-black-sm"
-                            style={{ padding: '3px 8px', fontSize: '0.75rem', gap: '4px' }}
-                            title={`Call candidate from HR Phone (${hrPhoneNumber})`}
-                          >
-                            <Phone size={12} /> Call
-                          </button>
-
-                          {onDeleteStudent && (
-                            <button
-                              onClick={() => onDeleteStudent(student.id)}
-                              className="btn-icon"
-                              style={{ width: '26px', height: '26px', color: '#ef4444' }}
-                              title="Delete candidate"
-                            >
-                              <Trash2 size={12} />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
+                      </div>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
