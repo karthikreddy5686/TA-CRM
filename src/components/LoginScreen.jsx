@@ -12,6 +12,15 @@ import {
 
 const PRESET_ACCOUNTS = [
   {
+    roleLabel: 'Admin',
+    email: 'admin@geonixa',
+    password: 'geonixa@123',
+    name: 'Geonixa Admin',
+    role: 'ADMIN',
+    title: 'Super Administrator',
+    avatar: 'AD',
+  },
+  {
     roleLabel: 'HR Manager',
     email: 'hr@company.com',
     password: 'admin',
@@ -22,41 +31,75 @@ const PRESET_ACCOUNTS = [
   },
   {
     roleLabel: 'HR Intern 1',
-    email: 'aarav@company.com',
+    email: 'intern1@company.com',
     password: 'intern',
-    name: 'Aarav Sharma',
+    name: 'HR Intern 1',
     role: 'HR_INTERN',
-    title: 'Recruitment Intern - North',
-    avatar: 'AS',
+    title: 'Recruitment Intern',
+    avatar: 'I1',
   },
   {
     roleLabel: 'HR Intern 2',
-    email: 'rhea@company.com',
+    email: 'intern2@company.com',
     password: 'intern',
-    name: 'Rhea Sen',
+    name: 'HR Intern 2',
     role: 'HR_INTERN',
-    title: 'Recruitment Intern - South',
-    avatar: 'RS',
+    title: 'Recruitment Intern',
+    avatar: 'I2',
   },
 ];
 
-export default function LoginScreen({ onLogin }) {
+export default function LoginScreen({ onLogin, users = [] }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Combine static presets with dynamically provisioned HR/Intern users from Admin Dashboard
+  const allAccounts = [
+    ...PRESET_ACCOUNTS,
+    ...(users || [])
+      .filter(u => u.email && u.password && !PRESET_ACCOUNTS.some(p => p.email.toLowerCase() === u.email.toLowerCase()))
+      .map(u => ({
+        roleLabel: u.role === 'ADMIN' ? 'Admin' : u.role === 'MAIN_HR' ? 'HR Manager' : 'HR Intern',
+        email: u.email,
+        password: u.password,
+        name: u.name,
+        role: u.role,
+        title: u.title || (u.role === 'ADMIN' ? 'Administrator' : u.role === 'MAIN_HR' ? 'HR Manager' : 'HR Intern'),
+        avatar: u.avatar || (u.role === 'ADMIN' ? 'AD' : u.role === 'MAIN_HR' ? 'HR' : 'IN'),
+      }))
+  ];
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setErrorMessage('');
 
-    const matched = PRESET_ACCOUNTS.find(
-      acc => acc.email.toLowerCase() === email.trim().toLowerCase() && acc.password === password
+    const inputEmail = email.trim().toLowerCase();
+
+    // 1. Explicit check for admin credentials: admin@geonixa or admin@geonixa.com with geonixa@123
+    if ((inputEmail === 'admin@geonixa' || inputEmail === 'admin@geonixa.com') && password === 'geonixa@123') {
+      onLogin({
+        id: 'user-admin',
+        name: 'Geonixa Admin',
+        role: 'ADMIN',
+        title: 'Super Administrator',
+        email: 'admin@geonixa',
+        password: 'geonixa@123',
+        avatar: 'AD',
+        status: 'online',
+      });
+      return;
+    }
+
+    // 2. Check all provisioned users and presets
+    const matched = allAccounts.find(
+      acc => acc.email.toLowerCase() === inputEmail && acc.password === password
     );
 
     if (matched) {
       onLogin(matched);
     } else {
-      setErrorMessage('Invalid email or password. Please use one of the specific credentials below.');
+      setErrorMessage('Invalid username or password. For Admin, use admin@geonixa with password geonixa@123, or use an account created in the Admin Dashboard.');
     }
   };
 
@@ -119,14 +162,14 @@ export default function LoginScreen({ onLogin }) {
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '16px' }}>
             <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#154360', marginBottom: '6px' }}>
-              Work Email
+              Username / Work Email
             </label>
             <div style={{ position: 'relative' }}>
               <Mail size={16} color="#71717a" style={{ position: 'absolute', left: '12px', top: '12px' }} />
               <input 
-                type="email" 
+                type="text" 
                 className="form-input" 
-                placeholder="name@company.com"
+                placeholder="admin@geonixa or name@company.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 style={{ paddingLeft: '36px' }}
@@ -188,11 +231,11 @@ export default function LoginScreen({ onLogin }) {
           borderTop: '1px solid #e2e8f0'
         }}>
           <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#154360', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>
-            Specific User Credentials:
+            Active Login Credentials:
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {PRESET_ACCOUNTS.map(acc => (
+            {allAccounts.map(acc => (
               <div 
                 key={acc.email}
                 onClick={() => handleSelectPreset(acc)}

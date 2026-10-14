@@ -26,7 +26,9 @@ import {
   Download,
   Upload,
   ChevronDown,
-  Menu
+  Menu,
+  ShieldCheck,
+  Key
 } from 'lucide-react';
 
 import { 
@@ -38,6 +40,7 @@ import {
 import { webAudio } from './utils/audio';
 
 import LoginScreen from './components/LoginScreen';
+import AdminDashboard from './components/AdminDashboard';
 import MainHRDashboard from './components/MainHRDashboard';
 import InternDashboard from './components/InternDashboard';
 import TPODirectory from './components/TPODirectory';
@@ -77,8 +80,29 @@ export default function App() {
   // Navigation State
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'googleFormBlast' | 'liveBoard' | 'drives' | 'tpos' | 'followups' | 'calls'
 
-  // User State
-  const [users, setUsers] = useState(INITIAL_USERS);
+  // User State with Local Storage persistence
+  const [users, setUsers] = useState(() => {
+    const saved = localStorage.getItem('tacrm_users');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+    return INITIAL_USERS;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('tacrm_users', JSON.stringify(users));
+    } catch (e) {
+      // ignore
+    }
+  }, [users]);
 
   // Sanitize helper to purge any phantom or placeholder records from storage
   const sanitizeDrives = (list) => {
@@ -718,13 +742,26 @@ export default function App() {
     }));
   };
 
-  // General CRM Handlers
+  // General CRM & Admin Handlers
   const handleAddTpo = (newTpo) => setTpos(prev => [newTpo, ...prev]);
+  const handleUpdateTpo = (updatedTpo) => setTpos(prev => prev.map(t => t.id === updatedTpo.id ? updatedTpo : t));
   const handleUpdateTpoStatus = (tpoId, newStatus) => setTpos(prev => prev.map(t => t.id === tpoId ? { ...t, status: newStatus } : t));
   const handleCreateDrive = (newDrive) => setDrives(prev => [newDrive, ...prev]);
+  const handleUpdateDrive = (updatedDrive) => setDrives(prev => prev.map(d => d.id === updatedDrive.id ? updatedDrive : d));
   const handleAddStudentsBatch = (newStudents) => setStudents(prev => [...newStudents, ...prev]);
+  const handleUpdateStudent = (updatedStudent) => setStudents(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s));
   const handleUpdateCandidateStage = (studentId, nextStage) => setStudents(prev => prev.map(s => s.id === studentId ? { ...s, stage: nextStage } : s));
   const handleAddFollowUp = (newFup) => setFollowUps(prev => [newFup, ...prev]);
+  const handleUpdateFollowUp = (updatedFup) => setFollowUps(prev => prev.map(f => f.id === updatedFup.id ? updatedFup : f));
+  
+  // Call session handlers
+  const handleAddCallSession = (newCall) => setCallSessions(prev => [newCall, ...prev]);
+  const handleUpdateCallSession = (updatedCall) => setCallSessions(prev => prev.map(c => c.id === updatedCall.id ? updatedCall : c));
+
+  // Admin User Provisioning Handlers
+  const handleAddUser = (newUser) => setUsers(prev => [newUser, ...prev]);
+  const handleUpdateUser = (updatedUser) => setUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
+  const handleDeleteUser = (userId) => setUsers(prev => prev.filter(u => u.id !== userId));
   
   const handleToggleCompleteFollowUp = (fupId) => {
     setFollowUps(prev => prev.map(f => {
@@ -800,7 +837,7 @@ export default function App() {
 
   // If user is not authenticated, render Login Screen
   if (!currentUser) {
-    return <LoginScreen onLogin={handleLogin} />;
+    return <LoginScreen onLogin={handleLogin} users={users} />;
   }
 
   return (
@@ -841,11 +878,25 @@ export default function App() {
             title="Dashboard Overview"
           >
             <BarChart3 size={17} />
-            <span className="nav-label">Dashboard</span>
+            <span className="nav-label">{currentUser.role === 'ADMIN' ? 'Admin Dashboard' : 'Dashboard'}</span>
             {activeTab === 'dashboard' && (
               <span style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', background: '#FFDB58' }} />
             )}
           </button>
+
+          {currentUser.role === 'ADMIN' && (
+            <button 
+              onClick={() => { setActiveTab('adminStaff'); setIsMobileSidebarOpen(false); }}
+              className={`nav-item ${activeTab === 'adminStaff' ? 'active' : ''}`}
+              title="HR & Intern Staff Provisioning"
+            >
+              <Key size={17} />
+              <span className="nav-label">HR Staff & Logins</span>
+              {activeTab === 'adminStaff' && (
+                <span style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', background: '#FFDB58' }} />
+              )}
+            </button>
+          )}
 
           <button 
             onClick={() => { setActiveTab('googleFormBlast'); setIsMobileSidebarOpen(false); }}
@@ -926,16 +977,16 @@ export default function App() {
         <div className="sidebar-user">
           <div className="user-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div className="user-avatar">
-                {currentUser.avatar || 'U'}
+              <div className="user-avatar" style={currentUser.role === 'ADMIN' ? { background: '#154360', color: '#FFDB58', border: '2px solid #FFDB58' } : {}}>
+                {currentUser.role === 'ADMIN' ? 'AD' : (currentUser.avatar || 'U')}
                 <span className={`status-indicator-dot ${currentUser.status === 'on-call' ? 'on-call' : 'online'}`} />
               </div>
               <div className="user-details user-card-info">
                 <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#09090b', lineHeight: 1.2 }}>
-                  {currentUser.name === 'Main HR Manager' || currentUser.name === 'Main HR' ? 'HR Manager' : currentUser.name}
+                  {currentUser.role === 'ADMIN' ? 'Geonixa Admin' : (currentUser.name === 'Main HR Manager' || currentUser.name === 'Main HR' ? 'HR Manager' : currentUser.name)}
                 </div>
                 <div style={{ fontSize: '0.68rem', color: '#71717a' }}>
-                  {currentUser.role === 'MAIN_HR' ? 'HR Manager' : 'HR Intern'}
+                  {currentUser.role === 'ADMIN' ? 'Super Admin' : currentUser.role === 'MAIN_HR' ? 'HR Manager' : 'HR Intern'}
                 </div>
               </div>
             </div>
@@ -989,8 +1040,39 @@ export default function App() {
 
         {/* Page Body Viewport */}
         <main className="page-body">
-          {activeTab === 'dashboard' && (
-            currentUser.role === 'MAIN_HR' ? (
+          {(activeTab === 'dashboard' || activeTab === 'adminStaff') && (
+            currentUser.role === 'ADMIN' ? (
+              <AdminDashboard 
+                users={users}
+                drives={drives}
+                students={students}
+                tpos={tpos}
+                followUps={followUps}
+                callSessions={callSessions}
+                onAddUser={handleAddUser}
+                onUpdateUser={handleUpdateUser}
+                onDeleteUser={handleDeleteUser}
+                onAddDrive={handleCreateDrive}
+                onUpdateDrive={handleUpdateDrive}
+                onDeleteDrive={handleDeleteDrive}
+                onAddStudent={handleAddStudentsBatch}
+                onUpdateStudent={handleUpdateStudent}
+                onDeleteStudent={handleDeleteStudent}
+                onAddTpo={handleAddTpo}
+                onUpdateTpo={handleUpdateTpo}
+                onDeleteTpo={handleDeleteTpo}
+                onAddFollowUp={handleAddFollowUp}
+                onUpdateFollowUp={handleUpdateFollowUp}
+                onDeleteFollowUp={handleDeleteFollowUp}
+                onAddCallSession={handleAddCallSession}
+                onUpdateCallSession={handleUpdateCallSession}
+                onDeleteCallSession={handleDeleteCallSession}
+                onStartCall={handleStartCall}
+                onSelectTab={setActiveTab}
+                onLoadDemoData={handleLoadDemoData}
+                defaultTab={activeTab === 'adminStaff' ? 'staff' : 'staff'}
+              />
+            ) : currentUser.role === 'MAIN_HR' ? (
               <MainHRDashboard 
                 users={users}
                 tpos={tpos}

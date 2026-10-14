@@ -2,11 +2,22 @@
 
 export const INITIAL_USERS = [
   {
+    id: 'user-admin',
+    name: 'Geonixa Admin',
+    role: 'ADMIN',
+    title: 'Super Administrator',
+    email: 'admin@geonixa',
+    password: 'geonixa@123',
+    avatar: 'AD',
+    status: 'online',
+  },
+  {
     id: 'user-main-hr',
     name: 'HR Manager',
     role: 'MAIN_HR',
     title: 'Head of Talent Acquisition',
     email: 'hr.head@company.com',
+    password: 'admin',
     avatar: 'HR',
     status: 'online',
   },
@@ -16,6 +27,7 @@ export const INITIAL_USERS = [
     role: 'HR_INTERN',
     title: 'Recruitment Intern',
     email: 'intern1@company.com',
+    password: 'intern',
     avatar: 'I1',
     status: 'online',
     dailyTargetHours: 3.5, // 3h 30m target
@@ -27,6 +39,7 @@ export const INITIAL_USERS = [
     role: 'HR_INTERN',
     title: 'Recruitment Intern',
     email: 'intern2@company.com',
+    password: 'intern',
     avatar: 'I2',
     status: 'online',
     dailyTargetHours: 3.5,
