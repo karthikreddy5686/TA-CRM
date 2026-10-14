@@ -683,24 +683,22 @@ export default function AdminDashboard({
         borderBottom: '1px solid #e2e8f0'
       }}>
         {[
-          { id: 'staff', label: 'HR Staff & Credentials', icon: Key, count: hrStaffList.length },
-          { id: 'drives', label: 'Campus Drives', icon: Calendar, count: drives.length },
-          { id: 'students', label: 'Posted Students', icon: Users, count: students.length },
-          { id: 'tpos', label: 'College TPOs', icon: Building2, count: tpos.length },
-          { id: 'followups', label: 'Follow-Ups', icon: Clock, count: followUps.length },
-          { id: 'calls', label: 'Call Records', icon: PhoneCall, count: callSessions.length }
+          { id: 'staff', label: 'HR Staff & Credentials' },
+          { id: 'drives', label: 'Campus Drives' },
+          { id: 'students', label: 'Posted Students' },
+          { id: 'tpos', label: 'College TPOs' },
+          { id: 'followups', label: 'Follow-Ups' },
+          { id: 'calls', label: 'Call Records' }
         ].map(tab => {
-          const Icon = tab.icon;
           const isActive = activeAdminTab === tab.id;
           return (
             <button
               key={tab.id}
               onClick={() => setActiveAdminTab(tab.id)}
               style={{
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
-                gap: '8px',
-                padding: '8px 14px',
+                padding: '8px 16px',
                 borderRadius: '8px',
                 border: '1px solid',
                 borderColor: isActive ? '#154360' : 'transparent',
@@ -713,18 +711,7 @@ export default function AdminDashboard({
                 whiteSpace: 'nowrap'
               }}
             >
-              <Icon size={15} color={isActive ? '#FFDB58' : '#71717a'} />
               <span>{tab.label}</span>
-              <span style={{
-                background: isActive ? '#FFDB58' : '#f1f5f9',
-                color: isActive ? '#154360' : '#71717a',
-                fontSize: '0.68rem',
-                fontWeight: 800,
-                padding: '1px 6px',
-                borderRadius: '10px'
-              }}>
-                {tab.count}
-              </span>
             </button>
           );
         })}
@@ -737,8 +724,8 @@ export default function AdminDashboard({
         <div className="content-card">
           <div className="card-header-row" style={{ padding: '14px 18px' }}>
             <div>
-              <h2 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Key size={17} color="#154360" /> HR Managers & HR Interns Login Credentials
+              <h2 className="card-title">
+                HR Managers & HR Interns Login Credentials
               </h2>
               <p className="card-subtitle">
                 Admin-exclusive credential generator. Provide login email and password for HR staff to access the CRM.
@@ -933,8 +920,8 @@ export default function AdminDashboard({
         <div className="content-card">
           <div className="card-header-row" style={{ padding: '14px 18px' }}>
             <div>
-              <h2 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Calendar size={17} color="#154360" /> Master Campus Drives Control ({drives.length})
+              <h2 className="card-title">
+                Master Campus Drives Control
               </h2>
               <p className="card-subtitle">
                 Edit drive dates, packages, roles, or post new campus recruitment drives across all colleges.
@@ -1027,8 +1014,8 @@ export default function AdminDashboard({
         <div className="content-card">
           <div className="card-header-row" style={{ padding: '14px 18px' }}>
             <div>
-              <h2 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Users size={17} color="#154360" /> Master Posted Students Control ({students.length})
+              <h2 className="card-title">
+                Master Posted Students Control
               </h2>
               <p className="card-subtitle">
                 Edit candidate contact details, change recruitment stages, or post new candidates directly.
@@ -1134,8 +1121,8 @@ export default function AdminDashboard({
         <div className="content-card">
           <div className="card-header-row" style={{ padding: '14px 18px' }}>
             <div>
-              <h2 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Building2 size={17} color="#154360" /> Master College TPOs Control ({tpos.length})
+              <h2 className="card-title">
+                Master College TPOs Control
               </h2>
               <p className="card-subtitle">
                 Manage placement officer contacts, outreach status, and post new college TPO records.
@@ -1235,8 +1222,8 @@ export default function AdminDashboard({
         <div className="content-card">
           <div className="card-header-row" style={{ padding: '14px 18px' }}>
             <div>
-              <h2 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Clock size={17} color="#154360" /> Master Follow-Ups Control ({followUps.length})
+              <h2 className="card-title">
+                Master Follow-Ups Control
               </h2>
               <p className="card-subtitle">
                 Schedule reminders, adjust priority, edit follow-up notes, and post new follow-up tasks.
@@ -1333,8 +1320,8 @@ export default function AdminDashboard({
         <div className="content-card">
           <div className="card-header-row" style={{ padding: '14px 18px' }}>
             <div>
-              <h2 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <PhoneCall size={17} color="#154360" /> Master Call Audit & Records ({callSessions.length})
+              <h2 className="card-title">
+                Master Call Audit & Records
               </h2>
               <p className="card-subtitle">
                 Audit logged calling talk time, edit notes/durations, or log manual call sessions.

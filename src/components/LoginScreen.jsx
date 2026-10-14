@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   Building2, 
   Lock, 
-  Mail, 
+  User, 
   ArrowRight, 
   ShieldCheck, 
   UserCheck, 
@@ -76,8 +76,8 @@ export default function LoginScreen({ onLogin, users = [] }) {
 
     const inputEmail = email.trim().toLowerCase();
 
-    // 1. Explicit check for admin credentials: admin@geonixa or admin@geonixa.com with geonixa@123
-    if ((inputEmail === 'admin@geonixa' || inputEmail === 'admin@geonixa.com') && password === 'geonixa@123') {
+    // 1. Explicit check for admin credentials: admin@geonixa or admin@geonixa.com or admin with geonixa@123
+    if ((inputEmail === 'admin@geonixa' || inputEmail === 'admin@geonixa.com' || inputEmail === 'admin') && password === 'geonixa@123') {
       onLogin({
         id: 'user-admin',
         name: 'Geonixa Admin',
@@ -93,13 +93,22 @@ export default function LoginScreen({ onLogin, users = [] }) {
 
     // 2. Check all provisioned users and presets
     const matched = allAccounts.find(
-      acc => acc.email.toLowerCase() === inputEmail && acc.password === password
+      acc => {
+        const accEmail = (acc.email || '').toLowerCase();
+        const accPrefix = accEmail.split('@')[0];
+        const accName = (acc.name || '').toLowerCase();
+        return (
+          accEmail === inputEmail ||
+          accPrefix === inputEmail ||
+          accName === inputEmail
+        ) && acc.password === password;
+      }
     );
 
     if (matched) {
       onLogin(matched);
     } else {
-      setErrorMessage('Invalid username or password. For Admin, use admin@geonixa with password geonixa@123, or use an account created in the Admin Dashboard.');
+      setErrorMessage('Invalid username / password');
     }
   };
 
@@ -162,14 +171,14 @@ export default function LoginScreen({ onLogin, users = [] }) {
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '16px' }}>
             <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#154360', marginBottom: '6px' }}>
-              Username / Work Email
+              Username
             </label>
             <div style={{ position: 'relative' }}>
-              <Mail size={16} color="#71717a" style={{ position: 'absolute', left: '12px', top: '12px' }} />
+              <User size={16} color="#71717a" style={{ position: 'absolute', left: '12px', top: '12px' }} />
               <input 
                 type="text" 
                 className="form-input" 
-                placeholder="admin@geonixa or name@company.com"
+                placeholder="Username"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 style={{ paddingLeft: '36px' }}
@@ -223,54 +232,6 @@ export default function LoginScreen({ onLogin, users = [] }) {
             Sign In <ArrowRight size={15} color="#154360" />
           </button>
         </form>
-
-        {/* Specific Login Credentials Box */}
-        <div style={{
-          marginTop: '28px',
-          paddingTop: '20px',
-          borderTop: '1px solid #e2e8f0'
-        }}>
-          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#154360', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>
-            Active Login Credentials:
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {allAccounts.map(acc => (
-              <div 
-                key={acc.email}
-                onClick={() => handleSelectPreset(acc)}
-                style={{
-                  background: email === acc.email ? '#ebf5fb' : '#f8fafc',
-                  border: email === acc.email ? '2px solid #154360' : '1px solid #e2e8f0',
-                  borderRadius: '10px',
-                  padding: '10px 12px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                <div>
-                  <div style={{ fontSize: '0.825rem', fontWeight: 700, color: '#154360' }}>
-                    {acc.name} <span style={{ fontSize: '0.72rem', color: '#71717a', fontWeight: 500 }}>({acc.roleLabel})</span>
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: '#52525b', fontFamily: 'monospace', marginTop: '2px' }}>
-                    {acc.email} • Pass: {acc.password}
-                  </div>
-                </div>
-
-                <button 
-                  type="button" 
-                  className={email === acc.email ? 'btn-mustard btn-black-sm' : 'btn-secondary btn-black-sm'}
-                  style={{ fontSize: '0.72rem', padding: '3px 8px' }}
-                >
-                  Use
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );

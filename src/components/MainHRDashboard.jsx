@@ -145,18 +145,6 @@ export default function MainHRDashboard({
           >
             <FileSpreadsheet size={14} /> Import Sheets
           </button>
-
-          {drives.length === 0 && onLoadDemoData && (
-            <button 
-              type="button" 
-              onClick={onLoadDemoData} 
-              className="btn-secondary btn-black-sm"
-              style={{ color: '#8b5cf6', borderColor: '#c4b5fd' }}
-              title="Load sample recruitment data across all tabs"
-            >
-              <Sparkles size={14} /> Load Demo Data
-            </button>
-          )}
         </div>
       </div>
 

@@ -886,14 +886,6 @@ export function GlobalActionSheetModal({
       onClick: () => { onClose(); onOpenFollowUp(); },
       badge: 'Reminder',
     },
-    {
-      id: 'demo',
-      title: 'Load Working Demo Data',
-      desc: 'Populate sample IIT & BITS recruitment dataset',
-      icon: <Sparkles size={18} color="#8b5cf6" />,
-      onClick: () => { onClose(); onLoadDemoData(); },
-      badge: 'Instant Demo',
-    },
     ...(hasData ? [{
       id: 'reset',
       title: 'Reset All Data to 0',

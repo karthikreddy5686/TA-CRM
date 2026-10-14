@@ -52,6 +52,7 @@ import GoogleFormBlastCenter from './components/GoogleFormBlastCenter';
 import PublishedDriveBoard from './components/PublishedDriveBoard';
 import HRPhoneConnectModal from './components/HRPhoneConnectModal';
 import InstallAppModal from './components/InstallAppModal';
+import LogoutConfirmModal from './components/LogoutConfirmModal';
 import {
   GlobalNewDriveModal,
   GlobalNewTpoModal,
@@ -62,19 +63,20 @@ import {
 } from './components/GlobalModals';
 
 export default function App() {
-  // Authentication State
+  // Authentication State - persists login session, stays logged out if logged out
   const [currentUser, setCurrentUser] = useState(() => {
     const savedUser = localStorage.getItem('tacrm_auth_user');
-    let user = savedUser ? JSON.parse(savedUser) : INITIAL_USERS[0];
-    if (user && (user.name === 'Main HR Manager' || user.name === 'Main HR')) {
-      user = { ...user, name: 'HR Manager' };
-      try {
+    if (!savedUser) return null;
+    try {
+      let user = JSON.parse(savedUser);
+      if (user && (user.name === 'Main HR Manager' || user.name === 'Main HR')) {
+        user = { ...user, name: 'HR Manager' };
         localStorage.setItem('tacrm_auth_user', JSON.stringify(user));
-      } catch (e) {
-        // ignore
       }
+      return user;
+    } catch (e) {
+      return null;
     }
-    return user;
   });
 
   // Navigation State
@@ -255,6 +257,7 @@ export default function App() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isAppInstalled, setIsAppInstalled] = useState(false);
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   // Global Quick Action Modals & Action Sheet
   const [isGlobalNewMenuOpen, setIsGlobalNewMenuOpen] = useState(false);
@@ -992,7 +995,7 @@ export default function App() {
             </div>
 
             <button 
-              onClick={handleLogout} 
+              onClick={() => setIsLogoutModalOpen(true)} 
               className="btn-icon" 
               style={{ width: '26px', height: '26px' }}
               title="Sign Out"
@@ -1414,21 +1417,6 @@ export default function App() {
                 type="button"
                 className="command-item"
                 onClick={() => {
-                  handleLoadDemoData();
-                  setIsCommandPaletteOpen(false);
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Sparkles size={15} color="#8b5cf6" />
-                  <span style={{ fontWeight: 700 }}>Load Working Demo Data</span>
-                </div>
-                <span className="badge badge-grey" style={{ fontSize: '0.68rem' }}>1-Click Setup</span>
-              </button>
-
-              <button
-                type="button"
-                className="command-item"
-                onClick={() => {
                   setIsGlobalDriveModalOpen(true);
                   setIsCommandPaletteOpen(false);
                 }}
@@ -1801,6 +1789,17 @@ export default function App() {
             });
           }
         }}
+      />
+
+      {/* Logout Confirmation Modal */}
+      <LogoutConfirmModal 
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        onConfirm={() => {
+          setIsLogoutModalOpen(false);
+          handleLogout();
+        }}
+        currentUser={currentUser}
       />
     </div>
   );

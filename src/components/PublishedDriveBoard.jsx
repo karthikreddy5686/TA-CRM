@@ -86,14 +86,9 @@ export default function PublishedDriveBoard({
           No Campus Drives Created Yet
         </h3>
         <p style={{ color: '#71717a', fontSize: '0.875rem', maxWidth: '460px', margin: '0 auto 20px' }}>
-          Create a campus drive in "Campus Drives", import students via "Google Sheets Intake", or load the instant demo dataset to view candidates on this board.
+          Create a campus drive in "Campus Drives" or import students via "Google Sheets Intake" to view candidates on this board.
         </p>
         <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
-          {onLoadDemoData && (
-            <button onClick={onLoadDemoData} className="btn-mustard btn-black-sm">
-              ⚡ Load Working Demo Data
-            </button>
-          )}
           {onNavigateToDrives && (
             <button onClick={onNavigateToDrives} className="btn-navy btn-black-sm">
               <Calendar size={13} color="#FFDB58" /> Go to Campus Drives
