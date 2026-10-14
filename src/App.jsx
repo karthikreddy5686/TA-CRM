@@ -1049,6 +1049,11 @@ export default function App() {
 
   // General CRM & Admin Handlers
   const handleAddTpo = (newTpo) => setTpos(prev => [newTpo, ...prev]);
+  const handleAddTposBatch = (newTpos) => {
+    if (!newTpos || newTpos.length === 0) return;
+    setTpos(prev => [...newTpos, ...prev]);
+    addToast(`Successfully imported ${newTpos.length} college TPO records!`, 'success');
+  };
   const handleUpdateTpo = (updatedTpo) => setTpos(prev => prev.map(t => t.id === updatedTpo.id ? updatedTpo : t));
   const handleUpdateTpoStatus = (tpoId, newStatus) => setTpos(prev => prev.map(t => t.id === tpoId ? { ...t, status: newStatus } : t));
   const handleCreateDrive = (newDrive) => setDrives(prev => [newDrive, ...prev]);
@@ -1364,6 +1369,7 @@ export default function App() {
                 onUpdateStudent={handleUpdateStudent}
                 onDeleteStudent={handleDeleteStudent}
                 onAddTpo={handleAddTpo}
+                onAddTposBatch={handleAddTposBatch}
                 onUpdateTpo={handleUpdateTpo}
                 onDeleteTpo={handleDeleteTpo}
                 onAddFollowUp={handleAddFollowUp}
@@ -1437,6 +1443,7 @@ export default function App() {
               currentRole={currentUser.role}
               onStartCall={handleStartCall}
               onAddTpo={handleAddTpo}
+              onAddTposBatch={handleAddTposBatch}
               onDeleteTpo={handleDeleteTpo}
               onUpdateTpoStatus={handleUpdateTpoStatus}
               onScheduleFollowUp={handleScheduleFollowUpFromTpo}

@@ -1180,9 +1180,22 @@ export default function AdminDashboard({
                 Manage placement officer contacts, outreach status, and post new college TPO records.
               </p>
             </div>
-            <button onClick={handleOpenAddTpo} className="btn-mustard btn-black-sm" style={{ fontWeight: 800 }}>
-              <Building2 size={14} color="#154360" /> Post New College TPO
-            </button>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <button 
+                type="button"
+                onClick={() => {
+                  if (onSelectTab) onSelectTab('tpos');
+                }} 
+                className="btn-navy-outline btn-black-sm" 
+                style={{ fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}
+                title="Link Google Sheets or import spreadsheet TPO records"
+              >
+                <FileSpreadsheet size={14} color="#154360" /> Link Sheets
+              </button>
+              <button onClick={handleOpenAddTpo} className="btn-mustard btn-black-sm" style={{ fontWeight: 800 }}>
+                <Building2 size={14} color="#154360" /> Post New College TPO
+              </button>
+            </div>
           </div>
 
           <div className="desktop-only" style={{ width: '100%', overflowX: 'hidden' }}>
