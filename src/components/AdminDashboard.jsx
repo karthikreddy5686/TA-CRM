@@ -134,7 +134,7 @@ export default function AdminDashboard({
   const [isCallModalOpen, setIsCallModalOpen] = useState(false);
   const [editingCall, setEditingCall] = useState(null);
   const [callFormData, setCallFormData] = useState({
-    internName: 'Vikram Aditya',
+    internName: users.find(u => u.role !== 'ADMIN')?.name || 'Staff Recruiter',
     recipientName: '',
     recipientType: 'TPO',
     durationSeconds: 120,
@@ -414,7 +414,7 @@ export default function AdminDashboard({
       status: 'PENDING',
       notes: 'Outreach follow up regarding campus hiring proposal.',
       internId: firstStaff ? firstStaff.id : '',
-      internName: firstStaff ? firstStaff.name : 'Vikram Aditya'
+      internName: firstStaff ? firstStaff.name : 'Staff Recruiter'
     });
     setIsFollowUpModalOpen(true);
   };
@@ -429,7 +429,7 @@ export default function AdminDashboard({
       status: fup.status || 'PENDING',
       notes: fup.notes || '',
       internId: fup.internId || (users.find(u => u.role !== 'ADMIN')?.id || ''),
-      internName: fup.internName || (users.find(u => u.role !== 'ADMIN')?.name || 'Vikram Aditya')
+      internName: fup.internName || (users.find(u => u.role !== 'ADMIN')?.name || 'Staff Recruiter')
     });
     setIsFollowUpModalOpen(true);
   };
@@ -439,8 +439,8 @@ export default function AdminDashboard({
     if (!followUpFormData.entityTitle.trim()) return;
 
     const assignedStaff = users.find(u => u.id === followUpFormData.internId) || users.find(u => u.role !== 'ADMIN');
-    const staffId = assignedStaff ? assignedStaff.id : (followUpFormData.internId || 'intern-vikram');
-    const staffName = assignedStaff ? assignedStaff.name : (followUpFormData.internName || 'Vikram Aditya');
+    const staffId = assignedStaff ? assignedStaff.id : (followUpFormData.internId || 'staff-assigned');
+    const staffName = assignedStaff ? assignedStaff.name : (followUpFormData.internName || 'Staff Recruiter');
 
     if (editingFollowUp) {
       onUpdateFollowUp({
@@ -470,7 +470,7 @@ export default function AdminDashboard({
     setEditingCall(null);
     const firstStaff = users.find(u => u.role !== 'ADMIN') || users[0];
     setCallFormData({
-      internName: firstStaff ? firstStaff.name : 'Vikram Aditya',
+      internName: firstStaff ? firstStaff.name : 'Staff Recruiter',
       recipientName: tpos[0]?.name || 'Placement Officer',
       recipientType: 'TPO',
       durationSeconds: 180,
@@ -1287,7 +1287,7 @@ export default function AdminDashboard({
                         </span>
                       </td>
                       <td style={{ padding: '10px 14px', fontSize: '0.8rem', fontWeight: 600, color: '#154360' }}>
-                        {fup.internName || 'Vikram Aditya'}
+                        {fup.internName || (users.find(u => u.role !== 'ADMIN')?.name || 'Staff Recruiter')}
                       </td>
                       <td style={{ padding: '10px 14px', fontSize: '0.75rem', color: '#52525b', maxWidth: '240px' }}>
                         {fup.notes || 'No notes provided'}

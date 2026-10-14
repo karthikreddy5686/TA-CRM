@@ -188,7 +188,7 @@ export function GlobalNewTpoModal({
       email: email.trim(),
       status: 'NEW_LEAD',
       assignedInternId: assignedStaff ? assignedStaff.id : 'unassigned',
-      assignedInternName: assignedStaff ? assignedStaff.name : 'Vikram Aditya',
+      assignedInternName: assignedStaff ? assignedStaff.name : 'Staff Recruiter',
       notes: notes.trim(),
       lastContacted: new Date().toISOString().split('T')[0],
       city: city.trim() || 'Campus City',
@@ -549,7 +549,7 @@ export function GlobalNewFollowUpModal({
     onSubmit({
       id: `fup-${Date.now()}`,
       internId: assignedStaff ? assignedStaff.id : 'unassigned',
-      internName: assignedStaff ? assignedStaff.name : 'Vikram Aditya',
+      internName: assignedStaff ? assignedStaff.name : (staffMembers[0]?.name || 'Staff Recruiter'),
       entityType: 'TASK',
       entityId: `ent-${Date.now()}`,
       entityTitle: entityTitle.trim(),
@@ -691,8 +691,8 @@ export function GlobalAddStudentModal({
       branch: branch.trim() || 'Computer Science',
       cgpa: parseFloat(cgpa) || 7.5,
       stage: stage || 'APPLIED',
-      internId: assignedStaff ? assignedStaff.id : 'intern-vikram',
-      internName: assignedStaff ? assignedStaff.name : 'Vikram Aditya',
+      internId: assignedStaff ? assignedStaff.id : (staffMembers[0]?.id || 'unassigned'),
+      internName: assignedStaff ? assignedStaff.name : (staffMembers[0]?.name || 'Staff Recruiter'),
       notes: 'Added manually via Quick Add',
     });
 

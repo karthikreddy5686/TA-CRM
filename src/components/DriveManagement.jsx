@@ -243,8 +243,8 @@ export default function DriveManagement({
         branch,
         cgpa,
         stage: 'APPLIED',
-        internId: users.find(u => u.role === 'HR_INTERN')?.id || users.find(u => u.role !== 'ADMIN')?.id || 'intern-vikram',
-        internName: users.find(u => u.role === 'HR_INTERN')?.name || 'Vikram Aditya',
+        internId: users.find(u => u.role === 'HR_INTERN')?.id || users.find(u => u.role !== 'ADMIN')?.id || 'staff-assigned',
+        internName: users.find(u => u.role === 'HR_INTERN')?.name || (users.find(u => u.role !== 'ADMIN')?.name || 'Staff Recruiter'),
         notes: 'Imported via CSV/Text',
       });
     }
@@ -279,8 +279,8 @@ export default function DriveManagement({
       branch: studentBranch.trim() || 'General',
       cgpa: parseFloat(studentCgpa) || 0,
       stage: studentStage,
-      internId: activeStaff ? activeStaff.id : 'intern-vikram',
-      internName: activeStaff ? activeStaff.name : 'Vikram Aditya',
+      internId: activeStaff ? activeStaff.id : 'staff-assigned',
+      internName: activeStaff ? activeStaff.name : 'Staff Recruiter',
       notes: 'Manually added candidate',
     };
 

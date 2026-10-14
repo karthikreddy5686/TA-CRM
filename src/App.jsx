@@ -95,6 +95,9 @@ export default function App() {
         name === 'main hr' ||
         name === 'hr intern 1' ||
         name === 'hr intern 2' ||
+        name.includes('vikram') ||
+        email.includes('vikram') ||
+        id.includes('vikram') ||
         email === 'hr.head@company.com' ||
         email === 'hr@company.com' ||
         email === 'intern1@company.com' ||
@@ -139,32 +142,9 @@ export default function App() {
       });
     }
 
-    // Ensure Vikram Aditya (the user's manually added HR) exists and is properly structured
-    const vikramUser = realUsers.find(u => (u.email || '').toLowerCase() === 'vikram@geonixa');
-    if (!vikramUser) {
-      realUsers.push({
-        id: 'intern-vikram',
-        name: 'Vikram Aditya',
-        role: 'HR_INTERN',
-        title: 'Recruitment Specialist',
-        email: 'vikram@geonixa',
-        password: 'admin',
-        avatar: 'VA',
-        status: 'online',
-        dailyTargetHours: 3.5,
-        dailyTargetLeads: 20,
-      });
-    } else {
-      // Ensure role and required properties
-      if (!vikramUser.role) vikramUser.role = 'HR_INTERN';
-      if (!vikramUser.name) vikramUser.name = 'Vikram Aditya';
-      if (!vikramUser.dailyTargetHours) vikramUser.dailyTargetHours = 3.5;
-      if (!vikramUser.dailyTargetLeads) vikramUser.dailyTargetLeads = 20;
-    }
-
-    // Ensure realistic second recruiter exists
-    const hasSecondIntern = realUsers.some(u => u.role === 'HR_INTERN' && (u.email || '').toLowerCase() !== 'vikram@geonixa');
-    if (!hasSecondIntern) {
+    // Ensure realistic HR Recruiter exists
+    const hasIntern = realUsers.some(u => u.role === 'HR_INTERN');
+    if (!hasIntern) {
       realUsers.push({
         id: 'intern-kavya',
         name: 'Kavya Nair',
@@ -219,12 +199,9 @@ export default function App() {
 
   const sanitizeStudents = (list, staffList = users) => {
     if (!Array.isArray(list)) return [];
-    const vikram = staffList.find(u => (u.email || '').toLowerCase() === 'vikram@geonixa') || 
-                   staffList.find(u => u.role === 'HR_INTERN') ||
-                   { id: 'intern-vikram', name: 'Vikram Aditya' };
-    const kavya = staffList.find(u => (u.email || '').toLowerCase() === 'kavya.nair@talentconnect.io') ||
-                  staffList.find(u => u.id !== vikram.id && u.role === 'HR_INTERN') ||
-                  vikram;
+    const activeStaff = staffList.find(u => u.role === 'HR_INTERN') ||
+                        staffList.find(u => u.role !== 'ADMIN') ||
+                        { id: 'intern-kavya', name: 'Kavya Nair' };
 
     return list
       .filter(s => 
@@ -235,12 +212,9 @@ export default function App() {
       .map(stu => {
         let internName = stu.internName;
         let internId = stu.internId;
-        if (!internName || internName === 'HR Intern 1' || internName === 'HR Intern' || internName === 'Priya Sharma' || internId === 'intern-1') {
-          internName = vikram.name;
-          internId = vikram.id;
-        } else if (internName === 'HR Intern 2' || internId === 'intern-2') {
-          internName = kavya.name;
-          internId = kavya.id;
+        if (!internName || internName === 'HR Intern 1' || internName === 'HR Intern 2' || internName === 'HR Intern' || internName === 'Vikram Aditya' || internName === 'Priya Sharma' || internId === 'intern-1' || internId === 'intern-2' || internId === 'intern-vikram') {
+          internName = activeStaff.name;
+          internId = activeStaff.id;
         }
         return { ...stu, internName, internId };
       });
@@ -257,23 +231,17 @@ export default function App() {
 
   const sanitizeFollowUps = (list, staffList = users) => {
     if (!Array.isArray(list)) return [];
-    const vikram = staffList.find(u => (u.email || '').toLowerCase() === 'vikram@geonixa') || 
-                   staffList.find(u => u.role === 'HR_INTERN') ||
-                   { id: 'intern-vikram', name: 'Vikram Aditya' };
-    const kavya = staffList.find(u => (u.email || '').toLowerCase() === 'kavya.nair@talentconnect.io') ||
-                  staffList.find(u => u.id !== vikram.id && u.role === 'HR_INTERN') ||
-                  vikram;
+    const activeStaff = staffList.find(u => u.role === 'HR_INTERN') ||
+                        staffList.find(u => u.role !== 'ADMIN') ||
+                        { id: 'intern-kavya', name: 'Kavya Nair' };
 
     return list.map(fup => {
       let internName = fup.internName;
       let internId = fup.internId;
 
-      if (!internName || internName === 'HR Intern 1' || internName === 'HR Intern' || internName === 'Priya Sharma' || internId === 'intern-1') {
-        internName = vikram.name;
-        internId = vikram.id;
-      } else if (internName === 'HR Intern 2' || internId === 'intern-2') {
-        internName = kavya.name;
-        internId = kavya.id;
+      if (!internName || internName === 'HR Intern 1' || internName === 'HR Intern 2' || internName === 'HR Intern' || internName === 'Vikram Aditya' || internName === 'Priya Sharma' || internId === 'intern-1' || internId === 'intern-2' || internId === 'intern-vikram') {
+        internName = activeStaff.name;
+        internId = activeStaff.id;
       }
 
       return {
@@ -286,23 +254,17 @@ export default function App() {
 
   const sanitizeTpos = (list, staffList = users) => {
     if (!Array.isArray(list)) return [];
-    const vikram = staffList.find(u => (u.email || '').toLowerCase() === 'vikram@geonixa') || 
-                   staffList.find(u => u.role === 'HR_INTERN') ||
-                   { id: 'intern-vikram', name: 'Vikram Aditya' };
-    const kavya = staffList.find(u => (u.email || '').toLowerCase() === 'kavya.nair@talentconnect.io') ||
-                  staffList.find(u => u.id !== vikram.id && u.role === 'HR_INTERN') ||
-                  vikram;
+    const activeStaff = staffList.find(u => u.role === 'HR_INTERN') ||
+                        staffList.find(u => u.role !== 'ADMIN') ||
+                        { id: 'intern-kavya', name: 'Kavya Nair' };
 
     return list.map(tpo => {
       let assignedInternName = tpo.assignedInternName;
       let assignedInternId = tpo.assignedInternId;
 
-      if (!assignedInternName || assignedInternName === 'HR Intern 1' || assignedInternName === 'HR Intern' || assignedInternId === 'intern-1') {
-        assignedInternName = vikram.name;
-        assignedInternId = vikram.id;
-      } else if (assignedInternName === 'HR Intern 2' || assignedInternId === 'intern-2') {
-        assignedInternName = kavya.name;
-        assignedInternId = kavya.id;
+      if (!assignedInternName || assignedInternName === 'HR Intern 1' || assignedInternName === 'HR Intern 2' || assignedInternName === 'HR Intern' || assignedInternName === 'Vikram Aditya' || assignedInternId === 'intern-1' || assignedInternId === 'intern-2' || assignedInternId === 'intern-vikram') {
+        assignedInternName = activeStaff.name;
+        assignedInternId = activeStaff.id;
       }
 
       return {
@@ -315,23 +277,17 @@ export default function App() {
 
   const sanitizeCalls = (list, staffList = users) => {
     if (!Array.isArray(list)) return [];
-    const vikram = staffList.find(u => (u.email || '').toLowerCase() === 'vikram@geonixa') || 
-                   staffList.find(u => u.role === 'HR_INTERN') ||
-                   { id: 'intern-vikram', name: 'Vikram Aditya' };
-    const kavya = staffList.find(u => (u.email || '').toLowerCase() === 'kavya.nair@talentconnect.io') ||
-                  staffList.find(u => u.id !== vikram.id && u.role === 'HR_INTERN') ||
-                  vikram;
+    const activeStaff = staffList.find(u => u.role === 'HR_INTERN') ||
+                        staffList.find(u => u.role !== 'ADMIN') ||
+                        { id: 'intern-kavya', name: 'Kavya Nair' };
 
     return list.map(call => {
       let internName = call.internName;
       let internId = call.internId;
 
-      if (!internName || internName === 'HR Intern 1' || internName === 'HR Intern' || internId === 'intern-1') {
-        internName = vikram.name;
-        internId = vikram.id;
-      } else if (internName === 'HR Intern 2' || internId === 'intern-2') {
-        internName = kavya.name;
-        internId = kavya.id;
+      if (!internName || internName === 'HR Intern 1' || internName === 'HR Intern 2' || internName === 'HR Intern' || internName === 'Vikram Aditya' || internId === 'intern-1' || internId === 'intern-2' || internId === 'intern-vikram') {
+        internName = activeStaff.name;
+        internId = activeStaff.id;
       }
 
       return {

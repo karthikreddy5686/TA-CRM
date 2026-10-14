@@ -71,7 +71,7 @@ export default function TPODirectory({
       email: newEmail,
       status: 'NEW_LEAD',
       assignedInternId: assignedUser ? assignedUser.id : 'unassigned',
-      assignedInternName: assignedUser ? assignedUser.name : 'Vikram Aditya',
+      assignedInternName: assignedUser ? assignedUser.name : (users.find(u => u.role !== 'ADMIN')?.name || 'Staff Recruiter'),
       notes: newNotes,
       lastContacted: new Date().toISOString().split('T')[0],
       city: newCity,

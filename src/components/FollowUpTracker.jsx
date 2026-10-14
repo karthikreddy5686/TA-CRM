@@ -60,7 +60,7 @@ export default function FollowUpTracker({
     onAddFollowUp({
       id: `fup-${Date.now()}`,
       internId: effectiveStaffId,
-      internName: assignedStaff ? assignedStaff.name : 'Vikram Aditya',
+      internName: assignedStaff ? assignedStaff.name : (staffMembers[0]?.name || 'Staff Recruiter'),
       entityType: newEntityType,
       entityId: `ent-${Date.now()}`,
       entityTitle: newTitle,
