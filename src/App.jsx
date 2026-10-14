@@ -842,7 +842,6 @@ export default function App() {
           >
             <FileSpreadsheet size={17} />
             <span className="nav-label">Google Sheets Intake</span>
-            <span className="nav-badge">{formResponses.length}</span>
           </button>
 
           <button 
@@ -852,7 +851,6 @@ export default function App() {
           >
             <Globe size={17} />
             <span className="nav-label">Posted Students</span>
-            <span className="nav-badge">{students.length}</span>
           </button>
 
           <button 
@@ -862,7 +860,6 @@ export default function App() {
           >
             <Calendar size={17} />
             <span className="nav-label">Campus Drives</span>
-            <span className="nav-badge">{drives.length}</span>
           </button>
 
           <div className="nav-section-title">Outreach & Calls</div>
@@ -874,7 +871,6 @@ export default function App() {
           >
             <Building2 size={17} />
             <span className="nav-label">College TPOs</span>
-            <span className="nav-badge">{tpos.length}</span>
           </button>
 
           <button 
@@ -884,9 +880,6 @@ export default function App() {
           >
             <Clock size={17} />
             <span className="nav-label">Follow-Ups</span>
-            <span className="nav-badge" style={{ background: '#fef2f2', color: '#991b1b' }}>
-              {followUps.filter(f => f.status === 'PENDING').length}
-            </span>
           </button>
 
           <button 
@@ -896,38 +889,8 @@ export default function App() {
           >
             <PhoneCall size={17} />
             <span className="nav-label">Call Logs</span>
-            <span className="nav-badge">{callSessions.length}</span>
           </button>
         </nav>
-
-        {/* PWA Install Button in Drawer */}
-        <div style={{ padding: '8px 12px', borderTop: '1px solid #f1f5f9' }}>
-          <button
-            type="button"
-            onClick={() => {
-              setIsMobileSidebarOpen(false);
-              handleInstallApp();
-            }}
-            style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              background: '#09090b',
-              color: '#ffffff',
-              padding: '9px 12px',
-              borderRadius: '8px',
-              border: 'none',
-              fontWeight: 700,
-              fontSize: '0.8rem',
-              cursor: 'pointer'
-            }}
-          >
-            <Smartphone size={14} />
-            <span>Install Web App</span>
-          </button>
-        </div>
 
         {/* Current User Card in Sidebar with Logout */}
         <div className="sidebar-user">
@@ -961,237 +924,35 @@ export default function App() {
 
       {/* Main Workspace Area */}
       <div className="main-content">
-        {/* App Top Header */}
-        <header className="top-header">
-          {/* Left: Mobile Hamburger Menu + Desktop Sidebar Collapse + Breadcrumbs */}
-          <div className="top-header-left">
-            <button 
-              type="button"
-              onClick={() => setIsMobileSidebarOpen(true)}
-              className="btn-icon mobile-menu-btn"
-              style={{ width: '32px', height: '32px' }}
-              title="Open Navigation Menu"
-            >
-              <Menu size={16} />
-            </button>
-
-            <button 
-              type="button"
-              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              className="btn-icon desktop-sidebar-toggle"
-              style={{ width: '32px', height: '32px' }}
-              title={isSidebarCollapsed ? "Expand sidebar ([)" : "Collapse sidebar ([)"}
-            >
-              {isSidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
-            </button>
-
-            <div className="top-header-title-wrap">
-              <span className="header-desktop-only" style={{ fontSize: '0.78rem', color: '#71717a', fontWeight: 600 }}>Workspace</span>
-              <span className="header-desktop-only" style={{ color: '#cbd5e1', fontSize: '0.8rem' }}>/</span>
-              <h1 className="page-title">
-                {activeTab === 'dashboard' && 'Dashboard Overview'}
-                {activeTab === 'googleFormBlast' && 'Intake Hub'}
-                {activeTab === 'liveBoard' && 'Posted Students'}
-                {activeTab === 'drives' && 'Campus Drives'}
-                {activeTab === 'tpos' && 'College TPOs'}
-                {activeTab === 'followups' && 'Follow-Ups'}
-                {activeTab === 'calls' && 'Call Logs'}
-              </h1>
-            </div>
+        {/* Mobile-only Top App Bar */}
+        <div className="mobile-only mobile-top-bar" style={{
+          height: '44px',
+          background: '#ffffff',
+          borderBottom: '1px solid #e2e8f0',
+          padding: '0 12px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          width: '100%',
+          boxSizing: 'border-box',
+          flexShrink: 0
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="brand-dot" />
+            <span style={{ fontWeight: 800, fontSize: '0.88rem', color: '#09090b', letterSpacing: '-0.02em' }}>
+              TalentConnect
+            </span>
           </div>
-
-          {/* Center: Web App Global Search & Command Palette Trigger */}
           <button 
             type="button"
-            onClick={() => setIsCommandPaletteOpen(true)}
-            className="app-search-trigger"
-            title="Open Command Palette (Ctrl+K)"
+            onClick={() => setIsMobileSidebarOpen(true)}
+            className="btn-icon"
+            style={{ width: '30px', height: '30px' }}
+            title="Open Menu"
           >
-            <Search size={14} />
-            <span className="header-desktop-only">Search candidates, drives, TPOs...</span>
-            <kbd className="kbd-chip header-desktop-only" style={{ marginLeft: 'auto' }}>Ctrl K</kbd>
+            <Menu size={16} />
           </button>
-
-          {/* Right: Global Actions, Live Sync, PWA Install, Fullscreen, User Chip */}
-          <div className="top-header-right">
-            {(drives.length > 0 || formResponses.length > 0 || students.length > 0 || tpos.length > 0 || callSessions.length > 0) && (
-              <button
-                type="button"
-                onClick={handleResetCleanData}
-                className="btn-secondary btn-black-sm header-desktop-only"
-                style={{ padding: '6px 11px', fontSize: '0.78rem', gap: '5px', color: '#ef4444', borderColor: '#fca5a5' }}
-                title="Wipe database to clean empty state (sets all sections to 0)"
-              >
-                <Trash2 size={13} />
-                <span>Reset to 0</span>
-              </button>
-            )}
-
-            {/* Global Quick Action Trigger */}
-            <button
-              type="button"
-              onClick={() => setIsGlobalNewMenuOpen(true)}
-              className="btn-black btn-black-sm"
-              style={{ padding: '6px 11px', fontSize: '0.8rem', gap: '5px', fontWeight: 700 }}
-              title="Global Create & Management Actions"
-            >
-              <Plus size={14} />
-              <span className="header-desktop-only">+ New Action</span>
-              <span className="header-mobile-only">New</span>
-            </button>
-
-            {/* Quick Demo Data Pill if database is empty */}
-            {drives.length === 0 && (
-              <button
-                type="button"
-                onClick={handleLoadDemoData}
-                className="btn-secondary btn-black-sm header-desktop-only"
-                style={{ padding: '5px 10px', fontSize: '0.78rem', gap: '5px', borderColor: '#cbd5e1' }}
-                title="Populate complete working sample data across all modules"
-              >
-                <Sparkles size={13} color="#8b5cf6" />
-                <span style={{ fontWeight: 700 }}>Load Demo Data</span>
-              </button>
-            )}
-
-            {/* PWA Install App Button */}
-            <button
-              type="button"
-              onClick={handleInstallApp}
-              className="install-app-pill"
-              title="Install TalentConnect as standalone desktop or mobile web app"
-            >
-              <Smartphone size={13} />
-              <span className="header-desktop-only">{isAppInstalled ? 'App Ready' : 'Install App'}</span>
-            </button>
-
-            {/* Live Sync / Online Status Pill (Desktop only to prevent header wrap) */}
-            {isOnline ? (
-              <div className="app-live-pill header-desktop-only" title="Real-time multi-tab workspace synchronization active">
-                <span className="pulse-dot-green"></span>
-                <span>Live Sync</span>
-              </div>
-            ) : (
-              <div className="app-offline-pill header-desktop-only" title="Working offline. All updates cached locally">
-                <span className="pulse-dot-amber"></span>
-                <span>Offline</span>
-              </div>
-            )}
-
-            {/* Fullscreen Toggle */}
-            <button
-              type="button"
-              onClick={toggleFullscreen}
-              className="btn-icon header-desktop-only"
-              style={{ width: '32px', height: '32px' }}
-              title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-            >
-              {isFullscreen ? <Minimize size={14} /> : <Maximize size={14} />}
-            </button>
-
-            {/* Notifications Bell */}
-            <div style={{ position: 'relative' }}>
-              <button 
-                type="button"
-                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                className="btn-icon"
-                style={{ width: '32px', height: '32px' }}
-                title="System Notifications & Architecture"
-              >
-                <Bell size={14} />
-              </button>
-
-              {isNotificationsOpen && (
-                <div className="notifications-popover">
-                  <div style={{ padding: '10px 14px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: 700, fontSize: '0.825rem' }}>Web App Architecture & Status</span>
-                    <button onClick={() => setIsNotificationsOpen(false)} className="btn-icon" style={{ width: '22px', height: '22px' }}>
-                      <X size={12} />
-                    </button>
-                  </div>
-                  <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.78rem', color: '#52525b' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <CheckCircle2 size={14} color="#10b981" />
-                      <span>Progressive Web App (PWA) manifest & service worker ready</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <CheckCircle2 size={14} color="#10b981" />
-                      <span>Global multi-tab real-time storage synchronization active</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <CheckCircle2 size={14} color="#10b981" />
-                      <span>Web Audio synthesizer active for live phone calls & notifications</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <CheckCircle2 size={14} color="#10b981" />
-                      <span>Database: {drives.length} drives • {students.length} candidates • {tpos.length} TPOs</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* HR Personal Phone Calling Line Status Pill */}
-            <button
-              type="button"
-              onClick={() => setIsPhoneConnectModalOpen(true)}
-              className="hr-phone-header-chip header-desktop-only"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                background: '#f8fafc',
-                border: '1px solid #e2e8f0',
-                borderRadius: '20px',
-                padding: '4px 10px',
-                cursor: 'pointer',
-                fontSize: '0.75rem',
-                color: '#09090b',
-                fontWeight: 600
-              }}
-              title="Click to configure HR personal calling phone line or calling preference"
-            >
-              <Smartphone size={13} color="#10b981" />
-              <span>HR Phone: <strong>{hrPhoneNumber}</strong></span>
-              <span style={{ fontSize: '0.65rem', background: '#ecfdf5', color: '#065f46', padding: '1px 5px', borderRadius: '10px' }}>Connected</span>
-            </button>
-
-            {/* User Profile Info Chip (Desktop Only) */}
-            <div className="header-desktop-only header-user-chip">
-              <div style={{ 
-                width: '24px', 
-                height: '24px', 
-                borderRadius: '50%', 
-                background: '#09090b', 
-                color: '#ffffff', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                fontSize: '0.68rem', 
-                fontWeight: 800 
-              }}>
-                {currentUser.avatar || 'U'}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#09090b', lineHeight: 1.1 }}>
-                  {currentUser.name}
-                </span>
-                <span style={{ fontSize: '0.65rem', color: '#71717a' }}>
-                  {currentUser.role === 'MAIN_HR' ? 'Main HR' : 'HR Intern'}
-                </span>
-              </div>
-            </div>
-
-            <button 
-              onClick={handleLogout}
-              className="btn-secondary btn-black-sm header-desktop-only"
-              style={{ padding: '5px 10px', fontSize: '0.78rem' }}
-              title="Sign out of your account"
-            >
-              <LogOut size={12} /> Sign Out
-            </button>
-          </div>
-        </header>
+        </div>
 
         {/* Page Body Viewport */}
         <main className="page-body">
@@ -1677,7 +1438,6 @@ export default function App() {
         >
           <FileSpreadsheet size={18} />
           <span>Intake</span>
-          {unblastedResponsesCount > 0 && <span className="mobile-badge">{unblastedResponsesCount}</span>}
         </button>
         <button 
           type="button"
@@ -1686,7 +1446,6 @@ export default function App() {
         >
           <Globe size={18} />
           <span>Students</span>
-          {students.length > 0 && <span className="mobile-badge">{students.length}</span>}
         </button>
         <button 
           type="button"
@@ -1695,7 +1454,6 @@ export default function App() {
         >
           <Calendar size={18} />
           <span>Drives</span>
-          {drives.length > 0 && <span className="mobile-badge">{drives.length}</span>}
         </button>
         <button 
           type="button"
@@ -1704,7 +1462,6 @@ export default function App() {
         >
           <PhoneCall size={18} />
           <span>Calls</span>
-          {callSessions.length > 0 && <span className="mobile-badge">{callSessions.length}</span>}
         </button>
         <button 
           type="button"

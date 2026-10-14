@@ -156,18 +156,6 @@ export default function MainHRDashboard({
               <Sparkles size={14} /> Load Demo Data
             </button>
           )}
-
-          {(drives.length > 0 || students.length > 0 || tpos.length > 0) && onResetCleanData && (
-            <button 
-              type="button" 
-              onClick={onResetCleanData} 
-              className="btn-secondary btn-black-sm" 
-              style={{ color: '#ef4444', borderColor: '#fca5a5' }} 
-              title="Reset all recruitment records to clean empty state (0)"
-            >
-              <Trash2 size={13} /> Reset to 0
-            </button>
-          )}
         </div>
       </div>
 
