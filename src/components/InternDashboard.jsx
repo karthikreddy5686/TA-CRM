@@ -202,10 +202,15 @@ export default function InternDashboard({
                         <div style={{ display: 'flex', gap: '6px' }}>
                           <button 
                             onClick={() => {
+                              const matched = fup.phone ? null : (
+                                students?.find(s => s.id === fup.entityId || (s.name && fup.entityTitle && (s.name.toLowerCase() === fup.entityTitle.toLowerCase() || fup.entityTitle.toLowerCase().includes(s.name.toLowerCase())))) ||
+                                tpos?.find(t => t.id === fup.entityId || (t.name && fup.entityTitle && (t.name.toLowerCase() === fup.entityTitle.toLowerCase() || fup.entityTitle.toLowerCase().includes(t.name.toLowerCase()))))
+                              );
                               onStartCall({
                                 recipientType: fup.entityType,
                                 recipientName: fup.entityTitle,
                                 recipientDetail: fup.notes,
+                                recipientPhone: fup.phone || matched?.phone || '',
                                 type: 'AUDIO',
                                 followUpId: fup.id
                               });
@@ -263,10 +268,15 @@ export default function InternDashboard({
                     <div style={{ display: 'flex', gap: '4px' }}>
                       <button 
                         onClick={() => {
+                          const matched = fup.phone ? null : (
+                            students?.find(s => s.id === fup.entityId || (s.name && fup.entityTitle && (s.name.toLowerCase() === fup.entityTitle.toLowerCase() || fup.entityTitle.toLowerCase().includes(s.name.toLowerCase())))) ||
+                            tpos?.find(t => t.id === fup.entityId || (t.name && fup.entityTitle && (t.name.toLowerCase() === fup.entityTitle.toLowerCase() || fup.entityTitle.toLowerCase().includes(t.name.toLowerCase()))))
+                          );
                           onStartCall({
                             recipientType: fup.entityType,
                             recipientName: fup.entityTitle,
                             recipientDetail: fup.notes,
+                            recipientPhone: fup.phone || matched?.phone || '',
                             type: 'AUDIO',
                             followUpId: fup.id
                           });

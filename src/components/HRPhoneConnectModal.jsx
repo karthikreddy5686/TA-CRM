@@ -121,90 +121,24 @@ export default function HRPhoneConnectModal({
             {/* Calling Mode Preference */}
             <div className="form-group">
               <label className="form-label">Preferred Calling Mode</label>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <label style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '10px',
-                  padding: '10px 12px',
-                  borderRadius: '8px',
-                  border: callingMode === 'PHONE_DIRECT' ? '1.5px solid #09090b' : '1px solid #e2e8f0',
-                  background: callingMode === 'PHONE_DIRECT' ? '#f8fafc' : '#ffffff',
-                  cursor: 'pointer'
-                }}>
-                  <input 
-                    type="radio" 
-                    name="callingMode" 
-                    value="PHONE_DIRECT"
-                    checked={callingMode === 'PHONE_DIRECT'}
-                    onChange={() => setCallingMode('PHONE_DIRECT')}
-                    style={{ marginTop: '3px', accentColor: '#09090b' }}
-                  />
-                  <div>
-                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#09090b' }}>
-                      📱 Call from Phone (1-Tap Dial / Companion QR)
-                    </div>
-                    <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px' }}>
-                      Talk directly from your phone handset via SIM or WhatsApp. The laptop CRM tracks live stopwatch, minutes, and auto-logs candidate disposition.
-                    </div>
+              <div style={{
+                padding: '12px 14px',
+                borderRadius: '8px',
+                border: '1.5px solid #09090b',
+                background: '#f8fafc',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '10px'
+              }}>
+                <Smartphone size={18} color="#09090b" style={{ marginTop: '2px', flexShrink: 0 }} />
+                <div>
+                  <div style={{ fontSize: '0.84rem', fontWeight: 700, color: '#09090b' }}>
+                    HR Phone Handset Calling (1-Tap Dial / Companion QR)
                   </div>
-                </label>
-
-                <label style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '10px',
-                  padding: '10px 12px',
-                  borderRadius: '8px',
-                  border: callingMode === 'CLOUD_BRIDGE' ? '1.5px solid #09090b' : '1px solid #e2e8f0',
-                  background: callingMode === 'CLOUD_BRIDGE' ? '#f8fafc' : '#ffffff',
-                  cursor: 'pointer'
-                }}>
-                  <input 
-                    type="radio" 
-                    name="callingMode" 
-                    value="CLOUD_BRIDGE"
-                    checked={callingMode === 'CLOUD_BRIDGE'}
-                    onChange={() => setCallingMode('CLOUD_BRIDGE')}
-                    style={{ marginTop: '3px', accentColor: '#09090b' }}
-                  />
-                  <div>
-                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#09090b' }}>
-                      🔄 Cloud Telephony Bridge (Click-to-Call)
-                    </div>
-                    <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px' }}>
-                      CRM rings your personal mobile first, and automatically bridges to candidate on a standard phone line when you answer.
-                    </div>
+                  <div style={{ fontSize: '0.74rem', color: '#64748b', marginTop: '2px' }}>
+                    Talk directly from your mobile handset. The CRM tracks talk time with stopwatch and auto-logs candidate notes when ended.
                   </div>
-                </label>
-
-                <label style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '10px',
-                  padding: '10px 12px',
-                  borderRadius: '8px',
-                  border: callingMode === 'VOIP_BROWSER' ? '1.5px solid #09090b' : '1px solid #e2e8f0',
-                  background: callingMode === 'VOIP_BROWSER' ? '#f8fafc' : '#ffffff',
-                  cursor: 'pointer'
-                }}>
-                  <input 
-                    type="radio" 
-                    name="callingMode" 
-                    value="VOIP_BROWSER"
-                    checked={callingMode === 'VOIP_BROWSER'}
-                    onChange={() => setCallingMode('VOIP_BROWSER')}
-                    style={{ marginTop: '3px', accentColor: '#09090b' }}
-                  />
-                  <div>
-                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#09090b' }}>
-                      💻 Laptop VoIP / Headset Calling
-                    </div>
-                    <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px' }}>
-                      Call directly through laptop microphone and audio line without picking up your phone.
-                    </div>
-                  </div>
-                </label>
+                </div>
               </div>
             </div>
 

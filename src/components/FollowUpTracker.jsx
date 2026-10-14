@@ -33,6 +33,7 @@ export default function FollowUpTracker({
   // New Follow-Up Form
   const [newTitle, setNewTitle] = useState('');
   const [newEntityType, setNewEntityType] = useState('TPO');
+  const [newPhone, setNewPhone] = useState('');
   const staffMembers = users.filter(u => u.role !== 'ADMIN');
   const [newInternId, setNewInternId] = useState('');
   const [newScheduledDate, setNewScheduledDate] = useState(
@@ -63,6 +64,7 @@ export default function FollowUpTracker({
       entityType: newEntityType,
       entityId: `ent-${Date.now()}`,
       entityTitle: newTitle,
+      phone: newPhone.trim(),
       scheduledDate: newScheduledDate,
       priority: newPriority,
       status: 'PENDING',
@@ -70,6 +72,7 @@ export default function FollowUpTracker({
     });
     setIsAddModalOpen(false);
     setNewTitle('');
+    setNewPhone('');
     setNewNotes('');
   };
 
@@ -258,13 +261,20 @@ export default function FollowUpTracker({
                         {fup.status === 'PENDING' && (
                           <>
                             <button 
-                              onClick={() => onStartCall({
-                                recipientType: fup.entityType,
-                                recipientName: fup.entityTitle,
-                                recipientDetail: fup.notes,
-                                type: 'AUDIO',
-                                followUpId: fup.id
-                              })}
+                              onClick={() => {
+                                const matched = fup.phone ? null : (
+                                  students?.find(s => s.id === fup.entityId || (s.name && fup.entityTitle && (s.name.toLowerCase() === fup.entityTitle.toLowerCase() || fup.entityTitle.toLowerCase().includes(s.name.toLowerCase())))) ||
+                                  tpos?.find(t => t.id === fup.entityId || (t.name && fup.entityTitle && (t.name.toLowerCase() === fup.entityTitle.toLowerCase() || fup.entityTitle.toLowerCase().includes(t.name.toLowerCase()))))
+                                );
+                                onStartCall({
+                                  recipientType: fup.entityType,
+                                  recipientName: fup.entityTitle,
+                                  recipientDetail: fup.notes,
+                                  recipientPhone: fup.phone || matched?.phone || '',
+                                  type: 'AUDIO',
+                                  followUpId: fup.id
+                                });
+                              }}
                               className="btn-mustard btn-black-sm"
                               style={{ padding: '2px 6px', fontSize: '0.7rem', gap: '3px' }}
                               title="Call immediately"
@@ -373,13 +383,20 @@ export default function FollowUpTracker({
                     {fup.status === 'PENDING' && (
                       <>
                         <button 
-                          onClick={() => onStartCall({
-                            recipientType: fup.entityType,
-                            recipientName: fup.entityTitle,
-                            recipientDetail: fup.notes,
-                            type: 'AUDIO',
-                            followUpId: fup.id
-                          })}
+                          onClick={() => {
+                            const matched = fup.phone ? null : (
+                              students?.find(s => s.id === fup.entityId || (s.name && fup.entityTitle && (s.name.toLowerCase() === fup.entityTitle.toLowerCase() || fup.entityTitle.toLowerCase().includes(s.name.toLowerCase())))) ||
+                              tpos?.find(t => t.id === fup.entityId || (t.name && fup.entityTitle && (t.name.toLowerCase() === fup.entityTitle.toLowerCase() || fup.entityTitle.toLowerCase().includes(t.name.toLowerCase()))))
+                            );
+                            onStartCall({
+                              recipientType: fup.entityType,
+                              recipientName: fup.entityTitle,
+                              recipientDetail: fup.notes,
+                              recipientPhone: fup.phone || matched?.phone || '',
+                              type: 'AUDIO',
+                              followUpId: fup.id
+                            });
+                          }}
                           className="btn-mustard btn-black-sm"
                           style={{ padding: '3px 8px', fontSize: '0.72rem', gap: '3px' }}
                         >
@@ -439,6 +456,17 @@ export default function FollowUpTracker({
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
                     required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Contact Phone (Optional)</label>
+                  <input 
+                    type="tel" 
+                    className="form-input" 
+                    placeholder="e.g. +91 98765 12345"
+                    value={newPhone}
+                    onChange={(e) => setNewPhone(e.target.value)}
                   />
                 </div>
 

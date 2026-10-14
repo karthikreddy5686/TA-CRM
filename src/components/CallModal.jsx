@@ -37,17 +37,29 @@ export default function CallModal({
   isMinimized, 
   onExpand,
   hrPhoneNumber = '+91 98201 55432',
-  onOpenPhoneConnectModal
+  onOpenPhoneConnectModal,
+  onStartTimer,
+  onToggleTimer,
+  onUpdateRecipientPhone
 }) {
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoEnabled, setIsVideoEnabled] = useState(callState?.type === 'VIDEO');
   const [notesDuringCall, setNotesDuringCall] = useState('');
   
-  // Audio Calling Channels: 'PHONE_DIRECT' | 'CLOUD_BRIDGE' | 'VOIP_BROWSER'
-  const [audioCallingTab, setAudioCallingTab] = useState('PHONE_DIRECT');
-  
-  // Cloud Telephony Bridge Simulation States: 'IDLE' | 'RINGING_HR' | 'HR_CONNECTED' | 'BRIDGING_CANDIDATE' | 'CONNECTED'
-  const [bridgeStatus, setBridgeStatus] = useState('IDLE');
+  // Recipient Phone state (dynamic and editable, no hardcoding)
+  const [phoneNumber, setPhoneNumber] = useState(callState?.recipientPhone || '');
+  const [isEditingPhone, setIsEditingPhone] = useState(!callState?.recipientPhone);
+
+  useEffect(() => {
+    setPhoneNumber(callState?.recipientPhone || '');
+    if (callState?.recipientPhone) {
+      setIsEditingPhone(false);
+    }
+  }, [callState?.recipientPhone]);
+
+  // Digits and formatting
+  const digitsOnly = (phoneNumber || '').replace(/\D/g, '');
+  const cleanPhone = digitsOnly ? (digitsOnly.startsWith('91') ? digitsOnly : `91${digitsOnly}`) : '';
   
   // Video Interview Scorecard & Rubric
   const [techRating, setTechRating] = useState(4);
@@ -65,14 +77,6 @@ export default function CallModal({
 
   const localVideoRef = useRef(null);
   const streamRef = useRef(null);
-
-  // Parse recipient phone number
-  const rawPhone = callState?.recipientPhone || 
-    (callState?.recipientDetail && callState.recipientDetail.includes('+91') 
-      ? callState.recipientDetail.split('•').pop().trim() 
-      : '+91 98765 43210');
-  const digitsOnly = rawPhone.replace(/\D/g, '');
-  const cleanPhone = digitsOnly.startsWith('91') ? digitsOnly : `91${digitsOnly}`;
 
   // Audio connection sound when call connects
   useEffect(() => {
@@ -107,29 +111,9 @@ export default function CallModal({
 
   if (!callState?.active) return null;
 
-  // Handle Cloud Phone Bridge Sequence
-  const handleInitiateBridge = () => {
-    setBridgeStatus('RINGING_HR');
-    webAudio.startRinging();
-
-    setTimeout(() => {
-      setBridgeStatus('HR_CONNECTED');
-      webAudio.playCallConnected();
-
-      setTimeout(() => {
-        setBridgeStatus('BRIDGING_CANDIDATE');
-        webAudio.startRinging();
-
-        setTimeout(() => {
-          setBridgeStatus('CONNECTED');
-          webAudio.playCallConnected();
-        }, 2200);
-      }, 1500);
-    }, 2000);
-  };
-
   const handleCopyPhone = () => {
-    navigator.clipboard.writeText(rawPhone);
+    if (!phoneNumber) return;
+    navigator.clipboard.writeText(phoneNumber);
     setCopiedPhone(true);
     setTimeout(() => setCopiedPhone(false), 2000);
   };
@@ -186,17 +170,30 @@ export default function CallModal({
           </div>
         </div>
 
-        <div className="call-timer-box">
-          <Clock size={14} color="#10b981" />
-          <span>{formatTimeDigital(callState.duration)}</span>
+        <div 
+          className="call-timer-box"
+          onClick={onToggleTimer || onStartTimer}
+          style={{ 
+            cursor: 'pointer',
+            background: callState.timerRunning ? 'rgba(16, 185, 129, 0.15)' : '#18181b',
+            border: callState.timerRunning ? '1px solid #10b981' : '1px solid #27272a'
+          }}
+          title={callState.timerRunning ? 'Timer active (Click to pause)' : 'Timer idle (Click to start)'}
+        >
+          <Clock size={14} color={callState.timerRunning ? '#10b981' : '#71717a'} />
+          <span style={{ color: callState.timerRunning ? '#10b981' : '#a1a1aa' }}>
+            {formatTimeDigital(callState.duration)}
+          </span>
         </div>
 
-        <div className="call-wave-container">
-          <div className="call-wave-bar"></div>
-          <div className="call-wave-bar"></div>
-          <div className="call-wave-bar"></div>
-          <div className="call-wave-bar"></div>
-        </div>
+        {callState.timerRunning && (
+          <div className="call-wave-container">
+            <div className="call-wave-bar"></div>
+            <div className="call-wave-bar"></div>
+            <div className="call-wave-bar"></div>
+            <div className="call-wave-bar"></div>
+          </div>
+        )}
 
         <button 
           onClick={onExpand}
@@ -297,9 +294,35 @@ export default function CallModal({
             </div>
 
             {/* Stopwatch */}
-            <div className="call-timer-box" style={{ background: '#18181b', border: '1px solid #27272a' }}>
-              <Clock size={14} color="#10b981" />
-              <span style={{ color: '#ffffff', fontSize: '0.88rem' }}>{formatTimeDigital(callState.duration)}</span>
+            <div 
+              className="call-timer-box" 
+              onClick={onToggleTimer || onStartTimer}
+              style={{ 
+                background: callState.timerRunning ? 'rgba(16, 185, 129, 0.15)' : '#18181b', 
+                border: callState.timerRunning ? '1px solid #10b981' : '1px solid #27272a',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '4px 10px',
+                borderRadius: '8px'
+              }}
+              title={callState.timerRunning ? 'Timer Active (Click to Pause)' : 'Timer Idle (Click to Start or click Dial on Mobile)'}
+            >
+              <Clock size={14} color={callState.timerRunning ? '#10b981' : '#71717a'} />
+              <span style={{ color: callState.timerRunning ? '#10b981' : '#ffffff', fontSize: '0.88rem', fontWeight: 700 }}>
+                {formatTimeDigital(callState.duration)}
+              </span>
+              <span style={{ 
+                fontSize: '0.65rem', 
+                fontWeight: 700, 
+                color: callState.timerRunning ? '#10b981' : '#eab308',
+                background: callState.timerRunning ? 'rgba(16, 185, 129, 0.2)' : 'rgba(234, 179, 8, 0.15)',
+                padding: '1px 5px',
+                borderRadius: '4px'
+              }}>
+                {callState.timerRunning ? 'LIVE' : 'IDLE'}
+              </span>
             </div>
 
             <button 
@@ -314,329 +337,190 @@ export default function CallModal({
         </div>
 
         {/* =========================================================================
-            SECTION 1: AUDIO CALLING MODES (CALL FROM PERSONAL PHONE / BRIDGE / VOIP)
+            SECTION 1: DIRECT PHONE CALLING (MOBILE SIM / COMPANION QR)
             ========================================================================= */}
         {callState.type === 'AUDIO' && (
-          <div style={{ padding: '16px 20px', background: '#121215', flex: '1 1 auto', overflowY: 'auto' }}>
-            {/* Channel Tabs */}
-            <div style={{ 
-              display: 'flex', 
-              background: '#18181b', 
-              padding: '4px', 
-              borderRadius: '8px', 
-              border: '1px solid #27272a', 
-              marginBottom: '16px' 
+          <div style={{ padding: '20px', background: '#121215', flex: '1 1 auto', overflowY: 'auto' }}>
+            <div style={{
+              background: '#18181b',
+              border: '1px solid #27272a',
+              borderRadius: '12px',
+              padding: '24px',
+              display: 'grid',
+              gridTemplateColumns: '1.2fr 0.8fr',
+              gap: '24px',
+              alignItems: 'center'
             }}>
-              <button
-                type="button"
-                onClick={() => setAudioCallingTab('PHONE_DIRECT')}
-                style={{
-                  flex: 1,
-                  padding: '7px 12px',
-                  borderRadius: '6px',
-                  border: 'none',
-                  fontSize: '0.78rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  background: audioCallingTab === 'PHONE_DIRECT' ? '#09090b' : 'transparent',
-                  color: audioCallingTab === 'PHONE_DIRECT' ? '#ffffff' : '#a1a1aa',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px'
-                }}
-              >
-                <Smartphone size={14} /> 1. Call from My Phone (SIM / QR)
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setAudioCallingTab('CLOUD_BRIDGE')}
-                style={{
-                  flex: 1,
-                  padding: '7px 12px',
-                  borderRadius: '6px',
-                  border: 'none',
-                  fontSize: '0.78rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  background: audioCallingTab === 'CLOUD_BRIDGE' ? '#09090b' : 'transparent',
-                  color: audioCallingTab === 'CLOUD_BRIDGE' ? '#ffffff' : '#a1a1aa',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px'
-                }}
-              >
-                <Radio size={14} /> 2. Personal Phone Bridge (Click-to-Call)
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setAudioCallingTab('VOIP_BROWSER')}
-                style={{
-                  flex: 1,
-                  padding: '7px 12px',
-                  borderRadius: '6px',
-                  border: 'none',
-                  fontSize: '0.78rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  background: audioCallingTab === 'VOIP_BROWSER' ? '#09090b' : 'transparent',
-                  color: audioCallingTab === 'VOIP_BROWSER' ? '#ffffff' : '#a1a1aa',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px'
-                }}
-              >
-                <Mic size={14} /> 3. Laptop VoIP Line
-              </button>
-            </div>
-
-            {/* TAB 1: Call From Phone Directly (SIM / QR Code / WhatsApp) */}
-            {audioCallingTab === 'PHONE_DIRECT' && (
-              <div style={{
-                background: '#18181b',
-                border: '1px solid #27272a',
-                borderRadius: '12px',
-                padding: '20px',
-                display: 'grid',
-                gridTemplateColumns: '1.2fr 0.8fr',
-                gap: '20px',
-                alignItems: 'center'
-              }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                    <span className="badge badge-green" style={{ fontSize: '0.72rem' }}>
-                      <CheckCircle2 size={12} /> HR SIM Direct Call
-                    </span>
-                    <span style={{ fontSize: '0.75rem', color: '#a1a1aa' }}>
-                      From HR: <strong>{hrPhoneNumber}</strong>
-                    </span>
-                  </div>
-
-                  <h3 style={{ fontSize: '1.2rem', color: '#ffffff', fontWeight: 800, marginBottom: '6px' }}>
-                    {callState.recipientName}
-                  </h3>
-                  <div style={{ fontSize: '0.95rem', color: '#10b981', fontFamily: 'monospace', fontWeight: 700, marginBottom: '14px' }}>
-                    {rawPhone}
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
-                    {/* Native tel: dialer button */}
-                    <a 
-                      href={`tel:${cleanPhone}`}
-                      className="btn-black"
-                      style={{ 
-                        background: '#10b981', 
-                        borderColor: '#10b981', 
-                        color: '#09090b', 
-                        fontSize: '0.8rem', 
-                        padding: '8px 14px', 
-                        fontWeight: 700,
-                        textDecoration: 'none'
-                      }}
-                    >
-                      <Phone size={14} /> Dial on Mobile ({rawPhone})
-                    </a>
-
-                    {/* WhatsApp Voice/Chat */}
-                    <a
-                      href={`https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Hello ${callState.recipientName}, calling from Talent Acquisition regarding your campus drive application.`)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn-secondary"
-                      style={{ 
-                        background: '#27272a', 
-                        borderColor: '#3f3f46', 
-                        color: '#22c55e', 
-                        fontSize: '0.8rem', 
-                        padding: '8px 12px',
-                        textDecoration: 'none'
-                      }}
-                    >
-                      <MessageSquare size={14} /> WhatsApp Audio
-                    </a>
-
-                    {/* Copy Phone */}
-                    <button
-                      type="button"
-                      onClick={handleCopyPhone}
-                      className="btn-secondary"
-                      style={{ background: '#27272a', borderColor: '#3f3f46', color: '#ffffff', fontSize: '0.8rem', padding: '8px 12px' }}
-                    >
-                      {copiedPhone ? <Check size={14} color="#10b981" /> : <Copy size={14} />}
-                      {copiedPhone ? 'Copied' : 'Copy'}
-                    </button>
-                  </div>
-
-                  <div style={{ fontSize: '0.75rem', color: '#71717a', lineHeight: 1.4 }}>
-                    💡 <strong>How it works:</strong> Dial candidate on your phone handset. The stopwatch on this laptop automatically tracks your verified talk time and logs notes directly into CRM Call Logs when you click End Call.
-                  </div>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                  <span className="badge badge-green" style={{ fontSize: '0.72rem' }}>
+                    <CheckCircle2 size={12} /> HR Direct Call
+                  </span>
+                  <span style={{ fontSize: '0.75rem', color: '#a1a1aa' }}>
+                    From HR: <strong>{hrPhoneNumber}</strong>
+                  </span>
                 </div>
 
-                {/* QR Code Card for Instant Mobile Phone Dialing */}
+                <h3 style={{ fontSize: '1.25rem', color: '#ffffff', fontWeight: 800, marginBottom: '6px' }}>
+                  {callState.recipientName}
+                </h3>
+
+                {/* Recipient Phone Number (Editable, No Hardcoding) */}
+                {isEditingPhone ? (
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap' }}>
+                    <input 
+                      type="tel"
+                      className="form-input"
+                      value={phoneNumber}
+                      onChange={(e) => {
+                        setPhoneNumber(e.target.value);
+                        if (onUpdateRecipientPhone) onUpdateRecipientPhone(e.target.value);
+                      }}
+                      placeholder="e.g. +91 98765 12345"
+                      style={{ 
+                        maxWidth: '220px', 
+                        fontSize: '0.92rem', 
+                        padding: '6px 12px', 
+                        background: '#09090b', 
+                        borderColor: '#10b981', 
+                        color: '#10b981', 
+                        fontWeight: 700 
+                      }}
+                      autoFocus
+                    />
+                    <button 
+                      type="button" 
+                      onClick={() => setIsEditingPhone(false)}
+                      className="btn-black btn-black-sm"
+                      style={{ background: '#10b981', borderColor: '#10b981', color: '#09090b', padding: '6px 12px', fontSize: '0.75rem', fontWeight: 700 }}
+                    >
+                      <Check size={13} /> Save Number
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+                    <div style={{ fontSize: '1.05rem', color: phoneNumber ? '#10b981' : '#f59e0b', fontFamily: 'monospace', fontWeight: 700 }}>
+                      {phoneNumber || '(No phone number set)'}
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={() => setIsEditingPhone(true)}
+                      style={{ background: 'none', border: 'none', color: '#60a5fa', cursor: 'pointer', fontSize: '0.75rem', textDecoration: 'underline' }}
+                    >
+                      {phoneNumber ? 'Change' : '+ Set Number'}
+                    </button>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '16px' }}>
+                  {/* Native tel: dialer button - Starts Stopwatch Timer onClick */}
+                  <a 
+                    href={cleanPhone ? `tel:${cleanPhone}` : '#'}
+                    onClick={(e) => {
+                      if (!cleanPhone) {
+                        e.preventDefault();
+                        setIsEditingPhone(true);
+                        return;
+                      }
+                      if (onStartTimer) onStartTimer();
+                    }}
+                    className="btn-black"
+                    style={{ 
+                      background: '#10b981', 
+                      borderColor: '#10b981', 
+                      color: '#09090b', 
+                      fontSize: '0.85rem', 
+                      padding: '9px 16px', 
+                      fontWeight: 700,
+                      textDecoration: 'none',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <Phone size={14} /> Dial on Mobile {phoneNumber ? `(${phoneNumber})` : ''}
+                  </a>
+
+                  {/* Copy Phone */}
+                  <button
+                    type="button"
+                    onClick={handleCopyPhone}
+                    className="btn-secondary"
+                    style={{ background: '#27272a', borderColor: '#3f3f46', color: '#ffffff', fontSize: '0.82rem', padding: '9px 14px' }}
+                  >
+                    {copiedPhone ? <Check size={14} color="#10b981" /> : <Copy size={14} />}
+                    {copiedPhone ? 'Copied' : 'Copy'}
+                  </button>
+
+                  {/* Manual Timer Toggle */}
+                  <button
+                    type="button"
+                    onClick={onToggleTimer || onStartTimer}
+                    className="btn-secondary"
+                    style={{ 
+                      background: callState.timerRunning ? 'rgba(16, 185, 129, 0.15)' : '#27272a', 
+                      borderColor: callState.timerRunning ? '#10b981' : '#3f3f46', 
+                      color: callState.timerRunning ? '#10b981' : '#d1d5db', 
+                      fontSize: '0.82rem', 
+                      padding: '9px 14px' 
+                    }}
+                    title="Start or pause stopwatch"
+                  >
+                    <Clock size={14} /> {callState.timerRunning ? 'Pause Timer' : 'Start Timer'}
+                  </button>
+                </div>
+
+                <div style={{ fontSize: '0.78rem', color: '#71717a', lineHeight: 1.45 }}>
+                  💡 <strong>How it works:</strong> Click <strong>Dial on Mobile</strong> or scan the companion QR code. The call stopwatch will begin tracking your talk duration and log it into CRM Call Logs upon ending.
+                </div>
+              </div>
+
+              {/* QR Code Card for Instant Mobile Phone Dialing */}
+              <div style={{
+                background: '#09090b',
+                border: '1px solid #27272a',
+                borderRadius: '10px',
+                padding: '20px',
+                textAlign: 'center',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center'
+              }}>
                 <div style={{
-                  background: '#09090b',
-                  border: '1px solid #27272a',
-                  borderRadius: '10px',
-                  padding: '16px',
-                  textAlign: 'center',
+                  background: '#ffffff',
+                  padding: '8px',
+                  borderRadius: '8px',
+                  marginBottom: '12px',
+                  width: '130px',
+                  height: '130px',
                   display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center'
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}>
-                  <div style={{
-                    background: '#ffffff',
-                    padding: '8px',
-                    borderRadius: '8px',
-                    marginBottom: '10px',
-                    width: '130px',
-                    height: '130px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    {/* SVG Companion QR Generator */}
+                  {cleanPhone ? (
                     <img 
                       src={`https://api.qrserver.com/v1/create-qr-code/?size=114x114&data=tel:${cleanPhone}`} 
                       alt="Scan to call" 
                       style={{ width: '114px', height: '114px', display: 'block' }}
                       onError={(e) => {
-                        // Fallback SVG icon if offline
                         e.target.style.display = 'none';
                       }}
                     />
-                  </div>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#ffffff', marginBottom: '3px' }}>
-                    Scan with Phone Camera
-                  </div>
-                  <div style={{ fontSize: '0.68rem', color: '#a1a1aa' }}>
-                    Point phone camera to dial {callState.recipientName} immediately from your mobile SIM
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* TAB 2: Personal Phone Cloud Bridge (Click-to-Call) */}
-            {audioCallingTab === 'CLOUD_BRIDGE' && (
-              <div style={{
-                background: '#18181b',
-                border: '1px solid #27272a',
-                borderRadius: '12px',
-                padding: '24px',
-                textAlign: 'center'
-              }}>
-                <div style={{ maxWidth: '480px', margin: '0 auto' }}>
-                  <div style={{
-                    width: '56px',
-                    height: '56px',
-                    borderRadius: '50%',
-                    background: '#27272a',
-                    border: '2px solid #3f3f46',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    margin: '0 auto 14px',
-                    color: bridgeStatus === 'CONNECTED' ? '#10b981' : '#ffffff'
-                  }}>
-                    <Radio size={24} />
-                  </div>
-
-                  <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#ffffff', marginBottom: '6px' }}>
-                    Two-Way Telephony Bridge
-                  </h3>
-                  <p style={{ fontSize: '0.78rem', color: '#a1a1aa', marginBottom: '18px' }}>
-                    The CRM dials your connected mobile (<strong>{hrPhoneNumber}</strong>) first. When you pick up, it patches candidate <strong>{callState.recipientName}</strong> (<strong>{rawPhone}</strong>) into the call.
-                  </p>
-
-                  {/* Bridge Status Progress */}
-                  <div style={{
-                    background: '#09090b',
-                    border: '1px solid #27272a',
-                    borderRadius: '8px',
-                    padding: '12px',
-                    marginBottom: '20px',
-                    textAlign: 'left',
-                    fontSize: '0.78rem'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: bridgeStatus !== 'IDLE' ? '#10b981' : '#71717a', marginBottom: '6px' }}>
-                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: bridgeStatus !== 'IDLE' ? '#10b981' : '#71717a' }}></span>
-                      Step 1: Dial HR Personal Phone ({hrPhoneNumber})
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: (bridgeStatus === 'HR_CONNECTED' || bridgeStatus === 'BRIDGING_CANDIDATE' || bridgeStatus === 'CONNECTED') ? '#10b981' : '#71717a', marginBottom: '6px' }}>
-                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: (bridgeStatus === 'HR_CONNECTED' || bridgeStatus === 'BRIDGING_CANDIDATE' || bridgeStatus === 'CONNECTED') ? '#10b981' : '#71717a' }}></span>
-                      Step 2: HR Answers Call
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: bridgeStatus === 'CONNECTED' ? '#10b981' : '#71717a' }}>
-                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: bridgeStatus === 'CONNECTED' ? '#10b981' : '#71717a' }}></span>
-                      Step 3: Candidate Line Bridged & Live ({rawPhone})
-                    </div>
-                  </div>
-
-                  {bridgeStatus === 'IDLE' ? (
-                    <button
-                      type="button"
-                      onClick={handleInitiateBridge}
-                      className="btn-black"
-                      style={{ background: '#10b981', borderColor: '#10b981', color: '#09090b', padding: '10px 20px', fontWeight: 700 }}
-                    >
-                      <Radio size={16} /> Initiate Bridge to My Phone
-                    </button>
-                  ) : bridgeStatus === 'CONNECTED' ? (
-                    <div style={{ color: '#10b981', fontWeight: 700, fontSize: '0.88rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                      <CheckCircle2 size={16} /> Both Lines Connected & Talking via Phone
-                    </div>
                   ) : (
-                    <div style={{ color: '#eab308', fontWeight: 600, fontSize: '0.82rem' }}>
-                      ⚡ {bridgeStatus === 'RINGING_HR' ? 'Ringing your phone...' : bridgeStatus === 'HR_CONNECTED' ? 'HR connected, dialing candidate...' : 'Connecting lines...'}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '114px', color: '#71717a' }}>
+                      <QrCode size={36} color="#71717a" />
+                      <span style={{ fontSize: '0.65rem', marginTop: '4px', color: '#18181b', fontWeight: 600 }}>Enter Phone</span>
                     </div>
                   )}
                 </div>
-              </div>
-            )}
-
-            {/* TAB 3: In-Browser Laptop VoIP */}
-            {audioCallingTab === 'VOIP_BROWSER' && (
-              <div style={{
-                background: '#18181b',
-                border: '1px solid #27272a',
-                borderRadius: '12px',
-                padding: '30px',
-                textAlign: 'center'
-              }}>
-                <div style={{
-                  width: '70px',
-                  height: '70px',
-                  borderRadius: '50%',
-                  background: '#27272a',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 14px',
-                  border: '2px solid #3f3f46'
-                }}>
-                  {callState.recipientType === 'TPO' ? <Building size={32} color="#ffffff" /> : <GraduationCap size={32} color="#ffffff" />}
+                <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#ffffff', marginBottom: '4px' }}>
+                  Scan with Phone Camera
                 </div>
-
-                <h3 style={{ fontSize: '1.15rem', color: '#ffffff', marginBottom: '4px' }}>
-                  {callState.recipientName}
-                </h3>
-                <p style={{ fontSize: '0.8rem', color: '#a1a1aa', marginBottom: '16px' }}>
-                  Laptop Audio Line • Mic {isMuted ? 'Muted' : 'Transmitting'}
-                </p>
-
-                <div className="call-wave-container" style={{ height: '36px', gap: '5px', justifyContent: 'center' }}>
-                  <div className="call-wave-bar" style={{ width: '4px' }}></div>
-                  <div className="call-wave-bar" style={{ width: '4px' }}></div>
-                  <div className="call-wave-bar" style={{ width: '4px' }}></div>
-                  <div className="call-wave-bar" style={{ width: '4px' }}></div>
-                  <div className="call-wave-bar" style={{ width: '4px' }}></div>
-                  <div className="call-wave-bar" style={{ width: '4px' }}></div>
+                <div style={{ fontSize: '0.7rem', color: '#a1a1aa' }}>
+                  Point phone camera to dial {callState.recipientName} directly from your mobile SIM
                 </div>
               </div>
-            )}
+            </div>
           </div>
         )}
 

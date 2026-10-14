@@ -531,6 +531,7 @@ export function GlobalNewFollowUpModal({
 }) {
   const staffMembers = (users || []).filter(u => u.role !== 'ADMIN');
   const [entityTitle, setEntityTitle] = useState(tpos[0] ? `${tpos[0].name} (${tpos[0].collegeName})` : '');
+  const [phone, setPhone] = useState('');
   const [internId, setInternId] = useState(staffMembers[0]?.id || '');
   const [scheduledDate, setScheduledDate] = useState(
     new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
@@ -552,6 +553,7 @@ export function GlobalNewFollowUpModal({
       entityType: 'TASK',
       entityId: `ent-${Date.now()}`,
       entityTitle: entityTitle.trim(),
+      phone: phone.trim(),
       scheduledDate,
       priority,
       status: 'PENDING',
@@ -583,6 +585,17 @@ export function GlobalNewFollowUpModal({
                   value={entityTitle}
                   onChange={e => setEntityTitle(e.target.value)}
                   required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Contact Phone (Optional)</label>
+                <input
+                  type="tel"
+                  className="form-input"
+                  placeholder="e.g. +91 98765 12345"
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
                 />
               </div>
 
@@ -673,7 +686,7 @@ export function GlobalAddStudentModal({
       name: name.trim(),
       rollNumber: rollNumber.trim() || `ROLL-${Date.now().toString().slice(-4)}`,
       email: email.trim() || `${name.trim().toLowerCase().replace(/\s+/g, '.')}@campus.edu`,
-      phone: phone.trim() || '+91 98765 43210',
+      phone: phone.trim(),
       collegeName: resolvedCollege,
       branch: branch.trim() || 'Computer Science',
       cgpa: parseFloat(cgpa) || 7.5,

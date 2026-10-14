@@ -452,10 +452,12 @@ export default function App() {
   // In-App Calling State Engine
   const [callState, setCallState] = useState({
     active: false,
+    timerRunning: false,
     type: 'AUDIO', // 'AUDIO' | 'VIDEO'
     recipientType: 'TPO',
     recipientName: '',
     recipientDetail: '',
+    recipientPhone: '',
     callerName: '',
     internId: '',
     duration: 0,
@@ -693,10 +695,10 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Live Timer Effect while call is active
+  // Live Timer Effect: only tick when call is active AND timerRunning is true
   useEffect(() => {
     let timer = null;
-    if (callState.active) {
+    if (callState.active && callState.timerRunning) {
       timer = setInterval(() => {
         setCallState(prev => ({ ...prev, duration: prev.duration + 1 }));
       }, 1000);
@@ -704,23 +706,69 @@ export default function App() {
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [callState.active]);
+  }, [callState.active, callState.timerRunning]);
+
+  // Start Call Timer Handler (invoked when user clicks "Dial on Mobile" or clicks the timer)
+  const handleStartTimer = () => {
+    setCallState(prev => ({ ...prev, timerRunning: true }));
+  };
+
+  const handleToggleTimer = () => {
+    setCallState(prev => ({ ...prev, timerRunning: !prev.timerRunning }));
+  };
+
+  const handleUpdateCallRecipientPhone = (newPhone) => {
+    setCallState(prev => ({ ...prev, recipientPhone: newPhone }));
+  };
 
   // Start Call Handler
   const handleStartCall = ({ recipientType, recipientName, recipientDetail, recipientPhone, type = 'AUDIO', tpoId, studentId, followUpId, student }) => {
     webAudio.startRinging();
     const caller = currentUser || { name: 'HR Agent', id: 'agent-1' };
-    const rawRecipientPhone = recipientPhone || 
-      (student?.phone) || 
-      (recipientDetail && recipientDetail.includes('+91') ? recipientDetail.split('•').pop().trim() : '+91 98765 43210');
+    
+    // Dynamic phone lookup: never hardcode fallback
+    let resolvedPhone = (recipientPhone || '').trim();
+    if (!resolvedPhone && student?.phone) {
+      resolvedPhone = student.phone.trim();
+    }
+    // Search students directory if recipient is a candidate
+    if (!resolvedPhone) {
+      const matchStu = students.find(s => 
+        (studentId && s.id === studentId) ||
+        (s.name && recipientName && s.name.toLowerCase() === recipientName.toLowerCase()) ||
+        (recipientName && s.name && recipientName.toLowerCase().includes(s.name.toLowerCase()))
+      );
+      if (matchStu?.phone) resolvedPhone = matchStu.phone.trim();
+    }
+    // Search TPOs directory if recipient is a TPO
+    if (!resolvedPhone) {
+      const matchTpo = tpos.find(t => 
+        (tpoId && t.id === tpoId) ||
+        (t.name && recipientName && t.name.toLowerCase() === recipientName.toLowerCase()) ||
+        (recipientName && t.name && recipientName.toLowerCase().includes(t.name.toLowerCase()))
+      );
+      if (matchTpo?.phone) resolvedPhone = matchTpo.phone.trim();
+    }
+    // Search follow-ups if linked
+    if (!resolvedPhone && followUpId) {
+      const matchFup = followUps.find(f => f.id === followUpId);
+      if (matchFup?.phone) resolvedPhone = matchFup.phone.trim();
+    }
+    // Check if recipientDetail contains phone
+    if (!resolvedPhone && recipientDetail && recipientDetail.includes('+91')) {
+      const parts = recipientDetail.split('•');
+      const found = parts.find(p => p.trim().startsWith('+91') || p.trim().startsWith('91'));
+      if (found) resolvedPhone = found.trim();
+    }
 
     setCallState({
       active: true,
+      timerRunning: false, // DO NOT start timer on call open; starts only after clicking "Dial on Mobile" or clicking timer
       type,
       recipientType: recipientType || 'CONTACT',
       recipientName: recipientName || 'Campus Contact',
       recipientDetail: recipientDetail || '',
-      recipientPhone: rawRecipientPhone,
+      recipientPhone: resolvedPhone || '',
       callerName: caller.name,
       internId: caller.id,
       duration: 0,
@@ -732,7 +780,7 @@ export default function App() {
 
     // Update user status to 'on-call'
     setUsers(prev => prev.map(u => u.id === caller.id ? { ...u, status: 'on-call' } : u));
-    addToast(`Dialing ${recipientName} (${type === 'VIDEO' ? 'Laptop Video Interview' : 'Phone Call'})...`, 'info');
+    addToast(`Opened Calling Hub for ${recipientName || 'Contact'}. Click "Dial on Mobile" to connect & begin timer.`, 'info');
   };
 
   // End Call Handler
@@ -1973,6 +2021,9 @@ export default function App() {
         onExpand={() => setIsCallMinimized(false)}
         hrPhoneNumber={hrPhoneNumber}
         onOpenPhoneConnectModal={() => setIsPhoneConnectModalOpen(true)}
+        onStartTimer={handleStartTimer}
+        onToggleTimer={handleToggleTimer}
+        onUpdateRecipientPhone={handleUpdateCallRecipientPhone}
       />
 
       {/* Post-Call Disposition & Follow-Up Creation Modal */}
