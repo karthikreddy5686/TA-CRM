@@ -126,13 +126,15 @@ export default function AdminDashboard({
     scheduledDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
     priority: 'HIGH',
     status: 'PENDING',
-    notes: ''
+    notes: '',
+    internId: '',
+    internName: ''
   });
 
   const [isCallModalOpen, setIsCallModalOpen] = useState(false);
   const [editingCall, setEditingCall] = useState(null);
   const [callFormData, setCallFormData] = useState({
-    internName: 'HR Manager',
+    internName: 'Vikram Aditya',
     recipientName: '',
     recipientType: 'TPO',
     durationSeconds: 120,
@@ -403,13 +405,16 @@ export default function AdminDashboard({
   // ---------------- Follow-Up Handlers ----------------
   const handleOpenAddFollowUp = () => {
     setEditingFollowUp(null);
+    const firstStaff = users.find(u => u.role !== 'ADMIN') || users[0];
     setFollowUpFormData({
       entityTitle: tpos[0]?.name ? `${tpos[0].name} (${tpos[0].collegeName})` : 'New Outreach Call',
       entityType: 'TPO',
       scheduledDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
       priority: 'HIGH',
       status: 'PENDING',
-      notes: 'Outreach follow up regarding campus hiring proposal.'
+      notes: 'Outreach follow up regarding campus hiring proposal.',
+      internId: firstStaff ? firstStaff.id : '',
+      internName: firstStaff ? firstStaff.name : 'Vikram Aditya'
     });
     setIsFollowUpModalOpen(true);
   };
@@ -422,7 +427,9 @@ export default function AdminDashboard({
       scheduledDate: fup.scheduledDate || '',
       priority: fup.priority || 'MEDIUM',
       status: fup.status || 'PENDING',
-      notes: fup.notes || ''
+      notes: fup.notes || '',
+      internId: fup.internId || (users.find(u => u.role !== 'ADMIN')?.id || ''),
+      internName: fup.internName || (users.find(u => u.role !== 'ADMIN')?.name || 'Vikram Aditya')
     });
     setIsFollowUpModalOpen(true);
   };
@@ -431,11 +438,17 @@ export default function AdminDashboard({
     e.preventDefault();
     if (!followUpFormData.entityTitle.trim()) return;
 
+    const assignedStaff = users.find(u => u.id === followUpFormData.internId) || users.find(u => u.role !== 'ADMIN');
+    const staffId = assignedStaff ? assignedStaff.id : (followUpFormData.internId || 'intern-vikram');
+    const staffName = assignedStaff ? assignedStaff.name : (followUpFormData.internName || 'Vikram Aditya');
+
     if (editingFollowUp) {
       onUpdateFollowUp({
         ...editingFollowUp,
         ...followUpFormData,
-        entityTitle: followUpFormData.entityTitle.trim()
+        entityTitle: followUpFormData.entityTitle.trim(),
+        internId: staffId,
+        internName: staffName
       });
       showNotification(`Updated follow-up!`);
     } else {
@@ -443,8 +456,8 @@ export default function AdminDashboard({
         id: `fup-${Date.now()}`,
         ...followUpFormData,
         entityTitle: followUpFormData.entityTitle.trim(),
-        internId: users.find(u => u.role === 'HR_INTERN')?.id || 'agent',
-        internName: 'HR Intern'
+        internId: staffId,
+        internName: staffName
       };
       onAddFollowUp(newF);
       showNotification(`Posted new scheduled follow-up!`);
@@ -455,8 +468,9 @@ export default function AdminDashboard({
   // ---------------- Call Log Handlers ----------------
   const handleOpenAddCall = () => {
     setEditingCall(null);
+    const firstStaff = users.find(u => u.role !== 'ADMIN') || users[0];
     setCallFormData({
-      internName: 'HR Manager',
+      internName: firstStaff ? firstStaff.name : 'Vikram Aditya',
       recipientName: tpos[0]?.name || 'Placement Officer',
       recipientType: 'TPO',
       durationSeconds: 180,
@@ -1242,6 +1256,7 @@ export default function AdminDashboard({
                   <th style={{ background: '#154360', color: '#ffffff' }}>Type</th>
                   <th style={{ background: '#154360', color: '#ffffff' }}>Scheduled Date</th>
                   <th style={{ background: '#154360', color: '#ffffff' }}>Priority</th>
+                  <th style={{ background: '#154360', color: '#ffffff' }}>Assigned Staff</th>
                   <th style={{ background: '#154360', color: '#ffffff' }}>Notes</th>
                   <th style={{ background: '#154360', color: '#ffffff' }}>Status</th>
                   <th style={{ background: '#154360', color: '#ffffff', textAlign: 'right' }}>Actions</th>
@@ -1250,7 +1265,7 @@ export default function AdminDashboard({
               <tbody>
                 {followUps.length === 0 ? (
                   <tr>
-                    <td colSpan={7} style={{ textAlign: 'center', padding: '28px', color: '#71717a' }}>
+                    <td colSpan={8} style={{ textAlign: 'center', padding: '28px', color: '#71717a' }}>
                       No follow-ups scheduled yet. Click "Post New Follow-Up" above.
                     </td>
                   </tr>
@@ -1270,6 +1285,9 @@ export default function AdminDashboard({
                         <span className={fup.priority === 'HIGH' ? 'badge badge-red' : 'badge badge-mustard'}>
                           {fup.priority || 'MEDIUM'}
                         </span>
+                      </td>
+                      <td style={{ padding: '10px 14px', fontSize: '0.8rem', fontWeight: 600, color: '#154360' }}>
+                        {fup.internName || 'Vikram Aditya'}
                       </td>
                       <td style={{ padding: '10px 14px', fontSize: '0.75rem', color: '#52525b', maxWidth: '240px' }}>
                         {fup.notes || 'No notes provided'}
@@ -1932,6 +1950,26 @@ export default function AdminDashboard({
                 </div>
 
                 <div className="form-group">
+                  <label className="form-label">Assigned Staff Member (HR / Intern) *</label>
+                  <select 
+                    className="form-select"
+                    value={followUpFormData.internId}
+                    onChange={e => {
+                      const sel = users.find(u => u.id === e.target.value);
+                      setFollowUpFormData(prev => ({ 
+                        ...prev, 
+                        internId: e.target.value,
+                        internName: sel ? sel.name : prev.internName
+                      }));
+                    }}
+                  >
+                    {users.filter(u => u.role !== 'ADMIN').map(u => (
+                      <option key={u.id} value={u.id}>{u.name} ({u.role === 'MAIN_HR' ? 'HR Manager' : 'HR Intern'})</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
                   <label className="form-label">Follow-Up Action Notes</label>
                   <textarea 
                     className="form-input" 
@@ -1973,12 +2011,15 @@ export default function AdminDashboard({
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   <div className="form-group">
                     <label className="form-label">Caller (Staff Member)</label>
-                    <input 
-                      type="text" 
-                      className="form-input" 
+                    <select 
+                      className="form-select" 
                       value={callFormData.internName}
                       onChange={e => setCallFormData(prev => ({ ...prev, internName: e.target.value }))}
-                    />
+                    >
+                      {users.filter(u => u.role !== 'ADMIN').map(u => (
+                        <option key={u.id} value={u.name}>{u.name} ({u.role === 'MAIN_HR' ? 'HR Manager' : 'HR Intern'})</option>
+                      ))}
+                    </select>
                   </div>
                   <div className="form-group">
                     <label className="form-label">Recipient Name *</label>

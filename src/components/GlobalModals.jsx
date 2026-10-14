@@ -158,9 +158,9 @@ export function GlobalNewTpoModal({
   isOpen, 
   onClose, 
   onSubmit, 
-  users 
+  users = [] 
 }) {
-  const interns = users.filter(u => u.role === 'HR_INTERN');
+  const staffMembers = (users || []).filter(u => u.role !== 'ADMIN');
   const [collegeName, setCollegeName] = useState('');
   const [name, setName] = useState('');
   const [designation, setDesignation] = useState('Training & Placement Officer');
@@ -168,7 +168,7 @@ export function GlobalNewTpoModal({
   const [email, setEmail] = useState('');
   const [city, setCity] = useState('');
   const [tier, setTier] = useState('Tier 1');
-  const [assignedInternId, setAssignedInternId] = useState(interns[0]?.id || '');
+  const [assignedInternId, setAssignedInternId] = useState(staffMembers[0]?.id || '');
   const [notes, setNotes] = useState('');
 
   if (!isOpen) return null;
@@ -177,7 +177,7 @@ export function GlobalNewTpoModal({
     e.preventDefault();
     if (!collegeName.trim() || !name.trim() || !phone.trim()) return;
 
-    const assignedIntern = interns.find(i => i.id === assignedInternId);
+    const assignedStaff = staffMembers.find(i => i.id === (assignedInternId || staffMembers[0]?.id)) || staffMembers[0];
     onSubmit({
       id: `tpo-${Date.now()}`,
       collegeId: `col-${Date.now()}`,
@@ -187,8 +187,8 @@ export function GlobalNewTpoModal({
       phone: phone.trim(),
       email: email.trim(),
       status: 'NEW_LEAD',
-      assignedInternId: assignedInternId || 'unassigned',
-      assignedInternName: assignedIntern ? assignedIntern.name : 'Unassigned',
+      assignedInternId: assignedStaff ? assignedStaff.id : 'unassigned',
+      assignedInternName: assignedStaff ? assignedStaff.name : 'Vikram Aditya',
       notes: notes.trim(),
       lastContacted: new Date().toISOString().split('T')[0],
       city: city.trim() || 'Campus City',
@@ -292,13 +292,13 @@ export function GlobalNewTpoModal({
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Assign to HR Intern</label>
+                  <label className="form-label">Assign to Staff Member</label>
                   <select 
                     className="form-select" 
-                    value={assignedInternId} 
+                    value={assignedInternId || staffMembers[0]?.id || ''} 
                     onChange={e => setAssignedInternId(e.target.value)}
                   >
-                    {interns.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
+                    {staffMembers.map(i => <option key={i.id} value={i.id}>{i.name} ({i.role === 'MAIN_HR' ? 'HR Manager' : 'HR Intern'})</option>)}
                   </select>
                 </div>
               </div>
@@ -525,13 +525,13 @@ export function GlobalNewFollowUpModal({
   isOpen, 
   onClose, 
   onSubmit, 
-  users, 
+  users = [], 
   tpos, 
   students 
 }) {
-  const interns = users.filter(u => u.role === 'HR_INTERN');
+  const staffMembers = (users || []).filter(u => u.role !== 'ADMIN');
   const [entityTitle, setEntityTitle] = useState(tpos[0] ? `${tpos[0].name} (${tpos[0].collegeName})` : '');
-  const [internId, setInternId] = useState(interns[0]?.id || '');
+  const [internId, setInternId] = useState(staffMembers[0]?.id || '');
   const [scheduledDate, setScheduledDate] = useState(
     new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   );
@@ -544,11 +544,11 @@ export function GlobalNewFollowUpModal({
     e.preventDefault();
     if (!entityTitle.trim()) return;
 
-    const assignedIntern = interns.find(i => i.id === internId);
+    const assignedStaff = staffMembers.find(i => i.id === (internId || staffMembers[0]?.id)) || staffMembers[0];
     onSubmit({
       id: `fup-${Date.now()}`,
-      internId: internId || 'unassigned',
-      internName: assignedIntern ? assignedIntern.name : 'HR Team',
+      internId: assignedStaff ? assignedStaff.id : 'unassigned',
+      internName: assignedStaff ? assignedStaff.name : 'Vikram Aditya',
       entityType: 'TASK',
       entityId: `ent-${Date.now()}`,
       entityTitle: entityTitle.trim(),
@@ -608,9 +608,9 @@ export function GlobalNewFollowUpModal({
               </div>
 
               <div className="form-group">
-                <label className="form-label">Assignee</label>
-                <select className="form-select" value={internId} onChange={e => setInternId(e.target.value)}>
-                  {interns.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
+                <label className="form-label">Assignee (Staff / Intern) *</label>
+                <select className="form-select" value={internId || staffMembers[0]?.id || ''} onChange={e => setInternId(e.target.value)}>
+                  {staffMembers.map(i => <option key={i.id} value={i.id}>{i.name} ({i.role === 'MAIN_HR' ? 'HR Manager' : 'HR Intern'})</option>)}
                 </select>
               </div>
 
@@ -643,7 +643,9 @@ export function GlobalAddStudentModal({
   onClose,
   onSubmit,
   drives,
+  users = []
 }) {
+  const staffMembers = (users || []).filter(u => u.role !== 'ADMIN');
   const [name, setName] = useState('');
   const [rollNumber, setRollNumber] = useState('');
   const [email, setEmail] = useState('');
@@ -653,6 +655,7 @@ export function GlobalAddStudentModal({
   const [stage, setStage] = useState('APPLIED');
   const [targetDriveId, setTargetDriveId] = useState(drives[0]?.id || '');
   const [customCollege, setCustomCollege] = useState('');
+  const [assignedStaffId, setAssignedStaffId] = useState(staffMembers[0]?.id || '');
 
   if (!isOpen) return null;
 
@@ -662,6 +665,7 @@ export function GlobalAddStudentModal({
 
     const matchedDrive = drives.find(d => d.id === targetDriveId) || drives[0];
     const resolvedCollege = matchedDrive ? matchedDrive.collegeName : (customCollege.trim() || 'Engineering College');
+    const assignedStaff = staffMembers.find(s => s.id === (assignedStaffId || staffMembers[0]?.id)) || staffMembers[0];
 
     onSubmit({
       id: `std-${Date.now()}`,
@@ -674,8 +678,8 @@ export function GlobalAddStudentModal({
       branch: branch.trim() || 'Computer Science',
       cgpa: parseFloat(cgpa) || 7.5,
       stage: stage || 'APPLIED',
-      internId: 'intern-1',
-      internName: 'Priya Sharma',
+      internId: assignedStaff ? assignedStaff.id : 'intern-vikram',
+      internName: assignedStaff ? assignedStaff.name : 'Vikram Aditya',
       notes: 'Added manually via Quick Add',
     });
 

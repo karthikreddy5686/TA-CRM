@@ -39,10 +39,10 @@ export default function TPODirectory({
   const [newDesignation, setNewDesignation] = useState('Training & Placement Officer');
   const [newPhone, setNewPhone] = useState('');
   const [newEmail, setNewEmail] = useState('');
-  const [newAssignedIntern, setNewAssignedIntern] = useState(users.find(u => u.role === 'HR_INTERN')?.id || '');
+  const [newAssignedIntern, setNewAssignedIntern] = useState(users.find(u => u.role !== 'ADMIN')?.id || '');
   const [newNotes, setNewNotes] = useState('');
 
-  const interns = users.filter(u => u.role === 'HR_INTERN');
+  const staffMembers = (users || []).filter(u => u.role !== 'ADMIN');
 
   // Filtered TPOs
   const filteredTpos = tpos.filter(tpo => {
@@ -60,7 +60,7 @@ export default function TPODirectory({
 
   const handleCreateTpo = (e) => {
     e.preventDefault();
-    const assignedUser = interns.find(i => i.id === newAssignedIntern);
+    const assignedUser = staffMembers.find(i => i.id === newAssignedIntern) || staffMembers[0];
     onAddTpo({
       id: `tpo-${Date.now()}`,
       collegeId: `col-${Date.now()}`,
@@ -70,8 +70,8 @@ export default function TPODirectory({
       phone: newPhone,
       email: newEmail,
       status: 'NEW_LEAD',
-      assignedInternId: newAssignedIntern,
-      assignedInternName: assignedUser ? assignedUser.name : 'Unassigned',
+      assignedInternId: assignedUser ? assignedUser.id : 'unassigned',
+      assignedInternName: assignedUser ? assignedUser.name : 'Vikram Aditya',
       notes: newNotes,
       lastContacted: new Date().toISOString().split('T')[0],
       city: newCity,
@@ -146,9 +146,9 @@ export default function TPODirectory({
               onChange={(e) => setInternFilter(e.target.value)}
               style={{ minWidth: '140px', fontSize: '0.825rem', padding: '6px 10px' }}
             >
-              <option value="ALL">All Interns</option>
-              {interns.map(i => (
-                <option key={i.id} value={i.id}>{i.name}</option>
+              <option value="ALL">All Staff & Interns</option>
+              {staffMembers.map(i => (
+                <option key={i.id} value={i.id}>{i.name} ({i.role === 'MAIN_HR' ? 'HR Manager' : 'HR Intern'})</option>
               ))}
             </select>
           </div>
@@ -523,14 +523,14 @@ export default function TPODirectory({
                   </div>
 
                   <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                    <label className="form-label">Assign to HR Intern</label>
+                    <label className="form-label">Assign to Staff Member</label>
                     <select 
                       className="form-select"
                       value={newAssignedIntern}
                       onChange={(e) => setNewAssignedIntern(e.target.value)}
                     >
-                      {interns.map(i => (
-                        <option key={i.id} value={i.id}>{i.name} ({i.title})</option>
+                      {staffMembers.map(i => (
+                        <option key={i.id} value={i.id}>{i.name} ({i.title || (i.role === 'MAIN_HR' ? 'HR Manager' : 'HR Intern')})</option>
                       ))}
                     </select>
                   </div>

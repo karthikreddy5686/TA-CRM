@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { 
-  Building2, 
-  Lock, 
-  User, 
-  ArrowRight, 
-  ShieldCheck, 
-  UserCheck, 
-  CheckCircle2, 
-  AlertCircle 
+import {
+  Building2,
+  Lock,
+  User,
+  ArrowRight,
+  ShieldCheck,
+  UserCheck,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 
 const PRESET_ACCOUNTS = [
@@ -175,9 +175,9 @@ export default function LoginScreen({ onLogin, users = [] }) {
             </label>
             <div style={{ position: 'relative' }}>
               <User size={16} color="#71717a" style={{ position: 'absolute', left: '12px', top: '12px' }} />
-              <input 
-                type="text" 
-                className="form-input" 
+              <input
+                type="text"
+                className="form-input"
                 placeholder="Username"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -193,9 +193,9 @@ export default function LoginScreen({ onLogin, users = [] }) {
             </label>
             <div style={{ position: 'relative' }}>
               <Lock size={16} color="#71717a" style={{ position: 'absolute', left: '12px', top: '12px' }} />
-              <input 
-                type="password" 
-                className="form-input" 
+              <input
+                type="password"
+                className="form-input"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -224,9 +224,9 @@ export default function LoginScreen({ onLogin, users = [] }) {
             </div>
           )}
 
-          <button 
-            type="submit" 
-            className="btn-mustard" 
+          <button
+            type="submit"
+            className="btn-mustard"
             style={{ width: '100%', padding: '12px', justifyContent: 'center', fontSize: '0.9rem', fontWeight: 800, borderRadius: '8px' }}
           >
             Sign In <ArrowRight size={15} color="#154360" />
@@ -236,3 +236,5 @@ export default function LoginScreen({ onLogin, users = [] }) {
     </div>
   );
 }
+
+

@@ -33,14 +33,13 @@ export default function FollowUpTracker({
   // New Follow-Up Form
   const [newTitle, setNewTitle] = useState('');
   const [newEntityType, setNewEntityType] = useState('TPO');
-  const [newInternId, setNewInternId] = useState(users.find(u => u.role === 'HR_INTERN')?.id || '');
+  const staffMembers = users.filter(u => u.role !== 'ADMIN');
+  const [newInternId, setNewInternId] = useState('');
   const [newScheduledDate, setNewScheduledDate] = useState(
     new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   );
   const [newPriority, setNewPriority] = useState('HIGH');
   const [newNotes, setNewNotes] = useState('');
-
-  const interns = users.filter(u => u.role === 'HR_INTERN');
 
   const filteredFollowUps = followUps.filter(f => {
     if (statusFilter !== 'ALL' && f.status !== statusFilter) return false;
@@ -55,11 +54,12 @@ export default function FollowUpTracker({
 
   const handleCreateSubmit = (e) => {
     e.preventDefault();
-    const assignedIntern = interns.find(i => i.id === newInternId);
+    const effectiveStaffId = newInternId || staffMembers[0]?.id || '';
+    const assignedStaff = staffMembers.find(i => i.id === effectiveStaffId) || staffMembers[0];
     onAddFollowUp({
       id: `fup-${Date.now()}`,
-      internId: newInternId,
-      internName: assignedIntern ? assignedIntern.name : 'HR Intern',
+      internId: effectiveStaffId,
+      internName: assignedStaff ? assignedStaff.name : 'Vikram Aditya',
       entityType: newEntityType,
       entityId: `ent-${Date.now()}`,
       entityTitle: newTitle,
@@ -159,9 +159,9 @@ export default function FollowUpTracker({
             onChange={(e) => setInternFilter(e.target.value)}
             style={{ flex: '1 1 110px', maxWidth: '200px', fontSize: '0.78rem', padding: '4px 8px' }}
           >
-            <option value="ALL">All Interns</option>
-            {interns.map(i => (
-              <option key={i.id} value={i.id}>{i.name}</option>
+            <option value="ALL">All Staff & Interns</option>
+            {staffMembers.map(s => (
+              <option key={s.id} value={s.id}>{s.name} ({s.role === 'MAIN_HR' ? 'HR Manager' : 'HR Intern'})</option>
             ))}
           </select>
         </div>
@@ -185,7 +185,7 @@ export default function FollowUpTracker({
                 <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>Entity</th>
                 <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>Due Date</th>
                 <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>Priority</th>
-                <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>Intern</th>
+                <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>Assigned Staff</th>
                 <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>Notes / Action Item</th>
                 <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>Action</th>
               </tr>
@@ -484,14 +484,14 @@ export default function FollowUpTracker({
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">Assigned Intern</label>
+                    <label className="form-label">Assigned Staff / Intern *</label>
                     <select 
                       className="form-select"
-                      value={newInternId}
+                      value={newInternId || staffMembers[0]?.id || ''}
                       onChange={(e) => setNewInternId(e.target.value)}
                     >
-                      {interns.map(i => (
-                        <option key={i.id} value={i.id}>{i.name}</option>
+                      {staffMembers.map(s => (
+                        <option key={s.id} value={s.id}>{s.name} ({s.role === 'MAIN_HR' ? 'HR Manager' : 'HR Intern'})</option>
                       ))}
                     </select>
                   </div>

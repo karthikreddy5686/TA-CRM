@@ -82,14 +82,114 @@ export default function App() {
   // Navigation State
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'googleFormBlast' | 'liveBoard' | 'drives' | 'tpos' | 'followups' | 'calls'
 
-  // User State with Local Storage persistence
+  // Sanitize helper to purge fake generic dummy accounts and establish realistic staff
+  const sanitizeUsers = (list) => {
+    const isGenericDummy = (u) => {
+      if (!u) return true;
+      const name = (u.name || '').trim().toLowerCase();
+      const email = (u.email || '').trim().toLowerCase();
+      const id = (u.id || '').toLowerCase();
+      return (
+        name === 'hr manager' ||
+        name === 'main hr manager' ||
+        name === 'main hr' ||
+        name === 'hr intern 1' ||
+        name === 'hr intern 2' ||
+        email === 'hr.head@company.com' ||
+        email === 'hr@company.com' ||
+        email === 'intern1@company.com' ||
+        email === 'intern2@company.com' ||
+        id === 'user-main-hr' ||
+        id === 'intern-1' ||
+        id === 'intern-2'
+      );
+    };
+
+    const realUsers = Array.isArray(list) ? list.filter(u => u && !isGenericDummy(u)) : [];
+
+    // Ensure Super Admin exists
+    const adminIdx = realUsers.findIndex(u => u.role === 'ADMIN');
+    if (adminIdx === -1) {
+      realUsers.unshift({
+        id: 'user-admin',
+        name: 'Geonixa Admin',
+        role: 'ADMIN',
+        title: 'Super Administrator',
+        email: 'admin@geonixa',
+        password: 'geonixa@123',
+        avatar: 'AD',
+        status: 'online',
+      });
+    }
+
+    // Ensure realistic HR Manager exists if none provisioned
+    const hasHRManager = realUsers.some(u => u.role === 'MAIN_HR');
+    if (!hasHRManager) {
+      realUsers.push({
+        id: 'hr-ananya',
+        name: 'Ananya Sharma',
+        role: 'MAIN_HR',
+        title: 'Head of Talent Acquisition',
+        email: 'ananya.sharma@talentconnect.io',
+        password: 'admin',
+        avatar: 'AS',
+        status: 'online',
+        dailyTargetHours: 4.0,
+        dailyTargetLeads: 25,
+      });
+    }
+
+    // Ensure Vikram Aditya (the user's manually added HR) exists and is properly structured
+    const vikramUser = realUsers.find(u => (u.email || '').toLowerCase() === 'vikram@geonixa');
+    if (!vikramUser) {
+      realUsers.push({
+        id: 'intern-vikram',
+        name: 'Vikram Aditya',
+        role: 'HR_INTERN',
+        title: 'Recruitment Specialist',
+        email: 'vikram@geonixa',
+        password: 'admin',
+        avatar: 'VA',
+        status: 'online',
+        dailyTargetHours: 3.5,
+        dailyTargetLeads: 20,
+      });
+    } else {
+      // Ensure role and required properties
+      if (!vikramUser.role) vikramUser.role = 'HR_INTERN';
+      if (!vikramUser.name) vikramUser.name = 'Vikram Aditya';
+      if (!vikramUser.dailyTargetHours) vikramUser.dailyTargetHours = 3.5;
+      if (!vikramUser.dailyTargetLeads) vikramUser.dailyTargetLeads = 20;
+    }
+
+    // Ensure realistic second recruiter exists
+    const hasSecondIntern = realUsers.some(u => u.role === 'HR_INTERN' && (u.email || '').toLowerCase() !== 'vikram@geonixa');
+    if (!hasSecondIntern) {
+      realUsers.push({
+        id: 'intern-kavya',
+        name: 'Kavya Nair',
+        role: 'HR_INTERN',
+        title: 'Campus Talent Associate',
+        email: 'kavya.nair@talentconnect.io',
+        password: 'intern',
+        avatar: 'KN',
+        status: 'online',
+        dailyTargetHours: 3.5,
+        dailyTargetLeads: 20,
+      });
+    }
+
+    return realUsers;
+  };
+
+  // User State with Local Storage persistence & automatic purging of dummy accounts
   const [users, setUsers] = useState(() => {
     const saved = localStorage.getItem('tacrm_users');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
+          return sanitizeUsers(parsed);
         }
       } catch (e) {
         // ignore
@@ -117,13 +217,33 @@ export default function App() {
     );
   };
 
-  const sanitizeStudents = (list) => {
+  const sanitizeStudents = (list, staffList = users) => {
     if (!Array.isArray(list)) return [];
-    return list.filter(s => 
-      s && 
-      !(s.collegeName && s.collegeName === 'University Campus') &&
-      !(s.collegeName && s.collegeName === 'College Campus')
-    );
+    const vikram = staffList.find(u => (u.email || '').toLowerCase() === 'vikram@geonixa') || 
+                   staffList.find(u => u.role === 'HR_INTERN') ||
+                   { id: 'intern-vikram', name: 'Vikram Aditya' };
+    const kavya = staffList.find(u => (u.email || '').toLowerCase() === 'kavya.nair@talentconnect.io') ||
+                  staffList.find(u => u.id !== vikram.id && u.role === 'HR_INTERN') ||
+                  vikram;
+
+    return list
+      .filter(s => 
+        s && 
+        !(s.collegeName && s.collegeName === 'University Campus') &&
+        !(s.collegeName && s.collegeName === 'College Campus')
+      )
+      .map(stu => {
+        let internName = stu.internName;
+        let internId = stu.internId;
+        if (!internName || internName === 'HR Intern 1' || internName === 'HR Intern' || internName === 'Priya Sharma' || internId === 'intern-1') {
+          internName = vikram.name;
+          internId = vikram.id;
+        } else if (internName === 'HR Intern 2' || internId === 'intern-2') {
+          internName = kavya.name;
+          internId = kavya.id;
+        }
+        return { ...stu, internName, internId };
+      });
   };
 
   const sanitizeResponses = (list) => {
@@ -135,6 +255,93 @@ export default function App() {
     );
   };
 
+  const sanitizeFollowUps = (list, staffList = users) => {
+    if (!Array.isArray(list)) return [];
+    const vikram = staffList.find(u => (u.email || '').toLowerCase() === 'vikram@geonixa') || 
+                   staffList.find(u => u.role === 'HR_INTERN') ||
+                   { id: 'intern-vikram', name: 'Vikram Aditya' };
+    const kavya = staffList.find(u => (u.email || '').toLowerCase() === 'kavya.nair@talentconnect.io') ||
+                  staffList.find(u => u.id !== vikram.id && u.role === 'HR_INTERN') ||
+                  vikram;
+
+    return list.map(fup => {
+      let internName = fup.internName;
+      let internId = fup.internId;
+
+      if (!internName || internName === 'HR Intern 1' || internName === 'HR Intern' || internName === 'Priya Sharma' || internId === 'intern-1') {
+        internName = vikram.name;
+        internId = vikram.id;
+      } else if (internName === 'HR Intern 2' || internId === 'intern-2') {
+        internName = kavya.name;
+        internId = kavya.id;
+      }
+
+      return {
+        ...fup,
+        internName,
+        internId
+      };
+    });
+  };
+
+  const sanitizeTpos = (list, staffList = users) => {
+    if (!Array.isArray(list)) return [];
+    const vikram = staffList.find(u => (u.email || '').toLowerCase() === 'vikram@geonixa') || 
+                   staffList.find(u => u.role === 'HR_INTERN') ||
+                   { id: 'intern-vikram', name: 'Vikram Aditya' };
+    const kavya = staffList.find(u => (u.email || '').toLowerCase() === 'kavya.nair@talentconnect.io') ||
+                  staffList.find(u => u.id !== vikram.id && u.role === 'HR_INTERN') ||
+                  vikram;
+
+    return list.map(tpo => {
+      let assignedInternName = tpo.assignedInternName;
+      let assignedInternId = tpo.assignedInternId;
+
+      if (!assignedInternName || assignedInternName === 'HR Intern 1' || assignedInternName === 'HR Intern' || assignedInternId === 'intern-1') {
+        assignedInternName = vikram.name;
+        assignedInternId = vikram.id;
+      } else if (assignedInternName === 'HR Intern 2' || assignedInternId === 'intern-2') {
+        assignedInternName = kavya.name;
+        assignedInternId = kavya.id;
+      }
+
+      return {
+        ...tpo,
+        assignedInternName,
+        assignedInternId
+      };
+    });
+  };
+
+  const sanitizeCalls = (list, staffList = users) => {
+    if (!Array.isArray(list)) return [];
+    const vikram = staffList.find(u => (u.email || '').toLowerCase() === 'vikram@geonixa') || 
+                   staffList.find(u => u.role === 'HR_INTERN') ||
+                   { id: 'intern-vikram', name: 'Vikram Aditya' };
+    const kavya = staffList.find(u => (u.email || '').toLowerCase() === 'kavya.nair@talentconnect.io') ||
+                  staffList.find(u => u.id !== vikram.id && u.role === 'HR_INTERN') ||
+                  vikram;
+
+    return list.map(call => {
+      let internName = call.internName;
+      let internId = call.internId;
+
+      if (!internName || internName === 'HR Intern 1' || internName === 'HR Intern' || internId === 'intern-1') {
+        internName = vikram.name;
+        internId = vikram.id;
+      } else if (internName === 'HR Intern 2' || internId === 'intern-2') {
+        internName = kavya.name;
+        internId = kavya.id;
+      }
+
+      return {
+        ...call,
+        internName,
+        internId
+      };
+    });
+  };
+
   // Data State with Local Storage fallback
   const [colleges, setColleges] = useState(() => {
     const saved = localStorage.getItem('tacrm_colleges');
@@ -143,7 +350,12 @@ export default function App() {
 
   const [tpos, setTpos] = useState(() => {
     const saved = localStorage.getItem('tacrm_tpos');
-    return saved ? JSON.parse(saved) : [];
+    if (!saved) return [];
+    try {
+      return sanitizeTpos(JSON.parse(saved));
+    } catch {
+      return [];
+    }
   });
 
   const [drives, setDrives] = useState(() => {
@@ -168,12 +380,22 @@ export default function App() {
 
   const [followUps, setFollowUps] = useState(() => {
     const saved = localStorage.getItem('tacrm_followups');
-    return saved ? JSON.parse(saved) : [];
+    if (!saved) return [];
+    try {
+      return sanitizeFollowUps(JSON.parse(saved));
+    } catch {
+      return [];
+    }
   });
 
   const [callSessions, setCallSessions] = useState(() => {
     const saved = localStorage.getItem('tacrm_calls');
-    return saved ? JSON.parse(saved) : [];
+    if (!saved) return [];
+    try {
+      return sanitizeCalls(JSON.parse(saved));
+    } catch {
+      return [];
+    }
   });
 
   const [formResponses, setFormResponses] = useState(() => {
@@ -1724,6 +1946,7 @@ export default function App() {
           addToast(`Candidate "${newStudent.name}" added to drive!`, 'success');
         }}
         drives={drives}
+        users={users}
       />
 
       {/* Global Quick Action Sheet Modal */}

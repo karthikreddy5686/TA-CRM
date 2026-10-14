@@ -243,7 +243,8 @@ export default function DriveManagement({
         branch,
         cgpa,
         stage: 'APPLIED',
-        internId: users.find(u => u.role === 'HR_INTERN')?.id || 'intern-1',
+        internId: users.find(u => u.role === 'HR_INTERN')?.id || users.find(u => u.role !== 'ADMIN')?.id || 'intern-vikram',
+        internName: users.find(u => u.role === 'HR_INTERN')?.name || 'Vikram Aditya',
         notes: 'Imported via CSV/Text',
       });
     }
@@ -264,6 +265,7 @@ export default function DriveManagement({
 
     const targetDrive = getOrCreateDriveForStudent(effectiveTargetDriveId, manualDriveTitle, manualCollegeName);
 
+    const activeStaff = users.find(u => u.role === 'HR_INTERN') || users.find(u => u.role !== 'ADMIN');
     const newStudent = {
       id: `stu-${Date.now()}`,
       driveId: targetDrive.id,
@@ -277,7 +279,8 @@ export default function DriveManagement({
       branch: studentBranch.trim() || 'General',
       cgpa: parseFloat(studentCgpa) || 0,
       stage: studentStage,
-      internId: users.find(u => u.role === 'HR_INTERN')?.id || 'intern-1',
+      internId: activeStaff ? activeStaff.id : 'intern-vikram',
+      internName: activeStaff ? activeStaff.name : 'Vikram Aditya',
       notes: 'Manually added candidate',
     };
 
