@@ -450,7 +450,7 @@ export default function GoogleFormBlastCenter({
         <span style={{ color: '#cbd5e1' }}>→</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <span style={{ background: '#09090b', color: '#ffffff', borderRadius: '50%', width: '16px', height: '16px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--font-10)', fontWeight: 800 }}>3</span>
-          <span style={{ fontWeight: 700, color: '#09090b' }}>Post & WhatsApp Invites</span>
+          <span style={{ fontWeight: 700, color: '#09090b' }}>Post Students</span>
         </div>
       </div>
 
@@ -713,28 +713,15 @@ Columns accepted: Full Name, Roll Number, Email, Phone/WhatsApp, Branch, CGPA"
               </button>
             )}
 
-            {/* Clear All Intake Records Button */}
-            {filteredResponses.length > 0 && onClearAllFormResponses && (
-              <button
-                type="button"
-                onClick={onClearAllFormResponses}
-                className="btn-secondary btn-black-sm"
-                style={{ color: '#ef4444', borderColor: '#fca5a5' }}
-                title="Clear all student intake rows"
-              >
-                <Trash2 size={13} /> Clear Intake ({filteredResponses.length})
-              </button>
-            )}
-
             {/* Meaningful Action Button */}
             <button 
               onClick={openBlastConfirmation}
               className="btn-black btn-black-sm"
               disabled={filteredResponses.length === 0}
               style={{ fontWeight: 700 }}
-              title="Post candidates to drive roster and send WhatsApp invitations"
+              title="Post candidates to campus drive roster"
             >
-              <Send size={13} /> {selectedIds.length > 0 ? `Post Selected (${selectedIds.length}) & Send WhatsApp Invites` : 'Post Students & Send WhatsApp Invites'}
+              <Send size={13} /> {selectedIds.length > 0 ? `Post Selected (${selectedIds.length})` : 'Post Students'}
             </button>
           </div>
         </div>
@@ -753,7 +740,7 @@ Columns accepted: Full Name, Roll Number, Email, Phone/WhatsApp, Branch, CGPA"
                 </th>
                 <th>Student Name</th>
                 <th>Roll No</th>
-                <th>WhatsApp / Phone</th>
+                <th>Phone</th>
                 <th>Branch</th>
                 <th>CGPA</th>
                 <th>Status</th>
@@ -836,9 +823,9 @@ Columns accepted: Full Name, Roll Number, Email, Phone/WhatsApp, Branch, CGPA"
                             }}
                             className="btn-secondary btn-black-sm"
                             style={{ fontSize: '0.72rem', padding: '3px 8px' }}
-                            title="Send WhatsApp invite & post to site"
+                            title="Post candidate to campus drive roster"
                           >
-                            Invite
+                            Post Student
                           </button>
 
                           {onDeleteFormResponse && (
@@ -1184,7 +1171,7 @@ Columns accepted: Full Name, Roll Number, Email, Phone/WhatsApp, Branch, CGPA"
             <div className="modal-header">
               <div>
                 <h3 className="card-title">
-                  Post Students & Send WhatsApp Invites
+                  Post Students
                 </h3>
                 <p className="card-subtitle">
                   Sending invitations to {selectedIds.length} candidate{selectedIds.length === 1 ? '' : 's'} for {activeDrive?.collegeName || inlineCollegeName}
@@ -1206,7 +1193,7 @@ Columns accepted: Full Name, Roll Number, Email, Phone/WhatsApp, Branch, CGPA"
                     Broadcasting invitations & posting to live site...
                   </div>
                   <p style={{ fontSize: '0.825rem', color: '#52525b', marginBottom: '20px' }}>
-                    Updating student rosters and triggering WhatsApp & Email notifications.
+                    Updating student rosters and adding candidates to the campus recruitment drive.
                   </p>
 
                   <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
@@ -1248,7 +1235,7 @@ Columns accepted: Full Name, Roll Number, Email, Phone/WhatsApp, Branch, CGPA"
                   </div>
 
                   <div style={{ marginTop: '16px' }}>
-                    <label className="form-label" style={{ marginBottom: '8px' }}>Channels to Blast</label>
+                    <label className="form-label" style={{ marginBottom: '8px' }}>Publishing Options</label>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', cursor: 'pointer' }}>
@@ -1258,17 +1245,7 @@ Columns accepted: Full Name, Roll Number, Email, Phone/WhatsApp, Branch, CGPA"
                           onChange={(e) => setPostToPublicWall(e.target.checked)}
                           style={{ width: '16px', height: '16px', accentColor: '#09090b' }}
                         />
-                        <span><strong>Publish onto Site Board:</strong> Adds candidates to the "Posted Students" live drive list</span>
-                      </label>
-
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', cursor: 'pointer' }}>
-                        <input 
-                          type="checkbox" 
-                          checked={includeWhatsApp}
-                          onChange={(e) => setIncludeWhatsApp(e.target.checked)}
-                          style={{ width: '16px', height: '16px', accentColor: '#09090b' }}
-                        />
-                        <span><strong>WhatsApp Broadcast:</strong> Send personalized invite message directly to student phone</span>
+                        <span><strong>Publish to Campus Drive:</strong> Adds candidates to the Campus Drive & Students roster</span>
                       </label>
 
                       <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', cursor: 'pointer' }}>

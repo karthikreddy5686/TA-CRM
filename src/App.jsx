@@ -757,9 +757,8 @@ export default function App() {
 
   const NAV_MODULES = [
     { id: 'dashboard', name: 'Dashboard Overview', category: 'Main', icon: <BarChart3 size={15} /> },
-    { id: 'googleFormBlast', name: 'Google Sheets & WhatsApp Student Intake', category: 'Main', icon: <FileSpreadsheet size={15} /> },
-    { id: 'liveBoard', name: 'Posted Students', category: 'Main', icon: <Globe size={15} /> },
-    { id: 'drives', name: 'Campus Drives', category: 'Main', icon: <Calendar size={15} /> },
+    { id: 'googleFormBlast', name: 'Google Sheets Student Intake', category: 'Main', icon: <FileSpreadsheet size={15} /> },
+    { id: 'drives', name: 'Campus Drives & Students', category: 'Main', icon: <Calendar size={15} /> },
     { id: 'tpos', name: 'College TPOs', category: 'Outreach & Calls', icon: <Building2 size={15} /> },
     { id: 'followups', name: 'Follow-Ups', category: 'Outreach & Calls', icon: <Clock size={15} /> },
     { id: 'calls', name: 'Call Logs', category: 'Outreach & Calls', icon: <PhoneCall size={15} /> },
@@ -845,21 +844,12 @@ export default function App() {
           </button>
 
           <button 
-            onClick={() => { setActiveTab('liveBoard'); setIsMobileSidebarOpen(false); }}
-            className={`nav-item ${activeTab === 'liveBoard' ? 'active' : ''}`}
-            title="Posted Students"
-          >
-            <Globe size={17} />
-            <span className="nav-label">Posted Students</span>
-          </button>
-
-          <button 
             onClick={() => { setActiveTab('drives'); setIsMobileSidebarOpen(false); }}
-            className={`nav-item ${activeTab === 'drives' ? 'active' : ''}`}
-            title="Campus Drives"
+            className={`nav-item ${activeTab === 'drives' || activeTab === 'liveBoard' ? 'active' : ''}`}
+            title="Campus Drives & Students"
           >
             <Calendar size={17} />
-            <span className="nav-label">Campus Drives</span>
+            <span className="nav-label">Campus Drives & Students</span>
           </button>
 
           <div className="nav-section-title">Outreach & Calls</div>
@@ -1005,22 +995,7 @@ export default function App() {
               onDeleteFormResponse={handleDeleteFormResponse}
               onBatchDeleteFormResponses={handleBatchDeleteFormResponses}
               onClearAllFormResponses={handleClearAllFormResponses}
-              onGoToLiveBoard={() => setActiveTab('liveBoard')}
-            />
-          )}
-
-          {activeTab === 'liveBoard' && (
-            <PublishedDriveBoard 
-              drives={drives}
-              students={students}
-              formResponses={formResponses}
-              onStartCall={handleStartCall}
-              onDeleteStudent={handleDeleteStudent}
-              onNavigateToBlast={() => setActiveTab('googleFormBlast')}
-              onUpdateCandidateStage={handleUpdateCandidateStage}
-              onLoadDemoData={handleLoadDemoData}
-              hrPhoneNumber={hrPhoneNumber}
-              onOpenPhoneConnectModal={() => setIsPhoneConnectModalOpen(true)}
+              onGoToLiveBoard={() => setActiveTab('drives')}
             />
           )}
 
@@ -1038,7 +1013,7 @@ export default function App() {
             />
           )}
 
-          {activeTab === 'drives' && (
+          {(activeTab === 'drives' || activeTab === 'liveBoard') && (
             <DriveManagement 
               drives={drives}
               students={students}
@@ -1053,6 +1028,9 @@ export default function App() {
               onDeleteDrive={handleDeleteDrive}
               onClearAllDrives={handleClearAllDrives}
               onLoadDemoData={handleLoadDemoData}
+              defaultTab={activeTab === 'liveBoard' ? 'pipeline' : 'drives'}
+              hrPhoneNumber={hrPhoneNumber}
+              onOpenPhoneConnectModal={() => setIsPhoneConnectModalOpen(true)}
             />
           )}
 
@@ -1072,40 +1050,41 @@ export default function App() {
 
           {activeTab === 'calls' && (
             <div className="content-card">
-              <div className="card-header-row">
+              <div className="card-header-row" style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
                 <div>
-                  <h2 className="card-title">All Logged Call Records & Talk Time</h2>
-                  <p className="card-subtitle">
+                  <h2 className="card-title" style={{ fontSize: '0.95rem' }}>All Logged Call Records & Talk Time</h2>
+                  <p className="card-subtitle" style={{ fontSize: '0.75rem' }}>
                     Total talk time clocked: <strong>{formatDuration(callSessions.reduce((s, c) => s + (c.durationSeconds || 0), 0))}</strong> across {callSessions.length} total sessions
                   </p>
                 </div>
               </div>
 
-              <div className="table-wrapper">
-                <table className="crm-table">
+              {/* Desktop Table View - Compact, small font, NO horizontal scroll */}
+              <div className="desktop-only" style={{ width: '100%', overflowX: 'hidden' }}>
+                <table className="crm-table" style={{ width: '100%', tableLayout: 'auto' }}>
                   <thead>
                     <tr>
-                      <th>Time & Date</th>
-                      <th>HR Caller</th>
-                      <th>Recipient / Organization</th>
-                      <th>Mode</th>
-                      <th>Clocked Duration</th>
-                      <th>Call Outcome</th>
-                      <th>Minutes & Follow-Up Notes</th>
-                      <th style={{ width: '40px' }}>Action</th>
+                      <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>Date & Time</th>
+                      <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>HR Caller</th>
+                      <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>Recipient</th>
+                      <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>Mode</th>
+                      <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>Duration</th>
+                      <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>Outcome</th>
+                      <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>Notes</th>
+                      <th style={{ width: '30px', padding: '6px 4px' }}></th>
                     </tr>
                   </thead>
                   <tbody>
                     {callSessions.length === 0 ? (
                       <tr>
-                        <td colSpan={8} style={{ textAlign: 'center', padding: '36px', color: '#71717a' }}>
+                        <td colSpan={8} style={{ textAlign: 'center', padding: '28px', color: '#71717a', fontSize: '0.78rem' }}>
                           No calls recorded yet. Click Call or Video on any TPO or candidate to log and track talk-time.
                         </td>
                       </tr>
                     ) : (
                       callSessions.map(c => (
                         <tr key={c.id}>
-                          <td style={{ whiteSpace: 'nowrap', fontSize: '0.8rem', color: '#52525b' }}>
+                          <td style={{ whiteSpace: 'nowrap', fontSize: '0.72rem', color: '#52525b', padding: '6px 8px' }}>
                             {new Date(c.startedAt).toLocaleString([], { 
                               month: 'short', 
                               day: 'numeric', 
@@ -1114,58 +1093,59 @@ export default function App() {
                             })}
                           </td>
 
-                          <td>
+                          <td style={{ fontSize: '0.75rem', padding: '6px 8px' }}>
                             <strong>{c.internName}</strong>
                           </td>
 
-                          <td>
+                          <td style={{ fontSize: '0.75rem', padding: '6px 8px' }}>
                             <div style={{ fontWeight: 600 }}>{c.recipientName}</div>
-                            <span className="badge badge-grey" style={{ fontSize: '0.7rem' }}>
+                            <span className="badge badge-grey" style={{ fontSize: '0.62rem', padding: '1px 5px' }}>
                               {c.recipientType}
                             </span>
                           </td>
 
-                          <td>
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '0.8rem' }}>
-                              {c.callType === 'VIDEO' ? <Video size={14} /> : <Phone size={14} />}
+                          <td style={{ padding: '6px 8px' }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem' }}>
+                              {c.callType === 'VIDEO' ? <Video size={12} /> : <Phone size={12} />}
                               {c.callType}
                             </span>
                           </td>
 
-                          <td>
+                          <td style={{ padding: '6px 8px' }}>
                             <span style={{ 
-                              fontFamily: 'Space Grotesk, sans-serif', 
+                              fontFamily: 'monospace', 
                               fontWeight: 700,
+                              fontSize: '0.72rem',
                               background: '#f1f5f9',
-                              padding: '4px 8px',
-                              borderRadius: '6px'
+                              padding: '2px 6px',
+                              borderRadius: '4px'
                             }}>
                               {formatDuration(c.durationSeconds)}
                             </span>
                           </td>
 
-                          <td>
+                          <td style={{ padding: '6px 8px' }}>
                             <span className={`badge ${
                               c.disposition === 'DRIVE_CONFIRMED' || c.disposition === 'SCREENING_PASSED'
                                 ? 'badge-green'
                                 : 'badge-amber'
-                            }`}>
+                            }`} style={{ fontSize: '0.65rem', padding: '2px 6px' }}>
                               {c.disposition ? c.disposition.replace(/_/g, ' ') : 'COMPLETED'}
                             </span>
                           </td>
 
-                          <td style={{ maxWidth: '300px', fontSize: '0.825rem', color: '#52525b' }}>
-                            {c.notes || 'No notes.'}
+                          <td style={{ fontSize: '0.72rem', color: '#52525b', padding: '6px 8px', maxWidth: '200px', wordBreak: 'break-word', whiteSpace: 'normal' }}>
+                            {c.notes || '—'}
                           </td>
 
-                          <td>
+                          <td style={{ padding: '6px 4px' }}>
                             <button 
                               onClick={() => handleDeleteCallSession(c.id)}
                               className="btn-icon"
-                              style={{ width: '26px', height: '26px', color: '#ef4444' }}
+                              style={{ width: '22px', height: '22px', color: '#ef4444' }}
                               title="Delete call log"
                             >
-                              <Trash2 size={13} />
+                              <Trash2 size={11} />
                             </button>
                           </td>
                         </tr>
@@ -1173,6 +1153,80 @@ export default function App() {
                     )}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile Card View - Clean, compact, small font, NO horizontal scroll */}
+              <div className="mobile-only" style={{ padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: '6px', width: '100%', boxSizing: 'border-box' }}>
+                {callSessions.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '20px 10px', color: '#71717a', fontSize: '0.78rem' }}>
+                    No calls recorded yet.
+                  </div>
+                ) : (
+                  callSessions.map(c => (
+                    <div key={c.id} style={{
+                      background: '#f8fafc',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                      padding: '8px 10px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '4px',
+                      width: '100%',
+                      boxSizing: 'border-box'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#09090b', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            {c.callType === 'VIDEO' ? <Video size={12} color="#0284c7" /> : <Phone size={12} color="#16a34a" />}
+                            {c.recipientName}
+                          </span>
+                          <span className="badge badge-grey" style={{ fontSize: '0.62rem', padding: '1px 4px' }}>
+                            {c.recipientType}
+                          </span>
+                        </div>
+                        <span style={{
+                          fontFamily: 'monospace',
+                          fontWeight: 700,
+                          fontSize: '0.72rem',
+                          background: '#e2e8f0',
+                          padding: '2px 6px',
+                          borderRadius: '4px'
+                        }}>
+                          {formatDuration(c.durationSeconds)}
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.68rem', color: '#71717a' }}>
+                        <span>Caller: <strong>{c.internName}</strong></span>
+                        <span>{new Date(c.startedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
+                        <span className={`badge ${
+                          c.disposition === 'DRIVE_CONFIRMED' || c.disposition === 'SCREENING_PASSED'
+                            ? 'badge-green'
+                            : 'badge-amber'
+                        }`} style={{ fontSize: '0.62rem', padding: '1px 5px' }}>
+                          {c.disposition ? c.disposition.replace(/_/g, ' ') : 'COMPLETED'}
+                        </span>
+                        <button 
+                          onClick={() => handleDeleteCallSession(c.id)}
+                          className="btn-icon"
+                          style={{ width: '22px', height: '22px', color: '#ef4444' }}
+                          title="Delete call log"
+                        >
+                          <Trash2 size={11} />
+                        </button>
+                      </div>
+
+                      {c.notes && (
+                        <div style={{ fontSize: '0.7rem', color: '#475569', background: '#ffffff', padding: '4px 6px', borderRadius: '4px', border: '1px solid #f1f5f9', wordBreak: 'break-word', marginTop: '2px' }}>
+                          {c.notes}
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}
@@ -1330,7 +1384,7 @@ export default function App() {
                       type="button"
                       className="command-item"
                       onClick={() => {
-                        setActiveTab('liveBoard');
+                        setActiveTab('drives');
                         setIsCommandPaletteOpen(false);
                         setCommandQuery('');
                       }}
@@ -1441,19 +1495,11 @@ export default function App() {
         </button>
         <button 
           type="button"
-          onClick={() => { setActiveTab('liveBoard'); setIsMobileSidebarOpen(false); }} 
-          className={`mobile-nav-btn ${activeTab === 'liveBoard' ? 'active' : ''}`}
-        >
-          <Globe size={18} />
-          <span>Students</span>
-        </button>
-        <button 
-          type="button"
           onClick={() => { setActiveTab('drives'); setIsMobileSidebarOpen(false); }} 
-          className={`mobile-nav-btn ${activeTab === 'drives' ? 'active' : ''}`}
+          className={`mobile-nav-btn ${activeTab === 'drives' || activeTab === 'liveBoard' ? 'active' : ''}`}
         >
           <Calendar size={18} />
-          <span>Drives</span>
+          <span>Drives & Students</span>
         </button>
         <button 
           type="button"

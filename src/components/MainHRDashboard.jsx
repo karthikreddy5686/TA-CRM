@@ -199,9 +199,9 @@ export default function MainHRDashboard({
 
         <div 
           className="metric-card" 
-          onClick={() => onSelectTab('liveBoard')}
+          onClick={() => onSelectTab('drives')}
           style={{ cursor: 'pointer', transition: 'all 0.15s ease' }}
-          title="Click to view Posted Students"
+          title="Click to view Campus Drives & Students"
         >
           <div className="metric-header">
             <span className="metric-title">Total Students</span>

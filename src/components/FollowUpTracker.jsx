@@ -97,44 +97,44 @@ export default function FollowUpTracker({
         </button>
       </div>
 
-      {/* Mini KPI banner */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '16px' }}>
-        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '14px 18px' }}>
-          <div style={{ fontSize: '0.72rem', fontWeight: 600, color: '#71717a', textTransform: 'uppercase' }}>
+      {/* Mini KPI banner - Compact */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '8px', marginBottom: '12px' }}>
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px 12px' }}>
+          <div style={{ fontSize: '0.65rem', fontWeight: 600, color: '#71717a', textTransform: 'uppercase' }}>
             Pending
           </div>
-          <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#09090b', marginTop: '2px' }}>
+          <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#09090b', marginTop: '1px' }}>
             {pendingCount}
           </div>
         </div>
 
-        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '14px 18px' }}>
-          <div style={{ fontSize: '0.72rem', fontWeight: 600, color: '#71717a', textTransform: 'uppercase' }}>
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px 12px' }}>
+          <div style={{ fontSize: '0.65rem', fontWeight: 600, color: '#71717a', textTransform: 'uppercase' }}>
             Urgent
           </div>
-          <div style={{ fontSize: '1.35rem', fontWeight: 800, color: urgentCount > 0 ? '#ef4444' : '#09090b', marginTop: '2px' }}>
+          <div style={{ fontSize: '1.1rem', fontWeight: 800, color: urgentCount > 0 ? '#ef4444' : '#09090b', marginTop: '1px' }}>
             {urgentCount}
           </div>
         </div>
 
-        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '14px 18px' }}>
-          <div style={{ fontSize: '0.72rem', fontWeight: 600, color: '#71717a', textTransform: 'uppercase' }}>
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px 12px' }}>
+          <div style={{ fontSize: '0.65rem', fontWeight: 600, color: '#71717a', textTransform: 'uppercase' }}>
             Completed
           </div>
-          <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#10b981', marginTop: '2px' }}>
+          <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#10b981', marginTop: '1px' }}>
             {completedCount}
           </div>
         </div>
       </div>
 
-      {/* Filter Bar */}
-      <div className="content-card" style={{ marginBottom: '20px', padding: '14px 20px' }}>
-        <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center' }}>
+      {/* Filter Bar - Flexible without side scrolling */}
+      <div className="content-card" style={{ marginBottom: '14px', padding: '10px 14px' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
           <select 
             className="form-select"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            style={{ width: 'auto', minWidth: '160px' }}
+            style={{ flex: '1 1 110px', maxWidth: '200px', fontSize: '0.78rem', padding: '4px 8px' }}
           >
             <option value="PENDING">Pending Only</option>
             <option value="COMPLETED">Completed Only</option>
@@ -145,7 +145,7 @@ export default function FollowUpTracker({
             className="form-select"
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value)}
-            style={{ width: 'auto', minWidth: '160px' }}
+            style={{ flex: '1 1 110px', maxWidth: '200px', fontSize: '0.78rem', padding: '4px 8px' }}
           >
             <option value="ALL">All Priorities</option>
             <option value="URGENT">Urgent</option>
@@ -157,7 +157,7 @@ export default function FollowUpTracker({
             className="form-select"
             value={internFilter}
             onChange={(e) => setInternFilter(e.target.value)}
-            style={{ width: 'auto', minWidth: '170px' }}
+            style={{ flex: '1 1 110px', maxWidth: '200px', fontSize: '0.78rem', padding: '4px 8px' }}
           >
             <option value="ALL">All Interns</option>
             {interns.map(i => (
@@ -169,50 +169,51 @@ export default function FollowUpTracker({
 
       {/* Table */}
       <div className="content-card">
-        <div className="card-header-row">
+        <div className="card-header-row" style={{ padding: '10px 14px', borderBottom: '1px solid #f1f5f9' }}>
           <div>
-            <h2 className="card-title">Follow-Up Schedule ({filteredFollowUps.length})</h2>
-            <p className="card-subtitle">Keep track of outreach promises and scheduled discussion dates</p>
+            <h2 className="card-title" style={{ fontSize: '0.92rem' }}>Follow-Up Schedule ({filteredFollowUps.length})</h2>
+            <p className="card-subtitle" style={{ fontSize: '0.72rem' }}>Keep track of outreach promises and scheduled discussion dates</p>
           </div>
         </div>
 
-        <div className="table-wrapper desktop-only">
-          <table className="crm-table">
+        <div className="desktop-only" style={{ width: '100%', overflowX: 'hidden' }}>
+          <table className="crm-table" style={{ width: '100%', tableLayout: 'auto' }}>
             <thead>
               <tr>
-                <th style={{ width: '40px' }}>Status</th>
-                <th>Target Contact / Organization</th>
-                <th>Entity</th>
-                <th>Due Date</th>
-                <th>Priority</th>
-                <th>Assigned Intern</th>
-                <th>Notes / Action Item</th>
-                <th>In-App Action</th>
+                <th style={{ width: '32px', padding: '6px 6px' }}>Status</th>
+                <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>Target Contact</th>
+                <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>Entity</th>
+                <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>Due Date</th>
+                <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>Priority</th>
+                <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>Intern</th>
+                <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>Notes / Action Item</th>
+                <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>Action</th>
               </tr>
             </thead>
             <tbody>
               {filteredFollowUps.length === 0 ? (
                 <tr>
-                  <td colSpan={8} style={{ textAlign: 'center', padding: '36px', color: '#71717a' }}>
+                  <td colSpan={8} style={{ textAlign: 'center', padding: '28px', color: '#71717a', fontSize: '0.78rem' }}>
                     No follow-ups found for selected filters.
                   </td>
                 </tr>
               ) : (
                 filteredFollowUps.map(fup => (
                   <tr key={fup.id}>
-                    <td>
+                    <td style={{ padding: '6px 6px', textAlign: 'center' }}>
                       <input 
                         type="checkbox"
                         checked={fup.status === 'COMPLETED'}
                         onChange={() => onToggleCompleteFollowUp(fup.id)}
-                        style={{ width: '16px', height: '16px', accentColor: '#09090b', cursor: 'pointer' }}
+                        style={{ width: '14px', height: '14px', accentColor: '#09090b', cursor: 'pointer' }}
                         title="Mark Completed"
                       />
                     </td>
 
-                    <td>
+                    <td style={{ padding: '6px 8px' }}>
                       <div style={{ 
-                        fontWeight: 700, 
+                        fontWeight: 700,
+                        fontSize: '0.78rem',
                         color: fup.status === 'COMPLETED' ? '#71717a' : '#09090b',
                         textDecoration: fup.status === 'COMPLETED' ? 'line-through' : 'none'
                       }}>
@@ -220,39 +221,40 @@ export default function FollowUpTracker({
                       </div>
                     </td>
 
-                    <td>
-                      <span className="badge badge-grey" style={{ fontSize: '0.72rem' }}>
+                    <td style={{ padding: '6px 8px' }}>
+                      <span className="badge badge-grey" style={{ fontSize: '0.65rem', padding: '1px 5px' }}>
                         {fup.entityType}
                       </span>
                     </td>
 
-                    <td>
+                    <td style={{ padding: '6px 8px' }}>
                       <span style={{ 
                         fontWeight: 600, 
+                        fontSize: '0.75rem',
                         color: '#09090b'
                       }}>
                         {fup.scheduledDate}
                       </span>
                     </td>
 
-                    <td>
+                    <td style={{ padding: '6px 8px' }}>
                       <span className={`badge ${
                         fup.priority === 'URGENT' ? 'badge-red' : fup.priority === 'HIGH' ? 'badge-amber' : 'badge-grey'
-                      }`}>
+                      }`} style={{ fontSize: '0.65rem', padding: '1px 5px' }}>
                         {fup.priority}
                       </span>
                     </td>
 
-                    <td>
-                      <span style={{ fontSize: '0.825rem' }}>{fup.internName}</span>
+                    <td style={{ padding: '6px 8px' }}>
+                      <span style={{ fontSize: '0.75rem' }}>{fup.internName}</span>
                     </td>
 
-                    <td style={{ maxWidth: '300px', fontSize: '0.825rem', color: '#52525b' }}>
+                    <td style={{ maxWidth: '220px', fontSize: '0.72rem', color: '#52525b', padding: '6px 8px', wordBreak: 'break-word', whiteSpace: 'normal' }}>
                       {fup.notes}
                     </td>
 
-                    <td>
-                      <div style={{ display: 'flex', gap: '6px' }}>
+                    <td style={{ padding: '6px 8px' }}>
+                      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                         {fup.status === 'PENDING' && (
                           <>
                             <button 
@@ -264,14 +266,16 @@ export default function FollowUpTracker({
                                 followUpId: fup.id
                               })}
                               className="btn-black btn-black-sm"
+                              style={{ padding: '2px 6px', fontSize: '0.7rem' }}
                               title="Call immediately"
                             >
-                              <Phone size={12} /> Call
+                              <Phone size={11} /> Call
                             </button>
 
                             <button 
                               onClick={() => onSnoozeFollowUp(fup.id, 1)}
                               className="btn-secondary btn-black-sm"
+                              style={{ padding: '2px 5px', fontSize: '0.7rem' }}
                               title="Snooze 1 day"
                             >
                               +1d
@@ -279,8 +283,8 @@ export default function FollowUpTracker({
                           </>
                         )}
                         {fup.status === 'COMPLETED' && (
-                          <span style={{ color: '#10b981', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <CheckCircle2 size={14} /> Done
+                          <span style={{ color: '#10b981', fontSize: '0.72rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '3px' }}>
+                            <CheckCircle2 size={12} /> Done
                           </span>
                         )}
 
@@ -288,10 +292,10 @@ export default function FollowUpTracker({
                           <button 
                             onClick={() => onDeleteFollowUp(fup.id)}
                             className="btn-icon"
-                            style={{ width: '28px', height: '28px', color: '#ef4444' }}
+                            style={{ width: '22px', height: '22px', color: '#ef4444' }}
                             title="Delete follow-up reminder"
                           >
-                            <Trash2 size={13} />
+                            <Trash2 size={11} />
                           </button>
                         )}
                       </div>
@@ -304,65 +308,67 @@ export default function FollowUpTracker({
         </div>
 
         {/* Mobile View: Clean Follow-Up Cards */}
-        <div className="mobile-only" style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div className="mobile-only" style={{ padding: '6px 8px', display: 'flex', flexDirection: 'column', gap: '6px', width: '100%', boxSizing: 'border-box' }}>
           {filteredFollowUps.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '24px 12px', color: '#71717a', fontSize: '0.8rem' }}>
-              No follow-ups found for selected filters. Tap "+ New Follow-Up" to create one.
+            <div style={{ textAlign: 'center', padding: '20px 10px', color: '#71717a', fontSize: '0.75rem' }}>
+              No follow-ups found for selected filters. Tap "+ Add Follow-Up" to create one.
             </div>
           ) : (
             filteredFollowUps.map(fup => (
               <div key={fup.id} style={{
                 background: fup.status === 'COMPLETED' ? '#f1f5f9' : '#f8fafc',
                 border: '1px solid #e2e8f0',
-                borderRadius: '10px',
-                padding: '12px',
+                borderRadius: '8px',
+                padding: '8px 10px',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '8px',
+                gap: '6px',
+                width: '100%',
+                boxSizing: 'border-box',
                 opacity: fup.status === 'COMPLETED' ? 0.75 : 1
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
                     <input 
-                      type="checkbox"
+                      type="checkbox" 
                       checked={fup.status === 'COMPLETED'}
                       onChange={() => onToggleCompleteFollowUp(fup.id)}
-                      style={{ width: '16px', height: '16px', accentColor: '#09090b', cursor: 'pointer', marginTop: '2px' }}
+                      style={{ width: '14px', height: '14px', accentColor: '#09090b', cursor: 'pointer', marginTop: '2px' }}
                     />
                     <div>
                       <div style={{ 
-                        fontWeight: 800, 
-                        fontSize: '0.9rem', 
+                        fontWeight: 700, 
+                        fontSize: '0.8rem', 
                         color: fup.status === 'COMPLETED' ? '#71717a' : '#09090b',
                         textDecoration: fup.status === 'COMPLETED' ? 'line-through' : 'none'
                       }}>
                         {fup.entityTitle}
                       </div>
-                      <div style={{ fontSize: '0.72rem', color: '#71717a' }}>
-                        {fup.entityType} • Assigned: {fup.internName}
+                      <div style={{ fontSize: '0.68rem', color: '#71717a' }}>
+                        {fup.entityType} • {fup.internName}
                       </div>
                     </div>
                   </div>
 
                   <span className={`badge ${
                     fup.priority === 'URGENT' ? 'badge-red' : fup.priority === 'HIGH' ? 'badge-amber' : 'badge-grey'
-                  }`} style={{ fontSize: '0.65rem' }}>
+                  }`} style={{ fontSize: '0.62rem', padding: '1px 5px' }}>
                     {fup.priority}
                   </span>
                 </div>
 
                 {fup.notes && (
-                  <div style={{ fontSize: '0.75rem', color: '#52525b', background: '#ffffff', padding: '6px 10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: '0.7rem', color: '#52525b', background: '#ffffff', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', wordBreak: 'break-word' }}>
                     {fup.notes}
                   </div>
                 )}
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #e2e8f0', paddingTop: '8px' }}>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#09090b' }}>
-                    📅 Due: {fup.scheduledDate}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #e2e8f0', paddingTop: '6px' }}>
+                  <span style={{ fontSize: '0.68rem', fontWeight: 600, color: '#09090b' }}>
+                    Due: {fup.scheduledDate}
                   </span>
 
-                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                     {fup.status === 'PENDING' && (
                       <>
                         <button 
