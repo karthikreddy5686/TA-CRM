@@ -57,14 +57,39 @@ export default function FollowUpTracker({
     e.preventDefault();
     const effectiveStaffId = newInternId || staffMembers[0]?.id || '';
     const assignedStaff = staffMembers.find(i => i.id === effectiveStaffId) || staffMembers[0];
+
+    let resolvedPhone = newPhone.trim();
+    let resolvedEntityId = `ent-${Date.now()}`;
+    const cleanTitle = newTitle.replace(/\s*\([^)]*\)/g, '').replace(/\s*-\s*.*$/, '').trim().toLowerCase();
+
+    if (!resolvedPhone) {
+      const matchStu = (students || []).find(s => {
+        const sName = (s.name || '').trim().toLowerCase();
+        return sName && (sName === cleanTitle || cleanTitle.includes(sName) || sName.includes(cleanTitle));
+      });
+      if (matchStu) {
+        resolvedPhone = matchStu.phone || '';
+        resolvedEntityId = matchStu.id;
+      } else {
+        const matchTpo = (tpos || []).find(t => {
+          const tName = (t.name || '').trim().toLowerCase();
+          return tName && (tName === cleanTitle || cleanTitle.includes(tName) || tName.includes(cleanTitle));
+        });
+        if (matchTpo) {
+          resolvedPhone = matchTpo.phone || '';
+          resolvedEntityId = matchTpo.id;
+        }
+      }
+    }
+
     onAddFollowUp({
       id: `fup-${Date.now()}`,
       internId: effectiveStaffId,
       internName: assignedStaff ? assignedStaff.name : (staffMembers[0]?.name || 'Staff Recruiter'),
       entityType: newEntityType,
-      entityId: `ent-${Date.now()}`,
-      entityTitle: newTitle,
-      phone: newPhone.trim(),
+      entityId: resolvedEntityId,
+      entityTitle: newTitle.trim(),
+      phone: resolvedPhone,
       scheduledDate: newScheduledDate,
       priority: newPriority,
       status: 'PENDING',
@@ -262,9 +287,10 @@ export default function FollowUpTracker({
                           <>
                             <button 
                               onClick={() => {
+                                const cleanTitle = (fup.entityTitle || '').replace(/\s*\([^)]*\)/g, '').replace(/\s*-\s*.*$/, '').trim().toLowerCase();
                                 const matched = fup.phone ? null : (
-                                  students?.find(s => s.id === fup.entityId || (s.name && fup.entityTitle && (s.name.toLowerCase() === fup.entityTitle.toLowerCase() || fup.entityTitle.toLowerCase().includes(s.name.toLowerCase())))) ||
-                                  tpos?.find(t => t.id === fup.entityId || (t.name && fup.entityTitle && (t.name.toLowerCase() === fup.entityTitle.toLowerCase() || fup.entityTitle.toLowerCase().includes(t.name.toLowerCase()))))
+                                  students?.find(s => s.id === fup.entityId || (s.name && (s.name.trim().toLowerCase() === cleanTitle || cleanTitle.includes(s.name.trim().toLowerCase()) || s.name.trim().toLowerCase().includes(cleanTitle)))) ||
+                                  tpos?.find(t => t.id === fup.entityId || (t.name && (t.name.trim().toLowerCase() === cleanTitle || cleanTitle.includes(t.name.trim().toLowerCase()) || t.name.trim().toLowerCase().includes(cleanTitle))))
                                 );
                                 onStartCall({
                                   recipientType: fup.entityType,
@@ -384,9 +410,10 @@ export default function FollowUpTracker({
                       <>
                         <button 
                           onClick={() => {
+                            const cleanTitle = (fup.entityTitle || '').replace(/\s*\([^)]*\)/g, '').replace(/\s*-\s*.*$/, '').trim().toLowerCase();
                             const matched = fup.phone ? null : (
-                              students?.find(s => s.id === fup.entityId || (s.name && fup.entityTitle && (s.name.toLowerCase() === fup.entityTitle.toLowerCase() || fup.entityTitle.toLowerCase().includes(s.name.toLowerCase())))) ||
-                              tpos?.find(t => t.id === fup.entityId || (t.name && fup.entityTitle && (t.name.toLowerCase() === fup.entityTitle.toLowerCase() || fup.entityTitle.toLowerCase().includes(t.name.toLowerCase()))))
+                              students?.find(s => s.id === fup.entityId || (s.name && (s.name.trim().toLowerCase() === cleanTitle || cleanTitle.includes(s.name.trim().toLowerCase()) || s.name.trim().toLowerCase().includes(cleanTitle)))) ||
+                              tpos?.find(t => t.id === fup.entityId || (t.name && (t.name.trim().toLowerCase() === cleanTitle || cleanTitle.includes(t.name.trim().toLowerCase()) || t.name.trim().toLowerCase().includes(cleanTitle))))
                             );
                             onStartCall({
                               recipientType: fup.entityType,

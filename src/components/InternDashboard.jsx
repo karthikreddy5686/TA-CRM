@@ -202,9 +202,10 @@ export default function InternDashboard({
                         <div style={{ display: 'flex', gap: '6px' }}>
                           <button 
                             onClick={() => {
+                              const cleanTitle = (fup.entityTitle || '').replace(/\s*\([^)]*\)/g, '').replace(/\s*-\s*.*$/, '').trim().toLowerCase();
                               const matched = fup.phone ? null : (
-                                students?.find(s => s.id === fup.entityId || (s.name && fup.entityTitle && (s.name.toLowerCase() === fup.entityTitle.toLowerCase() || fup.entityTitle.toLowerCase().includes(s.name.toLowerCase())))) ||
-                                tpos?.find(t => t.id === fup.entityId || (t.name && fup.entityTitle && (t.name.toLowerCase() === fup.entityTitle.toLowerCase() || fup.entityTitle.toLowerCase().includes(t.name.toLowerCase()))))
+                                students?.find(s => s.id === fup.entityId || (s.name && (s.name.trim().toLowerCase() === cleanTitle || cleanTitle.includes(s.name.trim().toLowerCase()) || s.name.trim().toLowerCase().includes(cleanTitle)))) ||
+                                tpos?.find(t => t.id === fup.entityId || (t.name && (t.name.trim().toLowerCase() === cleanTitle || cleanTitle.includes(t.name.trim().toLowerCase()) || t.name.trim().toLowerCase().includes(cleanTitle))))
                               );
                               onStartCall({
                                 recipientType: fup.entityType,
@@ -268,9 +269,10 @@ export default function InternDashboard({
                     <div style={{ display: 'flex', gap: '4px' }}>
                       <button 
                         onClick={() => {
+                          const cleanTitle = (fup.entityTitle || '').replace(/\s*\([^)]*\)/g, '').replace(/\s*-\s*.*$/, '').trim().toLowerCase();
                           const matched = fup.phone ? null : (
-                            students?.find(s => s.id === fup.entityId || (s.name && fup.entityTitle && (s.name.toLowerCase() === fup.entityTitle.toLowerCase() || fup.entityTitle.toLowerCase().includes(s.name.toLowerCase())))) ||
-                            tpos?.find(t => t.id === fup.entityId || (t.name && fup.entityTitle && (t.name.toLowerCase() === fup.entityTitle.toLowerCase() || fup.entityTitle.toLowerCase().includes(t.name.toLowerCase()))))
+                            students?.find(s => s.id === fup.entityId || (s.name && (s.name.trim().toLowerCase() === cleanTitle || cleanTitle.includes(s.name.trim().toLowerCase()) || s.name.trim().toLowerCase().includes(cleanTitle)))) ||
+                            tpos?.find(t => t.id === fup.entityId || (t.name && (t.name.trim().toLowerCase() === cleanTitle || cleanTitle.includes(t.name.trim().toLowerCase()) || t.name.trim().toLowerCase().includes(cleanTitle))))
                           );
                           onStartCall({
                             recipientType: fup.entityType,
@@ -360,6 +362,7 @@ export default function InternDashboard({
                           recipientType: 'TPO',
                           recipientName: `${tpo.name} (${tpo.collegeName})`,
                           recipientDetail: `${tpo.designation} • ${tpo.phone}`,
+                          recipientPhone: tpo.phone,
                           type: 'AUDIO',
                           tpoId: tpo.id
                         })}
@@ -374,6 +377,7 @@ export default function InternDashboard({
                           recipientType: 'TPO',
                           recipientName: `${tpo.name} (${tpo.collegeName})`,
                           recipientDetail: `${tpo.designation} • ${tpo.phone}`,
+                          recipientPhone: tpo.phone,
                           type: 'VIDEO',
                           tpoId: tpo.id
                         })}
@@ -420,6 +424,7 @@ export default function InternDashboard({
                     recipientType: 'TPO',
                     recipientName: `${tpo.name} (${tpo.collegeName})`,
                     recipientDetail: `${tpo.designation} • ${tpo.phone}`,
+                    recipientPhone: tpo.phone,
                     type: 'AUDIO',
                     tpoId: tpo.id
                   })}
@@ -433,6 +438,7 @@ export default function InternDashboard({
                     recipientType: 'TPO',
                     recipientName: `${tpo.name} (${tpo.collegeName})`,
                     recipientDetail: `${tpo.designation} • ${tpo.phone}`,
+                    recipientPhone: tpo.phone,
                     type: 'VIDEO',
                     tpoId: tpo.id
                   })}

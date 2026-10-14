@@ -36,7 +36,7 @@ export default function CallModal({
   onMinimize, 
   isMinimized, 
   onExpand,
-  hrPhoneNumber = '+91 98201 55432',
+  hrPhoneNumber = '',
   onOpenPhoneConnectModal,
   onStartTimer,
   onToggleTimer,
@@ -165,7 +165,7 @@ export default function CallModal({
               {callState.recipientName}
             </div>
             <div style={{ fontSize: '0.72rem', color: '#a1a1aa' }}>
-              {callState.type === 'VIDEO' ? 'Laptop Video Interview' : `Phone Call • ${hrPhoneNumber}`}
+              {callState.type === 'VIDEO' ? 'Laptop Video Interview' : 'Direct Phone Call'}
             </div>
           </div>
         </div>
@@ -259,40 +259,6 @@ export default function CallModal({
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            {/* HR Connected Personal Phone indicator */}
-            <div style={{
-              background: '#18181b',
-              border: '1px solid #27272a',
-              borderRadius: '8px',
-              padding: '4px 10px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontSize: '0.75rem',
-              color: '#d1d5db'
-            }}>
-              <Smartphone size={13} color="#10b981" />
-              <span>HR Phone: <strong>{hrPhoneNumber}</strong></span>
-              {onOpenPhoneConnectModal && (
-                <button
-                  type="button"
-                  onClick={onOpenPhoneConnectModal}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#60a5fa',
-                    cursor: 'pointer',
-                    fontSize: '0.7rem',
-                    textDecoration: 'underline',
-                    padding: '0 2px'
-                  }}
-                  title="Configure personal phone number"
-                >
-                  Change
-                </button>
-              )}
-            </div>
-
             {/* Stopwatch */}
             <div 
               className="call-timer-box" 
@@ -356,9 +322,6 @@ export default function CallModal({
                   <span className="badge badge-green" style={{ fontSize: '0.72rem' }}>
                     <CheckCircle2 size={12} /> HR Direct Call
                   </span>
-                  <span style={{ fontSize: '0.75rem', color: '#a1a1aa' }}>
-                    From HR: <strong>{hrPhoneNumber}</strong>
-                  </span>
                 </div>
 
                 <h3 style={{ fontSize: '1.25rem', color: '#ffffff', fontWeight: 800, marginBottom: '6px' }}>
@@ -390,7 +353,12 @@ export default function CallModal({
                     />
                     <button 
                       type="button" 
-                      onClick={() => setIsEditingPhone(false)}
+                      onClick={() => {
+                        setIsEditingPhone(false);
+                        if (onUpdateRecipientPhone && phoneNumber.trim()) {
+                          onUpdateRecipientPhone(phoneNumber.trim());
+                        }
+                      }}
                       className="btn-black btn-black-sm"
                       style={{ background: '#10b981', borderColor: '#10b981', color: '#09090b', padding: '6px 12px', fontSize: '0.75rem', fontWeight: 700 }}
                     >

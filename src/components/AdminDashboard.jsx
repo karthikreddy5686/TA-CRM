@@ -1095,7 +1095,45 @@ export default function AdminDashboard({
                         </select>
                       </td>
                       <td style={{ padding: '10px 14px', textAlign: 'right' }}>
-                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
+                          {onStartCall && (
+                            <>
+                              <button 
+                                type="button"
+                                onClick={() => onStartCall({
+                                  recipientType: 'STUDENT',
+                                  recipientName: student.name,
+                                  recipientDetail: `${student.branch || 'Engg'} • ${student.phone} • ${student.collegeName || 'Campus'}`,
+                                  recipientPhone: student.phone,
+                                  type: 'AUDIO',
+                                  studentId: student.id,
+                                  student
+                                })}
+                                className="btn-mustard btn-black-sm"
+                                style={{ padding: '3px 8px', fontSize: '0.72rem', gap: '3px' }}
+                                title="Call candidate immediately"
+                              >
+                                <Phone size={11} color="#154360" /> Call
+                              </button>
+                              <button 
+                                type="button"
+                                onClick={() => onStartCall({
+                                  recipientType: 'STUDENT',
+                                  recipientName: student.name,
+                                  recipientDetail: `${student.branch || 'Engg'} • ${student.phone} • ${student.collegeName || 'Campus'}`,
+                                  recipientPhone: student.phone,
+                                  type: 'VIDEO',
+                                  studentId: student.id,
+                                  student
+                                })}
+                                className="btn-navy btn-black-sm"
+                                style={{ padding: '3px 8px', fontSize: '0.72rem', gap: '3px' }}
+                                title="Start video interview room"
+                              >
+                                <Video size={11} color="#FFDB58" /> Video
+                              </button>
+                            </>
+                          )}
                           <button 
                             onClick={() => handleOpenEditStudent(student)}
                             className="btn-secondary btn-black-sm"
@@ -1196,7 +1234,25 @@ export default function AdminDashboard({
                         </select>
                       </td>
                       <td style={{ padding: '10px 14px', textAlign: 'right' }}>
-                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
+                          {onStartCall && (
+                            <button 
+                              type="button"
+                              onClick={() => onStartCall({
+                                recipientType: 'TPO',
+                                recipientName: `${tpo.name} (${tpo.collegeName})`,
+                                recipientDetail: `${tpo.designation || 'Placement Officer'} • ${tpo.phone}`,
+                                recipientPhone: tpo.phone,
+                                type: 'AUDIO',
+                                tpoId: tpo.id
+                              })}
+                              className="btn-mustard btn-black-sm"
+                              style={{ padding: '3px 8px', fontSize: '0.72rem', gap: '3px' }}
+                              title="Call TPO Officer"
+                            >
+                              <Phone size={11} color="#154360" /> Call
+                            </button>
+                          )}
                           <button 
                             onClick={() => handleOpenEditTpo(tpo)}
                             className="btn-secondary btn-black-sm"
@@ -1298,7 +1354,32 @@ export default function AdminDashboard({
                         </span>
                       </td>
                       <td style={{ padding: '10px 14px', textAlign: 'right' }}>
-                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
+                          {onStartCall && fup.status !== 'COMPLETED' && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const cleanName = (fup.entityTitle || '').replace(/\s*\([^)]*\)/g, '').trim().toLowerCase();
+                                const matched = fup.phone ? null : (
+                                  students.find(s => s.id === fup.entityId || (s.name && (s.name.trim().toLowerCase() === cleanName || cleanName.includes(s.name.trim().toLowerCase()) || s.name.trim().toLowerCase().includes(cleanName)))) ||
+                                  tpos.find(t => t.id === fup.entityId || (t.name && (t.name.trim().toLowerCase() === cleanName || cleanName.includes(t.name.trim().toLowerCase()) || t.name.trim().toLowerCase().includes(cleanName))))
+                                );
+                                onStartCall({
+                                  recipientType: fup.entityType || 'CONTACT',
+                                  recipientName: fup.entityTitle,
+                                  recipientDetail: fup.notes || '',
+                                  recipientPhone: fup.phone || matched?.phone || '',
+                                  type: 'AUDIO',
+                                  followUpId: fup.id
+                                });
+                              }}
+                              className="btn-mustard btn-black-sm"
+                              style={{ padding: '3px 8px', fontSize: '0.72rem', gap: '3px' }}
+                              title="Call immediately"
+                            >
+                              <Phone size={11} color="#154360" /> Call
+                            </button>
+                          )}
                           <button 
                             onClick={() => handleOpenEditFollowUp(fup)}
                             className="btn-secondary btn-black-sm"

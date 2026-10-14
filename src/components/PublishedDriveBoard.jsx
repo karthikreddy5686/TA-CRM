@@ -299,6 +299,7 @@ export default function PublishedDriveBoard({
                             recipientType: 'STUDENT',
                             recipientName: student.name,
                             recipientDetail: `${student.branch} • ${student.phone}`,
+                            recipientPhone: student.phone,
                             type: 'VIDEO',
                             studentId: student.id,
                             student

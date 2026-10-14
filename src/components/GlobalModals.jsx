@@ -376,12 +376,27 @@ export function GlobalQuickCallModal({
     }
 
     if (customName.trim() || customPhone.trim()) {
+      const cleanName = customName.trim().toLowerCase();
+      const matchedStudent = students.find(s => {
+        const sName = (s.name || '').trim().toLowerCase();
+        return sName && (sName === cleanName || cleanName.includes(sName) || sName.includes(cleanName));
+      });
+      const matchedTpo = tpos.find(t => {
+        const tName = (t.name || '').trim().toLowerCase();
+        return tName && (tName === cleanName || cleanName.includes(tName) || tName.includes(cleanName));
+      });
+
+      const resolvedPhone = customPhone.trim() || matchedStudent?.phone || matchedTpo?.phone || '';
+
       onStartCall({
-        recipientType: 'CAMPUS_CONTACT',
-        recipientName: customName.trim() || 'Campus Official',
-        recipientDetail: customPhone.trim() || 'Outreach Call',
-        recipientPhone: customPhone.trim(),
+        recipientType: matchedStudent ? 'STUDENT' : matchedTpo ? 'TPO' : 'CAMPUS_CONTACT',
+        recipientName: matchedStudent ? matchedStudent.name : matchedTpo ? `${matchedTpo.name} (${matchedTpo.collegeName})` : (customName.trim() || 'Campus Official'),
+        recipientDetail: matchedStudent ? `${matchedStudent.collegeName || 'Campus'} • ${resolvedPhone}` : matchedTpo ? `${matchedTpo.designation || 'Placement Officer'} • ${resolvedPhone}` : (resolvedPhone || 'Outreach Call'),
+        recipientPhone: resolvedPhone,
         type: callType,
+        studentId: matchedStudent?.id,
+        tpoId: matchedTpo?.id,
+        student: matchedStudent
       });
       onClose();
     }
@@ -482,11 +497,25 @@ export function GlobalQuickCallModal({
                   <label className="form-label">Contact Name</label>
                   <input
                     type="text"
+                    list="global-quickcall-suggestions"
                     className="form-input"
-                    placeholder="e.g. Dean of Placements"
+                    placeholder="e.g. Dean of Placements or Candidate Name"
                     value={customName}
-                    onChange={e => setCustomName(e.target.value)}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setCustomName(val);
+                      const clean = val.replace(/\s*\([^)]*\)/g, '').replace(/\s*-\s*.*$/, '').trim().toLowerCase();
+                      const matched = (students || []).find(s => (s.name || '').trim().toLowerCase() === clean) ||
+                                      (tpos || []).find(t => (t.name || '').trim().toLowerCase() === clean);
+                      if (matched && matched.phone && !customPhone) {
+                        setCustomPhone(matched.phone);
+                      }
+                    }}
                   />
+                  <datalist id="global-quickcall-suggestions">
+                    {(tpos || []).map(t => <option key={t.id} value={`${t.name} (${t.collegeName})`} />)}
+                    {(students || []).map(s => <option key={s.id} value={`${s.name} (${s.collegeName || 'Student'})`} />)}
+                  </datalist>
                 </div>
                 <div className="form-group">
                   <label className="form-label">Phone Number / Extension</label>
@@ -545,15 +574,42 @@ export function GlobalNewFollowUpModal({
     e.preventDefault();
     if (!entityTitle.trim()) return;
 
+    let resolvedPhone = phone.trim();
+    let resolvedEntityId = `ent-${Date.now()}`;
+    let resolvedEntityType = 'TASK';
+    const cleanTitle = entityTitle.replace(/\s*\([^)]*\)/g, '').replace(/\s*-\s*.*$/, '').trim().toLowerCase();
+
+    if (!resolvedPhone) {
+      const matchStu = (students || []).find(s => {
+        const sName = (s.name || '').trim().toLowerCase();
+        return sName && (sName === cleanTitle || cleanTitle.includes(sName) || sName.includes(cleanTitle));
+      });
+      if (matchStu) {
+        resolvedPhone = matchStu.phone || '';
+        resolvedEntityId = matchStu.id;
+        resolvedEntityType = 'STUDENT';
+      } else {
+        const matchTpo = (tpos || []).find(t => {
+          const tName = (t.name || '').trim().toLowerCase();
+          return tName && (tName === cleanTitle || cleanTitle.includes(tName) || tName.includes(cleanTitle));
+        });
+        if (matchTpo) {
+          resolvedPhone = matchTpo.phone || '';
+          resolvedEntityId = matchTpo.id;
+          resolvedEntityType = 'TPO';
+        }
+      }
+    }
+
     const assignedStaff = staffMembers.find(i => i.id === (internId || staffMembers[0]?.id)) || staffMembers[0];
     onSubmit({
       id: `fup-${Date.now()}`,
       internId: assignedStaff ? assignedStaff.id : 'unassigned',
       internName: assignedStaff ? assignedStaff.name : (staffMembers[0]?.name || 'Staff Recruiter'),
-      entityType: 'TASK',
-      entityId: `ent-${Date.now()}`,
+      entityType: resolvedEntityType,
+      entityId: resolvedEntityId,
       entityTitle: entityTitle.trim(),
-      phone: phone.trim(),
+      phone: resolvedPhone,
       scheduledDate,
       priority,
       status: 'PENDING',
@@ -580,12 +636,26 @@ export function GlobalNewFollowUpModal({
                 <label className="form-label">Subject / Entity *</label>
                 <input
                   type="text"
+                  list="global-followup-suggestions"
                   className="form-input"
                   placeholder="e.g. Dr. Rajesh Kulkarni (IIT Bombay) or Candidate Verification"
                   value={entityTitle}
-                  onChange={e => setEntityTitle(e.target.value)}
+                  onChange={e => {
+                    const val = e.target.value;
+                    setEntityTitle(val);
+                    const clean = val.replace(/\s*\([^)]*\)/g, '').replace(/\s*-\s*.*$/, '').trim().toLowerCase();
+                    const matched = (students || []).find(s => (s.name || '').trim().toLowerCase() === clean) ||
+                                    (tpos || []).find(t => (t.name || '').trim().toLowerCase() === clean);
+                    if (matched && matched.phone && !phone) {
+                      setPhone(matched.phone);
+                    }
+                  }}
                   required
                 />
+                <datalist id="global-followup-suggestions">
+                  {(tpos || []).map(t => <option key={t.id} value={`${t.name} (${t.collegeName})`} />)}
+                  {(students || []).map(s => <option key={s.id} value={`${s.name} (${s.collegeName || 'Student'})`} />)}
+                </datalist>
               </div>
 
               <div className="form-group">

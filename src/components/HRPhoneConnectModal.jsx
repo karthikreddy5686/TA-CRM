@@ -19,7 +19,7 @@ export default function HRPhoneConnectModal({
   onSavePhone,
   currentUser
 }) {
-  const [phoneNumber, setPhoneNumber] = useState(currentPhone || '+91 98201 55432');
+  const [phoneNumber, setPhoneNumber] = useState(currentPhone || '');
   const [callingMode, setCallingMode] = useState('PHONE_DIRECT'); // 'PHONE_DIRECT' | 'CLOUD_BRIDGE' | 'VOIP_BROWSER'
   const [isTesting, setIsTesting] = useState(false);
   const [testSuccess, setTestSuccess] = useState(false);
@@ -108,7 +108,7 @@ export default function HRPhoneConnectModal({
                     setPhoneNumber(e.target.value);
                     setTestSuccess(false);
                   }}
-                  placeholder="+91 98201 55432"
+                  placeholder="+91 98765 43210"
                   style={{ paddingLeft: '34px', fontSize: '0.92rem', fontWeight: 600, letterSpacing: '0.02em' }}
                   required
                 />

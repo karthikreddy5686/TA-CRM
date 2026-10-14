@@ -204,11 +204,7 @@ export default function App() {
                         { id: 'intern-kavya', name: 'Kavya Nair' };
 
     return list
-      .filter(s => 
-        s && 
-        !(s.collegeName && s.collegeName === 'University Campus') &&
-        !(s.collegeName && s.collegeName === 'College Campus')
-      )
+      .filter(Boolean)
       .map(stu => {
         let internName = stu.internName;
         let internId = stu.internId;
@@ -222,11 +218,7 @@ export default function App() {
 
   const sanitizeResponses = (list) => {
     if (!Array.isArray(list)) return [];
-    return list.filter(r => 
-      r && 
-      !(r.collegeName && r.collegeName === 'University Campus') &&
-      !(r.collegeName && r.collegeName === 'College Campus')
-    );
+    return list.filter(Boolean);
   };
 
   const sanitizeFollowUps = (list, staffList = users) => {
@@ -326,11 +318,12 @@ export default function App() {
 
   const [students, setStudents] = useState(() => {
     const saved = localStorage.getItem('tacrm_students');
-    if (!saved) return [];
+    if (saved === null) return sanitizeStudents(WORKING_DEMO_DATA.students);
     try {
-      return sanitizeStudents(JSON.parse(saved));
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed) ? sanitizeStudents(parsed) : sanitizeStudents(WORKING_DEMO_DATA.students);
     } catch {
-      return [];
+      return sanitizeStudents(WORKING_DEMO_DATA.students);
     }
   });
 
@@ -449,7 +442,12 @@ export default function App() {
   
   // HR Personal Calling Phone Line
   const [hrPhoneNumber, setHrPhoneNumber] = useState(() => {
-    return localStorage.getItem('tacrm_hr_phone') || '+91 98201 55432';
+    const saved = localStorage.getItem('tacrm_hr_phone');
+    if (saved === '+91 98201 55432') {
+      localStorage.removeItem('tacrm_hr_phone');
+      return '';
+    }
+    return saved || '';
   });
   const [isPhoneConnectModalOpen, setIsPhoneConnectModalOpen] = useState(false);
 
@@ -674,54 +672,129 @@ export default function App() {
   };
 
   const handleUpdateCallRecipientPhone = (newPhone) => {
-    setCallState(prev => ({ ...prev, recipientPhone: newPhone }));
+    const trimmed = (newPhone || '').trim();
+    setCallState(prev => ({ ...prev, recipientPhone: trimmed }));
+    if (!trimmed) return;
+
+    // Automatically persist to matching student in CRM roster so user never has to re-enter
+    setStudents(prev => prev.map(s => {
+      if ((callState.relatedEntityId && s.id === callState.relatedEntityId) ||
+          (callState.studentData?.id && s.id === callState.studentData.id)) {
+        return { ...s, phone: trimmed };
+      }
+      const stuName = (s.name || '').trim().toLowerCase();
+      const callName = (callState.recipientName || '').replace(/\s*\([^)]*\)/g, '').trim().toLowerCase();
+      if (stuName && callName && (stuName === callName || callName.includes(stuName) || stuName.includes(callName))) {
+        return { ...s, phone: trimmed };
+      }
+      return s;
+    }));
+
+    // Also persist to formResponses
+    setFormResponses(prev => prev.map(r => {
+      const respName = (r.name || '').trim().toLowerCase();
+      const callName = (callState.recipientName || '').replace(/\s*\([^)]*\)/g, '').trim().toLowerCase();
+      if (respName && callName && (respName === callName || callName.includes(respName) || respName.includes(callName))) {
+        return { ...r, phone: trimmed };
+      }
+      return r;
+    }));
+
+    // Also persist to followUps
+    setFollowUps(prev => prev.map(f => {
+      if (callState.relatedEntityId && f.id === callState.relatedEntityId) {
+        return { ...f, phone: trimmed };
+      }
+      const fupName = (f.entityTitle || '').replace(/\s*\([^)]*\)/g, '').trim().toLowerCase();
+      const callName = (callState.recipientName || '').replace(/\s*\([^)]*\)/g, '').trim().toLowerCase();
+      if (fupName && callName && (fupName === callName || callName.includes(fupName) || fupName.includes(callName))) {
+        return { ...f, phone: trimmed };
+      }
+      return f;
+    }));
   };
 
-  // Start Call Handler
+  // Start Call Handler - Multi-source lookup so student phone is ALWAYS auto-filled from posting
   const handleStartCall = ({ recipientType, recipientName, recipientDetail, recipientPhone, type = 'AUDIO', tpoId, studentId, followUpId, student }) => {
     webAudio.startRinging();
     const caller = currentUser || { name: 'HR Agent', id: 'agent-1' };
     
-    // Dynamic phone lookup: never hardcode fallback
+    // Dynamic phone lookup: check all possible stores so user never has to re-enter
     let resolvedPhone = (recipientPhone || '').trim();
     if (!resolvedPhone && student?.phone) {
       resolvedPhone = student.phone.trim();
     }
-    // Search students directory if recipient is a candidate
-    if (!resolvedPhone) {
-      const matchStu = students.find(s => 
-        (studentId && s.id === studentId) ||
-        (s.name && recipientName && s.name.toLowerCase() === recipientName.toLowerCase()) ||
-        (recipientName && s.name && recipientName.toLowerCase().includes(s.name.toLowerCase()))
-      );
-      if (matchStu?.phone) resolvedPhone = matchStu.phone.trim();
+
+    const cleanRecipientName = (recipientName || '')
+      .replace(/\s*\([^)]*\)/g, '')
+      .replace(/\s*-\s*.*$/, '')
+      .trim()
+      .toLowerCase();
+
+    // 1. Search students roster (by studentId, exact name, or substring match)
+    let matchedStudent = student || null;
+    if (!resolvedPhone || !matchedStudent) {
+      const matchStu = students.find(s => {
+        if (studentId && s.id === studentId) return true;
+        const stuName = (s.name || '').trim().toLowerCase();
+        if (!stuName || !cleanRecipientName) return false;
+        return stuName === cleanRecipientName || 
+               cleanRecipientName.includes(stuName) || 
+               stuName.includes(cleanRecipientName);
+      });
+      if (matchStu) {
+        matchedStudent = matchStu;
+        if (!resolvedPhone && matchStu.phone) resolvedPhone = matchStu.phone.trim();
+      }
     }
-    // Search TPOs directory if recipient is a TPO
+
+    // 2. Search formResponses (Intake candidate roster)
     if (!resolvedPhone) {
-      const matchTpo = tpos.find(t => 
-        (tpoId && t.id === tpoId) ||
-        (t.name && recipientName && t.name.toLowerCase() === recipientName.toLowerCase()) ||
-        (recipientName && t.name && recipientName.toLowerCase().includes(t.name.toLowerCase()))
-      );
+      const matchResp = formResponses.find(r => {
+        const respName = (r.name || '').trim().toLowerCase();
+        if (!respName || !cleanRecipientName) return false;
+        return respName === cleanRecipientName || 
+               cleanRecipientName.includes(respName) || 
+               respName.includes(cleanRecipientName);
+      });
+      if (matchResp?.phone) resolvedPhone = matchResp.phone.trim();
+    }
+
+    // 3. Search TPOs directory if recipient is a TPO or contact
+    if (!resolvedPhone) {
+      const matchTpo = tpos.find(t => {
+        if (tpoId && t.id === tpoId) return true;
+        const tpoName = (t.name || '').trim().toLowerCase();
+        if (!tpoName || !cleanRecipientName) return false;
+        return tpoName === cleanRecipientName || 
+               cleanRecipientName.includes(tpoName) || 
+               tpoName.includes(cleanRecipientName);
+      });
       if (matchTpo?.phone) resolvedPhone = matchTpo.phone.trim();
     }
-    // Search follow-ups if linked
-    if (!resolvedPhone && followUpId) {
-      const matchFup = followUps.find(f => f.id === followUpId);
+
+    // 4. Search follow-ups if linked or by entityTitle
+    if (!resolvedPhone) {
+      const matchFup = followUps.find(f => {
+        if (followUpId && f.id === followUpId && f.phone) return true;
+        const fupName = (f.entityTitle || '').replace(/\s*\([^)]*\)/g, '').trim().toLowerCase();
+        if (!fupName || !cleanRecipientName) return false;
+        return f.phone && (fupName === cleanRecipientName || cleanRecipientName.includes(fupName) || fupName.includes(cleanRecipientName));
+      });
       if (matchFup?.phone) resolvedPhone = matchFup.phone.trim();
     }
-    // Check if recipientDetail contains phone
-    if (!resolvedPhone && recipientDetail && recipientDetail.includes('+91')) {
-      const parts = recipientDetail.split('•');
-      const found = parts.find(p => p.trim().startsWith('+91') || p.trim().startsWith('91'));
-      if (found) resolvedPhone = found.trim();
+
+    // 5. Extract phone from recipientDetail or anywhere in parameters
+    if (!resolvedPhone && recipientDetail) {
+      const phoneMatch = recipientDetail.match(/(?:\+?91[\s-]?)?[6-9]\d{4}[\s-]?\d{5}|\b[6-9]\d{9}\b/);
+      if (phoneMatch) resolvedPhone = phoneMatch[0].trim();
     }
 
     setCallState({
       active: true,
       timerRunning: false, // DO NOT start timer on call open; starts only after clicking "Dial on Mobile" or clicking timer
       type,
-      recipientType: recipientType || 'CONTACT',
+      recipientType: recipientType || (matchedStudent ? 'STUDENT' : 'CONTACT'),
       recipientName: recipientName || 'Campus Contact',
       recipientDetail: recipientDetail || '',
       recipientPhone: resolvedPhone || '',
@@ -729,8 +802,8 @@ export default function App() {
       internId: caller.id,
       duration: 0,
       startTime: new Date().toISOString(),
-      relatedEntityId: studentId || tpoId || followUpId || null,
-      studentData: student || null
+      relatedEntityId: studentId || tpoId || followUpId || matchedStudent?.id || null,
+      studentData: matchedStudent
     });
     setIsCallMinimized(false);
 
@@ -752,12 +825,13 @@ export default function App() {
     // Restore user status
     setUsers(prev => prev.map(u => u.id === finalState.internId ? { ...u, status: 'online' } : u));
 
-    // Open Disposition Modal with logged duration
+    // Open Disposition Modal with logged duration and preserved phone
     setDispositionData({
       internId: finalState.internId,
       internName: finalState.callerName,
       recipientType: finalState.recipientType,
       recipientName: finalState.recipientName,
+      recipientPhone: finalState.recipientPhone || '',
       callType: finalState.type,
       duration: finalDuration,
       startedAt: finalState.startTime,
@@ -772,13 +846,14 @@ export default function App() {
   const handleSaveDisposition = ({ disposition, notes, needFollowUp, followUpDate, followUpPriority, candidateStage }) => {
     if (!dispositionData) return;
 
-    // 1. Create Call Session Record
+    // 1. Create Call Session Record with recipientPhone
     const newSession = {
       id: `call-${Date.now()}`,
       internId: dispositionData.internId,
       internName: dispositionData.internName,
       recipientType: dispositionData.recipientType,
       recipientName: dispositionData.recipientName,
+      recipientPhone: dispositionData.recipientPhone || '',
       callType: dispositionData.callType,
       startedAt: dispositionData.startedAt,
       endedAt: dispositionData.endedAt,
@@ -789,7 +864,7 @@ export default function App() {
 
     setCallSessions(prev => [newSession, ...prev]);
 
-    // 2. If follow-up requested, append to follow-ups
+    // 2. If follow-up requested, append to follow-ups with preserved phone
     if (needFollowUp && followUpDate) {
       const newFup = {
         id: `fup-${Date.now()}`,
@@ -798,6 +873,7 @@ export default function App() {
         entityType: dispositionData.recipientType,
         entityId: dispositionData.relatedEntityId || `ent-${Date.now()}`,
         entityTitle: dispositionData.recipientName,
+        phone: dispositionData.recipientPhone || '',
         scheduledDate: followUpDate,
         priority: followUpPriority || 'HIGH',
         status: 'PENDING',
