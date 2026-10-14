@@ -145,7 +145,7 @@ export function GlobalNewDriveModal({
 
           <div className="modal-footer">
             <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
-            <button type="submit" className="btn-black">Create Campus Drive</button>
+            <button type="submit" className="btn-mustard" style={{ fontWeight: 800 }}>Create Campus Drive</button>
           </div>
         </form>
       </div>
@@ -318,7 +318,7 @@ export function GlobalNewTpoModal({
 
           <div className="modal-footer">
             <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
-            <button type="submit" className="btn-black">Add TPO Lead</button>
+            <button type="submit" className="btn-mustard" style={{ fontWeight: 800 }}>Add TPO Lead</button>
           </div>
         </form>
       </div>
@@ -506,10 +506,11 @@ export function GlobalQuickCallModal({
             <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
             <button 
               type="submit" 
-              className="btn-black"
+              className="btn-mustard"
+              style={{ fontWeight: 800 }}
               disabled={!selectedEntityId && !customName && !customPhone}
             >
-              {callType === 'VIDEO' ? <Video size={14} /> : <Phone size={14} />}
+              {callType === 'VIDEO' ? <Video size={14} color="#154360" /> : <Phone size={14} color="#154360" />}
               Start {callType === 'VIDEO' ? 'Video Conference' : 'Audio Call'}
             </button>
           </div>
@@ -628,7 +629,7 @@ export function GlobalNewFollowUpModal({
 
           <div className="modal-footer">
             <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
-            <button type="submit" className="btn-black">Schedule Task</button>
+            <button type="submit" className="btn-mustard" style={{ fontWeight: 800 }}>Schedule Task</button>
           </div>
         </form>
       </div>
@@ -812,7 +813,7 @@ export function GlobalAddStudentModal({
 
           <div className="modal-footer">
             <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
-            <button type="submit" className="btn-black">Add Candidate</button>
+            <button type="submit" className="btn-mustard" style={{ fontWeight: 800 }}>Add Candidate</button>
           </div>
         </form>
       </div>
@@ -841,7 +842,7 @@ export function GlobalActionSheetModal({
       id: 'drive',
       title: 'New Campus Drive',
       desc: 'Schedule a drive for colleges (IIT, NIT, BITS...)',
-      icon: <Calendar size={18} color="#09090b" />,
+      icon: <Calendar size={18} color="#154360" />,
       onClick: () => { onClose(); onOpenNewDrive(); },
       badge: 'Recruitment',
     },
@@ -849,7 +850,7 @@ export function GlobalActionSheetModal({
       id: 'student',
       title: 'Add Candidate Student',
       desc: 'Add an individual candidate directly to roster',
-      icon: <UserPlus size={18} color="#09090b" />,
+      icon: <UserPlus size={18} color="#154360" />,
       onClick: () => { onClose(); onOpenAddStudent(); },
       badge: 'Direct Add',
     },
@@ -857,7 +858,7 @@ export function GlobalActionSheetModal({
       id: 'intake',
       title: 'Import from Google Sheets',
       desc: 'Paste candidate rows from Sheets or WhatsApp',
-      icon: <FileSpreadsheet size={18} color="#059669" />,
+      icon: <FileSpreadsheet size={18} color="#154360" />,
       onClick: () => { onClose(); onGoToIntake(); },
       badge: 'Fast Intake',
     },
@@ -865,7 +866,7 @@ export function GlobalActionSheetModal({
       id: 'tpo',
       title: 'New College TPO Lead',
       desc: 'Add campus training & placement official contact',
-      icon: <Building2 size={18} color="#09090b" />,
+      icon: <Building2 size={18} color="#154360" />,
       onClick: () => { onClose(); onOpenNewTpo(); },
       badge: 'Outreach',
     },

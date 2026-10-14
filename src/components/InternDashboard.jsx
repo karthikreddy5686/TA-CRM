@@ -48,7 +48,7 @@ export default function InternDashboard({
         boxShadow: 'var(--shadow-card)'
       }}>
         <div>
-          <h1 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#09090b', letterSpacing: '-0.02em' }}>
+          <h1 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#154360', letterSpacing: '-0.02em' }}>
             My Workspace
           </h1>
           <p style={{ color: '#52525b', fontSize: '0.85rem', marginTop: '2px' }}>
@@ -60,8 +60,8 @@ export default function InternDashboard({
           <button onClick={() => onSelectTab('drives')} className="btn-secondary btn-black-sm">
             <Upload size={14} /> Upload Students
           </button>
-          <button onClick={() => onSelectTab('tpos')} className="btn-black btn-black-sm">
-            <Phone size={14} /> Call TPOs
+          <button onClick={() => onSelectTab('tpos')} className="btn-mustard btn-black-sm" style={{ fontWeight: 800 }}>
+            <Phone size={14} color="#154360" /> Call TPOs
           </button>
         </div>
       </div>
@@ -70,12 +70,12 @@ export default function InternDashboard({
       <div className="metrics-grid">
         <div className="metric-card">
           <div className="metric-header">
-            <span className="metric-title">My Call Time</span>
-            <div className="metric-icon-box">
-              <Clock size={18} color="#09090b" />
+            <span className="metric-title" style={{ color: '#154360' }}>My Call Time</span>
+            <div className="metric-icon-box" style={{ background: '#ebf5fb', borderColor: '#aed6f1' }}>
+              <Clock size={18} color="#154360" />
             </div>
           </div>
-          <div className="metric-value">{formatDuration(myTotalSeconds)}</div>
+          <div className="metric-value" style={{ color: '#154360' }}>{formatDuration(myTotalSeconds)}</div>
           <div style={{ marginTop: '8px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', fontWeight: 600, marginBottom: '3px' }}>
               <span>{progressPercent}% completed</span>
@@ -86,8 +86,8 @@ export default function InternDashboard({
                 style={{ 
                   width: `${progressPercent}%`, 
                   height: '100%', 
-                  background: progressPercent >= 80 ? '#10b981' : '#09090b',
-                }}
+                  background: progressPercent >= 80 ? '#10b981' : '#154360',
+                }} 
               />
             </div>
           </div>
@@ -95,12 +95,12 @@ export default function InternDashboard({
 
         <div className="metric-card">
           <div className="metric-header">
-            <span className="metric-title">My Colleges</span>
-            <div className="metric-icon-box">
-              <Building2 size={18} color="#09090b" />
+            <span className="metric-title" style={{ color: '#154360' }}>My Colleges</span>
+            <div className="metric-icon-box" style={{ background: '#fffdf0', borderColor: '#fae27a' }}>
+              <Building2 size={18} color="#154360" />
             </div>
           </div>
-          <div className="metric-value">{myTpos.length}</div>
+          <div className="metric-value" style={{ color: '#154360' }}>{myTpos.length}</div>
           <div className="metric-subtext">
             <span>{myTpos.filter(t => t.status === 'DRIVE_CONFIRMED').length} confirmed drives</span>
           </div>
@@ -108,12 +108,12 @@ export default function InternDashboard({
 
         <div className="metric-card">
           <div className="metric-header">
-            <span className="metric-title">My Students</span>
-            <div className="metric-icon-box">
-              <Users size={18} color="#09090b" />
+            <span className="metric-title" style={{ color: '#154360' }}>My Students</span>
+            <div className="metric-icon-box" style={{ background: '#ebf5fb', borderColor: '#aed6f1' }}>
+              <Users size={18} color="#154360" />
             </div>
           </div>
-          <div className="metric-value">{myStudents.length}</div>
+          <div className="metric-value" style={{ color: '#154360' }}>{myStudents.length}</div>
           <div className="metric-subtext">
             <span>Across campus drives</span>
           </div>
@@ -121,12 +121,12 @@ export default function InternDashboard({
 
         <div className="metric-card">
           <div className="metric-header">
-            <span className="metric-title">Pending Follow-Ups</span>
-            <div className="metric-icon-box">
-              <Calendar size={18} color="#09090b" />
+            <span className="metric-title" style={{ color: '#154360' }}>Pending Follow-Ups</span>
+            <div className="metric-icon-box" style={{ background: '#fffdf0', borderColor: '#fae27a' }}>
+              <Calendar size={18} color="#154360" />
             </div>
           </div>
-          <div className="metric-value" style={{ color: myFollowUps.length > 0 ? '#ef4444' : '#09090b' }}>
+          <div className="metric-value" style={{ color: myFollowUps.length > 0 ? '#ef4444' : '#154360' }}>
             {myFollowUps.length}
           </div>
           <div className="metric-subtext">
@@ -210,10 +210,10 @@ export default function InternDashboard({
                                 followUpId: fup.id
                               });
                             }}
-                            className="btn-black btn-black-sm"
-                            style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                            className="btn-mustard btn-black-sm"
+                            style={{ padding: '4px 10px', fontSize: '0.75rem', gap: '4px' }}
                           >
-                            <Phone size={12} /> Call
+                            <Phone size={12} color="#154360" /> Call
                           </button>
 
                           <button 
@@ -238,6 +238,7 @@ export default function InternDashboard({
                 <div key={fup.id} style={{
                   background: '#f8fafc',
                   border: '1px solid #e2e8f0',
+                  borderLeft: '4px solid #154360',
                   borderRadius: '10px',
                   padding: '10px 12px',
                   display: 'flex',
@@ -245,7 +246,7 @@ export default function InternDashboard({
                   gap: '6px'
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#09090b' }}>
+                    <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#154360' }}>
                       {fup.entityTitle}
                     </div>
                     <span className={`badge ${
@@ -270,10 +271,10 @@ export default function InternDashboard({
                             followUpId: fup.id
                           });
                         }}
-                        className="btn-black btn-black-sm"
-                        style={{ padding: '3px 8px', fontSize: '0.72rem' }}
+                        className="btn-mustard btn-black-sm"
+                        style={{ padding: '3px 8px', fontSize: '0.72rem', gap: '3px' }}
                       >
-                        <Phone size={11} /> Call
+                        <Phone size={11} color="#154360" /> Call
                       </button>
                       <button 
                         onClick={() => onCompleteFollowUp(fup.id)}

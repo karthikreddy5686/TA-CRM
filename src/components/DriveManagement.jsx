@@ -53,7 +53,8 @@ export default function DriveManagement({
   onLoadDemoData,
   defaultTab = 'drives',
   hrPhoneNumber,
-  onOpenPhoneConnectModal
+  onOpenPhoneConnectModal,
+  onNavigateToLiveBoard
 }) {
   const [activeTab, setActiveTab] = useState(defaultTab); // 'drives' | 'pipeline'
   const [viewMode, setViewMode] = useState('table'); // 'table' | 'columns'
@@ -311,18 +312,22 @@ export default function DriveManagement({
               padding: '6px 14px',
               fontSize: '0.8rem',
               fontWeight: 700,
-              background: activeTab === 'drives' ? '#ffffff' : 'transparent',
+              background: activeTab === 'drives' ? '#154360' : '#ffffff',
               border: '1px solid',
-              borderColor: activeTab === 'drives' ? '#e2e8f0' : 'transparent',
+              borderColor: activeTab === 'drives' ? '#0e2e42' : '#aed6f1',
               borderRadius: '8px',
-              color: activeTab === 'drives' ? '#09090b' : '#71717a',
+              color: activeTab === 'drives' ? '#ffffff' : '#154360',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px'
+              gap: '6px',
+              boxShadow: activeTab === 'drives' ? '0 1px 3px rgba(21, 67, 96, 0.2)' : 'none'
             }}
           >
-            <Calendar size={14} /> Campus Drives ({drives.length})
+            <Calendar size={14} color={activeTab === 'drives' ? '#FFDB58' : '#154360'} /> Campus Drives ({drives.length})
+            {activeTab === 'drives' && (
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#FFDB58', marginLeft: '2px' }} />
+            )}
           </button>
 
           <button 
@@ -331,23 +336,38 @@ export default function DriveManagement({
               padding: '6px 14px',
               fontSize: '0.8rem',
               fontWeight: 700,
-              background: activeTab === 'pipeline' ? '#ffffff' : 'transparent',
+              background: activeTab === 'pipeline' ? '#154360' : '#ffffff',
               border: '1px solid',
-              borderColor: activeTab === 'pipeline' ? '#e2e8f0' : 'transparent',
+              borderColor: activeTab === 'pipeline' ? '#0e2e42' : '#aed6f1',
               borderRadius: '8px',
-              color: activeTab === 'pipeline' ? '#09090b' : '#71717a',
+              color: activeTab === 'pipeline' ? '#ffffff' : '#154360',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px'
+              gap: '6px',
+              boxShadow: activeTab === 'pipeline' ? '0 1px 3px rgba(21, 67, 96, 0.2)' : 'none'
             }}
           >
-            <Users size={14} /> Candidate Roster & Pipeline ({students.length})
+            <Users size={14} color={activeTab === 'pipeline' ? '#FFDB58' : '#154360'} /> Candidate Pipeline ({students.length})
+            {activeTab === 'pipeline' && (
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#FFDB58', marginLeft: '2px' }} />
+            )}
           </button>
         </div>
 
         {/* Right Distinct Action Buttons */}
         <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+          {onNavigateToLiveBoard && (
+            <button
+              onClick={onNavigateToLiveBoard}
+              className="btn-navy-outline btn-black-sm"
+              style={{ fontSize: '0.75rem', padding: '4px 9px', gap: '4px' }}
+              title="Go to Posted Students board"
+            >
+              <Users size={12} color="#154360" /> Posted Students ({students.length})
+            </button>
+          )}
+
           {activeTab === 'pipeline' && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginRight: '4px' }}>
               <button 
@@ -399,10 +419,10 @@ export default function DriveManagement({
               setIsManualStudentModalOpen(false);
               setIsCsvModalOpen(false);
             }} 
-            className="btn-black btn-black-sm"
-            style={{ fontSize: '0.75rem', padding: '4px 8px' }}
+            className="btn-mustard btn-black-sm"
+            style={{ fontSize: '0.75rem', padding: '4px 10px', boxShadow: '0 1px 3px rgba(255, 219, 88, 0.4)' }}
           >
-            <Plus size={13} /> + New Drive
+            <Plus size={13} color="#154360" /> New Drive
           </button>
         </div>
       </div>
@@ -529,7 +549,7 @@ export default function DriveManagement({
               }} 
               className="btn-black"
             >
-              <Plus size={14} /> + Create Campus Drive
+              <Plus size={14} /> Create Campus Drive
             </button>
             <button 
               onClick={() => {
@@ -539,7 +559,7 @@ export default function DriveManagement({
               }} 
               className="btn-secondary"
             >
-              <UserPlus size={14} /> + Add Student
+              <UserPlus size={14} /> Add Student
             </button>
             <button 
               onClick={() => {
@@ -988,7 +1008,9 @@ export default function DriveManagement({
         <div className="content-card">
           <div className="card-header-row" style={{ padding: '14px 20px' }}>
             <div>
-              <h2 className="card-title" style={{ fontSize: '0.98rem' }}>All Campus Drives ({drives.length})</h2>
+              <h2 className="card-title" style={{ fontSize: '0.98rem', color: '#154360', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Calendar size={16} color="#154360" /> All Campus Drives ({drives.length})
+              </h2>
               <p className="card-subtitle">Scheduled campus visits and hiring details</p>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1003,8 +1025,8 @@ export default function DriveManagement({
                   <Trash2 size={13} /> Delete All Drives ({drives.length})
                 </button>
               )}
-              <button onClick={() => setIsCreateDriveOpen(true)} className="btn-black btn-black-sm">
-                <Plus size={13} /> + New Drive
+              <button onClick={() => setIsCreateDriveOpen(true)} className="btn-mustard btn-black-sm" style={{ boxShadow: '0 1px 3px rgba(255, 219, 88, 0.4)' }}>
+                <Plus size={13} color="#154360" /> New Drive
               </button>
             </div>
           </div>
@@ -1013,21 +1035,21 @@ export default function DriveManagement({
             <table className="crm-table" style={{ width: '100%', tableLayout: 'auto' }}>
               <thead>
                 <tr>
-                  <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>Drive Name</th>
-                  <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>College</th>
-                  <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>Role</th>
-                  <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>CTC</th>
-                  <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>Date</th>
-                  <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>Status</th>
-                  <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>Candidates</th>
-                  <th style={{ width: '30px', padding: '6px 4px' }}></th>
+                  <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>Drive Name</th>
+                  <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>College</th>
+                  <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>Role</th>
+                  <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>CTC</th>
+                  <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>Date</th>
+                  <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>Status</th>
+                  <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>Candidates</th>
+                  <th style={{ width: '30px', padding: '6px 4px', background: '#154360', color: '#ffffff' }}></th>
                 </tr>
               </thead>
               <tbody>
                 {drives.length === 0 ? (
                   <tr>
                     <td colSpan={8} style={{ textAlign: 'center', padding: '28px', color: '#71717a', fontSize: '0.78rem' }}>
-                      No drives scheduled yet. Click "+ New Drive" to add your first campus drive.
+                      No drives scheduled yet. Click "New Drive" to add your first campus drive.
                     </td>
                   </tr>
                 ) : (
@@ -1036,7 +1058,7 @@ export default function DriveManagement({
                     return (
                       <tr key={drive.id}>
                         <td style={{ padding: '6px 8px' }}>
-                          <div style={{ fontWeight: 700, color: '#09090b', fontSize: '0.8rem' }}>
+                          <div style={{ fontWeight: 700, color: '#154360', fontSize: '0.8rem' }}>
                             {drive.title}
                           </div>
                         </td>
@@ -1050,7 +1072,16 @@ export default function DriveManagement({
                         </td>
 
                         <td style={{ padding: '6px 8px' }}>
-                          <span style={{ fontWeight: 700, color: '#09090b', fontFamily: 'monospace', fontSize: '0.75rem' }}>
+                          <span style={{ 
+                            fontWeight: 700, 
+                            color: '#154360', 
+                            background: '#FFDB58', 
+                            border: '1px solid #fae27a', 
+                            borderRadius: '4px', 
+                            padding: '2px 6px', 
+                            fontFamily: 'monospace', 
+                            fontSize: '0.75rem' 
+                          }}>
                             {drive.ctc}
                           </span>
                         </td>
@@ -1068,14 +1099,18 @@ export default function DriveManagement({
                         <td style={{ padding: '6px 8px' }}>
                           <button 
                             onClick={() => {
-                              setSelectedDriveId(drive.id);
-                              setActiveTab('pipeline');
+                              if (onNavigateToLiveBoard) {
+                                onNavigateToLiveBoard(drive.id);
+                              } else {
+                                setSelectedDriveId(drive.id);
+                                setActiveTab('pipeline');
+                              }
                             }}
-                            className="btn-secondary btn-black-sm"
+                            className="btn-navy-outline btn-black-sm"
                             style={{ fontSize: '0.7rem', padding: '2px 7px', gap: '4px' }}
                             title="View and manage candidates in this drive"
                           >
-                            <Users size={11} /> {driveCandidates.length} Students
+                            <Users size={11} color="#154360" /> {driveCandidates.length} Students
                           </button>
                         </td>
 
@@ -1103,7 +1138,7 @@ export default function DriveManagement({
           <div className="mobile-only" style={{ padding: '6px 8px', display: 'flex', flexDirection: 'column', gap: '6px', width: '100%', boxSizing: 'border-box' }}>
             {drives.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '20px 10px', color: '#71717a', fontSize: '0.78rem' }}>
-                No drives scheduled yet. Tap "+ New Drive" to add your first campus recruitment drive.
+                No drives scheduled yet. Tap "New Drive" to add your first campus recruitment drive.
               </div>
             ) : (
               drives.map(drive => {
@@ -1112,6 +1147,7 @@ export default function DriveManagement({
                   <div key={drive.id} style={{
                     background: '#f8fafc',
                     border: '1px solid #e2e8f0',
+                    borderLeft: '4px solid #154360',
                     borderRadius: '8px',
                     padding: '8px 10px',
                     display: 'flex',
@@ -1122,7 +1158,7 @@ export default function DriveManagement({
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div>
-                        <div style={{ fontWeight: 700, fontSize: '0.825rem', color: '#09090b' }}>
+                        <div style={{ fontWeight: 700, fontSize: '0.825rem', color: '#154360' }}>
                           {drive.title}
                         </div>
                         <div style={{ fontSize: '0.68rem', color: '#71717a' }}>
@@ -1145,17 +1181,28 @@ export default function DriveManagement({
                       fontSize: '0.7rem',
                       color: '#52525b'
                     }}>
-                      <span>💰 {drive.ctc}</span>
+                      <span style={{ 
+                        background: '#FFDB58', 
+                        color: '#154360', 
+                        fontWeight: 700, 
+                        padding: '1px 6px', 
+                        borderRadius: '4px',
+                        border: '1px solid #fae27a'
+                      }}>💰 {drive.ctc}</span>
                       <span>📅 {drive.driveDate || 'Upcoming'}</span>
                       <button
                         onClick={() => {
-                          setSelectedDriveId(drive.id);
-                          setActiveTab('pipeline');
+                          if (onNavigateToLiveBoard) {
+                            onNavigateToLiveBoard(drive.id);
+                          } else {
+                            setSelectedDriveId(drive.id);
+                            setActiveTab('pipeline');
+                          }
                         }}
-                        className="btn-secondary btn-black-sm"
+                        className="btn-navy-outline btn-black-sm"
                         style={{ padding: '2px 6px', fontSize: '0.68rem', gap: '3px' }}
                       >
-                        <Users size={10} /> {driveCandidates.length} Students
+                        <Users size={10} color="#154360" /> {driveCandidates.length} Students
                       </button>
                     </div>
 

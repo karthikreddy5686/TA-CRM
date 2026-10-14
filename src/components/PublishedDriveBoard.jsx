@@ -9,7 +9,9 @@ import {
   Check,
   Building2,
   FileSpreadsheet,
-  Trash2
+  Trash2,
+  Calendar,
+  Users
 } from 'lucide-react';
 
 export default function PublishedDriveBoard({
@@ -20,7 +22,10 @@ export default function PublishedDriveBoard({
   onDeleteStudent,
   onNavigateToBlast,
   onUpdateCandidateStage,
-  onLoadDemoData
+  onLoadDemoData,
+  onNavigateToDrives,
+  hrPhoneNumber,
+  onOpenPhoneConnectModal
 }) {
   const [selectedDriveId, setSelectedDriveId] = useState(drives[0]?.id || '');
   const [searchTerm, setSearchTerm] = useState('');
@@ -76,8 +81,8 @@ export default function PublishedDriveBoard({
   if (drives.length === 0) {
     return (
       <div className="content-card" style={{ padding: '60px 20px', textAlign: 'center' }}>
-        <Building2 size={40} color="#a1a1aa" style={{ margin: '0 auto 12px' }} />
-        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#09090b', marginBottom: '6px' }}>
+        <Building2 size={40} color="#154360" style={{ margin: '0 auto 12px' }} />
+        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#154360', marginBottom: '6px' }}>
           No Campus Drives Created Yet
         </h3>
         <p style={{ color: '#71717a', fontSize: '0.875rem', maxWidth: '460px', margin: '0 auto 20px' }}>
@@ -85,11 +90,16 @@ export default function PublishedDriveBoard({
         </p>
         <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
           {onLoadDemoData && (
-            <button onClick={onLoadDemoData} className="btn-black">
+            <button onClick={onLoadDemoData} className="btn-mustard btn-black-sm">
               ⚡ Load Working Demo Data
             </button>
           )}
-          <button onClick={onNavigateToBlast} className="btn-secondary">
+          {onNavigateToDrives && (
+            <button onClick={onNavigateToDrives} className="btn-navy btn-black-sm">
+              <Calendar size={13} color="#FFDB58" /> Go to Campus Drives
+            </button>
+          )}
+          <button onClick={onNavigateToBlast} className="btn-secondary btn-black-sm">
             Go to Google Sheets Intake
           </button>
         </div>
@@ -100,18 +110,18 @@ export default function PublishedDriveBoard({
   return (
     <div>
       {/* Drive Summary & Action Bar */}
-      <div className="content-card" style={{ marginBottom: '12px', padding: '12px 14px', background: '#f8fafc' }}>
+      <div className="content-card" style={{ marginBottom: '12px', padding: '12px 14px', background: '#ffffff' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontWeight: 700, fontSize: 'var(--font-sm)', color: '#09090b', lineHeight: 'var(--lh-sm)' }}>
-                Drive:
+              <span style={{ fontWeight: 800, fontSize: 'var(--font-sm)', color: '#154360', lineHeight: 'var(--lh-sm)' }}>
+                Campus Drive:
               </span>
               <select
                 className="form-select"
                 value={selectedDriveId || activeDrive?.id}
                 onChange={(e) => setSelectedDriveId(e.target.value)}
-                style={{ fontWeight: 600, width: 'auto', padding: '5px 10px', fontSize: 'var(--font-xs)' }}
+                style={{ fontWeight: 700, width: 'auto', padding: '5px 10px', fontSize: 'var(--font-xs)', borderColor: '#154360', color: '#154360' }}
               >
                 {drives.map(d => (
                   <option key={d.id} value={d.id}>{d.title} ({d.collegeName})</option>
@@ -120,43 +130,51 @@ export default function PublishedDriveBoard({
             </div>
             {activeDrive && (
               <div style={{ fontSize: 'var(--font-11)', lineHeight: 'var(--lh-11)', color: '#52525b', marginTop: '4px' }}>
-                Role: <strong>{activeDrive.jobRole}</strong> • CTC: <strong>{activeDrive.ctc}</strong> • Date: <strong>{activeDrive.driveDate || 'Upcoming'}</strong>
+                Role: <strong style={{ color: '#154360' }}>{activeDrive.jobRole}</strong> • CTC: <strong style={{ color: '#154360' }}>{activeDrive.ctc}</strong> • Date: <strong>{activeDrive.driveDate || 'Upcoming'}</strong>
               </div>
             )}
           </div>
 
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 'var(--radius-sm)', padding: '4px 10px', textAlign: 'center' }}>
-              <span style={{ fontSize: 'var(--font-10)', lineHeight: 'var(--lh-10)', fontWeight: 700, color: '#71717a', marginRight: '6px' }}>TOTAL:</span>
-              <span style={{ fontSize: 'var(--font-base)', fontWeight: 800, color: '#09090b', fontFamily: 'Space Grotesk, sans-serif' }}>
+            {/* Mustard Yellow Total Counter Badge */}
+            <div style={{ background: '#FFDB58', border: '1px solid #fae27a', borderRadius: 'var(--radius-sm)', padding: '4px 10px', textAlign: 'center', boxShadow: '0 1px 3px rgba(255, 219, 88, 0.3)' }}>
+              <span style={{ fontSize: 'var(--font-10)', lineHeight: 'var(--lh-10)', fontWeight: 800, color: '#154360', marginRight: '6px' }}>TOTAL:</span>
+              <span style={{ fontSize: 'var(--font-base)', fontWeight: 800, color: '#154360', fontFamily: 'Space Grotesk, sans-serif' }}>
                 {driveStudents.length}
               </span>
             </div>
 
-            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 'var(--radius-sm)', padding: '4px 10px', textAlign: 'center' }}>
-              <span style={{ fontSize: 'var(--font-10)', lineHeight: 'var(--lh-10)', fontWeight: 700, color: '#71717a', marginRight: '6px' }}>IN INTERVIEWS:</span>
-              <span style={{ fontSize: 'var(--font-base)', fontWeight: 800, color: '#09090b', fontFamily: 'Space Grotesk, sans-serif' }}>
+            {/* Navy Blue In-Interviews Counter Badge */}
+            <div style={{ background: '#154360', border: '1px solid #0e2e42', borderRadius: 'var(--radius-sm)', padding: '4px 10px', textAlign: 'center', boxShadow: '0 1px 3px rgba(21, 67, 96, 0.3)' }}>
+              <span style={{ fontSize: 'var(--font-10)', lineHeight: 'var(--lh-10)', fontWeight: 700, color: '#ffffff', marginRight: '6px' }}>IN INTERVIEWS:</span>
+              <span style={{ fontSize: 'var(--font-base)', fontWeight: 800, color: '#FFDB58', fontFamily: 'Space Grotesk, sans-serif' }}>
                 {driveStudents.filter(s => s.stage === 'TECH_INTERVIEW' || s.stage === 'HR_INTERVIEW').length}
               </span>
             </div>
 
-            <button onClick={handleExportCsv} className="btn-secondary btn-black-sm" disabled={filteredStudents.length === 0}>
-              <Download size={13} /> Export (CSV)
+            <button onClick={handleExportCsv} className="btn-navy-outline btn-black-sm" disabled={filteredStudents.length === 0} title="Export CSV list">
+              <Download size={13} color="#154360" /> Export (CSV)
             </button>
-            <button onClick={handleCopyBoardLink} className="btn-black btn-black-sm">
-              {copiedShareLink ? <Check size={13} /> : <Share2 size={13} />}
+            <button onClick={handleCopyBoardLink} className="btn-mustard btn-black-sm" title="Share candidate board link with TPO">
+              {copiedShareLink ? <Check size={13} color="#154360" /> : <Share2 size={13} color="#154360" />}
               {copiedShareLink ? 'Link Copied!' : 'Share with TPO'}
             </button>
+
+            {onNavigateToDrives && (
+              <button onClick={onNavigateToDrives} className="btn-secondary btn-black-sm" title="Go to Campus Drives management">
+                <Calendar size={13} color="#154360" /> Drives
+              </button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Candidate Table */}
+      {/* Candidate Table Card */}
       <div className="content-card">
         <div className="card-header-row" style={{ padding: '10px 14px' }}>
           <div>
-            <h2 className="card-title" style={{ fontSize: 'var(--font-base)', lineHeight: 'var(--lh-base)' }}>
-              Students ({filteredStudents.length})
+            <h2 className="card-title" style={{ fontSize: 'var(--font-base)', lineHeight: 'var(--lh-base)', color: '#154360', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Users size={16} color="#154360" /> Posted Students ({filteredStudents.length})
             </h2>
           </div>
 
@@ -169,7 +187,7 @@ export default function PublishedDriveBoard({
                 placeholder="Search student..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ paddingLeft: '28px', fontSize: 'var(--font-xs)', padding: '5px 8px 5px 28px' }}
+                style={{ paddingLeft: '28px', fontSize: 'var(--font-xs)', padding: '5px 8px 5px 28px', borderRadius: '6px' }}
               />
             </div>
 
@@ -177,7 +195,7 @@ export default function PublishedDriveBoard({
               className="form-select"
               value={branchFilter}
               onChange={(e) => setBranchFilter(e.target.value)}
-              style={{ width: 'auto', fontSize: 'var(--font-xs)', padding: '5px 8px' }}
+              style={{ width: 'auto', fontSize: 'var(--font-xs)', padding: '5px 8px', borderRadius: '6px' }}
             >
               <option value="ALL">All Branches</option>
               {branches.map(b => (
@@ -187,36 +205,36 @@ export default function PublishedDriveBoard({
           </div>
         </div>
 
-        {/* Desktop View: Full CRM Table */}
-        <div className="table-wrapper desktop-only">
-          <table className="crm-table">
+        {/* Desktop View: Full CRM Table without horizontal overflow */}
+        <div className="desktop-only" style={{ width: '100%', overflowX: 'hidden' }}>
+          <table className="crm-table" style={{ width: '100%', tableLayout: 'auto' }}>
             <thead>
               <tr>
-                <th>Roll No</th>
-                <th>Student</th>
-                <th>Branch</th>
-                <th>CGPA</th>
-                <th>Stage</th>
-                <th>Contact</th>
-                <th>Interview</th>
+                <th style={{ background: '#154360', color: '#ffffff', fontSize: 'var(--font-xs)', padding: '7px 8px' }}>Roll No</th>
+                <th style={{ background: '#154360', color: '#ffffff', fontSize: 'var(--font-xs)', padding: '7px 8px' }}>Student</th>
+                <th style={{ background: '#154360', color: '#ffffff', fontSize: 'var(--font-xs)', padding: '7px 8px' }}>Branch</th>
+                <th style={{ background: '#154360', color: '#ffffff', fontSize: 'var(--font-xs)', padding: '7px 8px' }}>CGPA</th>
+                <th style={{ background: '#154360', color: '#ffffff', fontSize: 'var(--font-xs)', padding: '7px 8px' }}>Stage</th>
+                <th style={{ background: '#154360', color: '#ffffff', fontSize: 'var(--font-xs)', padding: '7px 8px' }}>Contact</th>
+                <th style={{ background: '#154360', color: '#ffffff', fontSize: 'var(--font-xs)', padding: '7px 8px' }}>Interview</th>
               </tr>
             </thead>
             <tbody>
               {filteredStudents.length === 0 ? (
                 <tr>
                   <td colSpan={7} style={{ textAlign: 'center', padding: '28px', color: '#71717a', fontSize: 'var(--font-sm)' }}>
-                    No students posted yet for this drive. Go to <strong>Google Sheets Intake</strong> and click <strong>"🚀 Blast via WhatsApp & Post to Site"</strong> to publish candidates here.
+                    No students posted yet for this drive. Go to <strong>Google Sheets Intake</strong> and click <strong>"Post Students"</strong> to publish candidates here.
                   </td>
                 </tr>
               ) : (
                 filteredStudents.map(student => (
                   <tr key={student.id}>
-                    <td style={{ fontFamily: 'monospace', fontWeight: 700, color: '#09090b', fontSize: 'var(--font-xs)' }}>
+                    <td style={{ fontFamily: 'monospace', fontWeight: 700, color: '#09090b', fontSize: 'var(--font-xs)', padding: '6px 8px' }}>
                       {student.rollNumber}
                     </td>
 
-                    <td>
-                      <div style={{ fontWeight: 700, color: '#09090b', fontSize: 'var(--font-sm)' }}>
+                    <td style={{ padding: '6px 8px' }}>
+                      <div style={{ fontWeight: 700, color: '#154360', fontSize: 'var(--font-sm)' }}>
                         {student.name}
                       </div>
                       <div style={{ fontSize: 'var(--font-11)', color: '#52525b', lineHeight: 'var(--lh-11)' }}>
@@ -224,23 +242,24 @@ export default function PublishedDriveBoard({
                       </div>
                     </td>
 
-                    <td style={{ fontSize: 'var(--font-xs)' }}>
+                    <td style={{ fontSize: 'var(--font-xs)', padding: '6px 8px' }}>
                       {student.branch}
                     </td>
 
-                    <td>
+                    <td style={{ padding: '6px 8px' }}>
                       <span style={{
                         fontWeight: 700,
                         background: '#f1f5f9',
                         padding: '2px 6px',
                         borderRadius: '4px',
-                        fontSize: 'var(--font-xs)'
+                        fontSize: 'var(--font-xs)',
+                        border: '1px solid #e2e8f0'
                       }}>
                         {student.cgpa}
                       </span>
                     </td>
 
-                    <td>
+                    <td style={{ padding: '6px 8px' }}>
                       {onUpdateCandidateStage ? (
                         <select
                           className="form-select"
@@ -250,23 +269,23 @@ export default function PublishedDriveBoard({
                             fontSize: 'var(--font-11)',
                             padding: '3px 6px',
                             fontWeight: 700,
-                            borderRadius: '12px',
+                            borderRadius: '6px',
                             width: 'auto',
-                            background: student.stage === 'OFFERED' ? '#ecfdf5' : student.stage === 'TECH_INTERVIEW' ? '#fffbeb' : '#f8fafc',
-                            color: student.stage === 'OFFERED' ? '#065f46' : student.stage === 'TECH_INTERVIEW' ? '#92400e' : '#09090b',
-                            border: '1px solid #cbd5e1'
+                            background: student.stage === 'OFFERED' ? '#FFDB58' : student.stage === 'TECH_INTERVIEW' ? '#ebf5fb' : '#f8fafc',
+                            color: student.stage === 'OFFERED' ? '#154360' : student.stage === 'TECH_INTERVIEW' ? '#154360' : '#09090b',
+                            border: student.stage === 'OFFERED' ? '1px solid #fae27a' : student.stage === 'TECH_INTERVIEW' ? '1px solid #aed6f1' : '1px solid #cbd5e1'
                           }}
                         >
-                          <option value="APPLIED">Applied</option>
-                          <option value="ONLINE_ASSESSMENT">Online Test</option>
-                          <option value="TECH_INTERVIEW">Interview</option>
-                          <option value="OFFERED">Selected / Offered</option>
+                          <option value="APPLIED">1. Applied</option>
+                          <option value="ONLINE_ASSESSMENT">2. Online Test</option>
+                          <option value="TECH_INTERVIEW">3. Interview</option>
+                          <option value="OFFERED">4. Selected / Offered</option>
                         </select>
                       ) : (
                         <span className={`badge ${student.stage === 'OFFERED' || student.stage === 'JOINED'
-                          ? 'badge-green'
+                          ? 'badge-mustard'
                           : student.stage === 'TECH_INTERVIEW' || student.stage === 'HR_INTERVIEW'
-                            ? 'badge-amber'
+                            ? 'badge-navy-subtle'
                             : 'badge-grey'
                           }`} style={{ fontSize: 'var(--font-10)' }}>
                           {student.stage ? student.stage.replace(/_/g, ' ') : 'ONLINE ASSESSMENT'}
@@ -274,11 +293,11 @@ export default function PublishedDriveBoard({
                       )}
                     </td>
 
-                    <td style={{ fontSize: 'var(--font-xs)', color: '#52525b', fontFamily: 'monospace' }}>
+                    <td style={{ fontSize: 'var(--font-xs)', color: '#52525b', fontFamily: 'monospace', padding: '6px 8px' }}>
                       {student.phone}
                     </td>
 
-                    <td>
+                    <td style={{ padding: '6px 8px' }}>
                       <div style={{ display: 'flex', gap: '6px' }}>
                         <button
                           onClick={() => onStartCall({
@@ -286,13 +305,14 @@ export default function PublishedDriveBoard({
                             recipientName: student.name,
                             recipientDetail: `${student.branch} • ${student.phone}`,
                             type: 'VIDEO',
-                            studentId: student.id
+                            studentId: student.id,
+                            student
                           })}
-                          className="btn-black btn-black-sm"
-                          style={{ padding: '3px 8px', fontSize: 'var(--font-xs)' }}
+                          className="btn-navy btn-black-sm"
+                          style={{ padding: '3px 8px', fontSize: 'var(--font-xs)', gap: '4px' }}
                           title="Start Video Interview"
                         >
-                          <Video size={12} /> Video
+                          <Video size={12} color="#FFDB58" /> Video
                         </button>
 
                         <button
@@ -300,24 +320,26 @@ export default function PublishedDriveBoard({
                             recipientType: 'STUDENT',
                             recipientName: student.name,
                             recipientDetail: `${student.branch} • ${student.phone}`,
+                            recipientPhone: student.phone,
                             type: 'AUDIO',
-                            studentId: student.id
+                            studentId: student.id,
+                            student
                           })}
-                          className="btn-secondary btn-black-sm"
-                          style={{ padding: '3px 8px', fontSize: 'var(--font-xs)' }}
+                          className="btn-mustard btn-black-sm"
+                          style={{ padding: '3px 8px', fontSize: 'var(--font-xs)', gap: '4px' }}
                           title="Call via Phone"
                         >
-                          <Phone size={12} /> Call
+                          <Phone size={12} color="#154360" /> Call
                         </button>
 
                         {onDeleteStudent && (
                           <button
                             onClick={() => onDeleteStudent(student.id)}
                             className="btn-icon"
-                            style={{ width: '26px', height: '26px', color: '#ef4444' }}
+                            style={{ width: '24px', height: '24px', color: '#ef4444' }}
                             title="Delete candidate"
                           >
-                            <Trash2 size={12} />
+                            <Trash2 size={11} />
                           </button>
                         )}
                       </div>
@@ -340,6 +362,7 @@ export default function PublishedDriveBoard({
               <div key={student.id} style={{
                 background: '#f8fafc',
                 border: '1px solid #e2e8f0',
+                borderLeft: '4px solid #154360',
                 borderRadius: 'var(--radius-sm)',
                 padding: '8px 10px',
                 display: 'flex',
@@ -348,7 +371,7 @@ export default function PublishedDriveBoard({
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <div style={{ fontWeight: 800, fontSize: 'var(--font-sm)', lineHeight: 'var(--lh-sm)', color: '#09090b' }}>
+                    <div style={{ fontWeight: 800, fontSize: 'var(--font-sm)', lineHeight: 'var(--lh-sm)', color: '#154360' }}>
                       {student.name}
                     </div>
                     <div style={{ fontSize: 'var(--font-10)', lineHeight: 'var(--lh-10)', color: '#71717a' }}>
@@ -357,13 +380,13 @@ export default function PublishedDriveBoard({
                   </div>
                   <span style={{
                     fontWeight: 700,
-                    background: '#ffffff',
-                    border: '1px solid #e2e8f0',
+                    background: '#FFDB58',
+                    border: '1px solid #fae27a',
                     padding: '1px 6px',
                     borderRadius: '4px',
                     fontSize: 'var(--font-10)',
                     lineHeight: 'var(--lh-10)',
-                    color: '#09090b'
+                    color: '#154360'
                   }}>
                     ⭐ {student.cgpa} CGPA
                   </span>
@@ -381,7 +404,7 @@ export default function PublishedDriveBoard({
                   flexWrap: 'wrap'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <span style={{ fontSize: 'var(--font-10)', color: '#71717a', fontWeight: 600 }}>Stage:</span>
+                    <span style={{ fontSize: 'var(--font-10)', color: '#154360', fontWeight: 700 }}>Stage:</span>
                     <select
                       className="form-select"
                       value={student.stage || 'ONLINE_ASSESSMENT'}
@@ -393,9 +416,9 @@ export default function PublishedDriveBoard({
                         fontWeight: 700,
                         borderRadius: '4px',
                         width: 'auto',
-                        background: student.stage === 'OFFERED' ? '#ecfdf5' : student.stage === 'TECH_INTERVIEW' ? '#fffbeb' : '#f8fafc',
-                        color: student.stage === 'OFFERED' ? '#065f46' : student.stage === 'TECH_INTERVIEW' ? '#92400e' : '#09090b',
-                        border: '1px solid #cbd5e1'
+                        background: student.stage === 'OFFERED' ? '#FFDB58' : student.stage === 'TECH_INTERVIEW' ? '#ebf5fb' : '#f8fafc',
+                        color: student.stage === 'OFFERED' ? '#154360' : student.stage === 'TECH_INTERVIEW' ? '#154360' : '#09090b',
+                        border: student.stage === 'OFFERED' ? '1px solid #fae27a' : student.stage === 'TECH_INTERVIEW' ? '1px solid #aed6f1' : '1px solid #cbd5e1'
                       }}
                     >
                       <option value="APPLIED">1. Applied</option>
@@ -416,11 +439,11 @@ export default function PublishedDriveBoard({
                         studentId: student.id,
                         student
                       })}
-                      className="btn-black btn-black-sm"
+                      className="btn-mustard btn-black-sm"
                       style={{ padding: '3px 8px', fontSize: 'var(--font-xs)', gap: '4px' }}
                       title="Direct Phone Call"
                     >
-                      <Phone size={11} /> Call
+                      <Phone size={11} color="#154360" /> Call
                     </button>
 
                     <button
@@ -433,18 +456,18 @@ export default function PublishedDriveBoard({
                         studentId: student.id,
                         student
                       })}
-                      className="btn-secondary btn-black-sm"
+                      className="btn-navy btn-black-sm"
                       style={{ padding: '3px 8px', fontSize: 'var(--font-xs)', gap: '4px' }}
                       title="Video Interview Room"
                     >
-                      <Video size={11} /> Video
+                      <Video size={11} color="#FFDB58" /> Video
                     </button>
 
                     {onDeleteStudent && (
                       <button
                         onClick={() => onDeleteStudent(student.id)}
                         className="btn-icon"
-                        style={{ width: '26px', height: '26px', color: '#ef4444' }}
+                        style={{ width: '24px', height: '24px', color: '#ef4444' }}
                         title="Delete candidate"
                       >
                         <Trash2 size={11} />

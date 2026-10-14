@@ -88,8 +88,9 @@ export default function MainHRDashboard({
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px' }}>
             <span style={{ 
-              background: drives.length > 0 ? '#ecfdf5' : '#f1f5f9', 
-              color: drives.length > 0 ? '#065f46' : '#52525b', 
+              background: drives.length > 0 ? '#ebf5fb' : '#f1f5f9', 
+              color: drives.length > 0 ? '#154360' : '#52525b', 
+              border: drives.length > 0 ? '1px solid #aed6f1' : '1px solid #e2e8f0',
               padding: '2px 7px', 
               borderRadius: '20px', 
               fontSize: 'var(--font-10)', 
@@ -103,7 +104,7 @@ export default function MainHRDashboard({
               {drives.length} Drives • {students.length} Candidates • {tpos.length} TPOs
             </span>
           </div>
-          <h1 style={{ fontSize: 'var(--font-2xl)', lineHeight: 'var(--lh-2xl)', fontWeight: 800, color: '#09090b', letterSpacing: '-0.02em', margin: 0 }}>
+          <h1 style={{ fontSize: 'var(--font-2xl)', lineHeight: 'var(--lh-2xl)', fontWeight: 800, color: '#154360', letterSpacing: '-0.02em', margin: 0 }}>
             HR Dashboard
           </h1>
           <p style={{ color: '#52525b', fontSize: 'var(--font-xs)', lineHeight: 'var(--lh-xs)', marginTop: '2px' }}>
@@ -117,11 +118,11 @@ export default function MainHRDashboard({
             <button 
               type="button" 
               onClick={onOpenNewDriveModal} 
-              className="btn-black btn-black-sm"
-              style={{ fontWeight: 700 }}
+              className="btn-mustard btn-black-sm"
+              style={{ fontWeight: 800 }}
               title="Schedule a new campus recruitment drive"
             >
-              <Plus size={14} /> + New Drive
+              <Plus size={14} color="#154360" /> New Drive
             </button>
           )}
 
@@ -132,7 +133,7 @@ export default function MainHRDashboard({
               className="btn-secondary btn-black-sm"
               title="Add a candidate directly to the student list"
             >
-              <UserPlus size={14} /> + Add Student
+              <UserPlus size={14} /> Add Student
             </button>
           )}
 
@@ -168,12 +169,12 @@ export default function MainHRDashboard({
           title="Click to view Call Logs"
         >
           <div className="metric-header">
-            <span className="metric-title">Team Call Time</span>
-            <div className="metric-icon-box">
-              <Clock size={18} color="#09090b" />
+            <span className="metric-title" style={{ color: '#154360' }}>Team Call Time</span>
+            <div className="metric-icon-box" style={{ background: '#ebf5fb', borderColor: '#aed6f1' }}>
+              <Clock size={18} color="#154360" />
             </div>
           </div>
-          <div className="metric-value">{formatDuration(totalCallSeconds)}</div>
+          <div className="metric-value" style={{ color: '#154360' }}>{formatDuration(totalCallSeconds)}</div>
           <div className="metric-subtext">
             <span>Across {callSessions.length} total calls • Click to view</span>
           </div>
@@ -186,12 +187,12 @@ export default function MainHRDashboard({
           title="Click to view College TPOs"
         >
           <div className="metric-header">
-            <span className="metric-title">College TPOs</span>
-            <div className="metric-icon-box">
-              <Building2 size={18} color="#09090b" />
+            <span className="metric-title" style={{ color: '#154360' }}>College TPOs</span>
+            <div className="metric-icon-box" style={{ background: '#fffdf0', borderColor: '#fae27a' }}>
+              <Building2 size={18} color="#154360" />
             </div>
           </div>
-          <div className="metric-value">{totalTpos}</div>
+          <div className="metric-value" style={{ color: '#154360' }}>{totalTpos}</div>
           <div className="metric-subtext">
             <span>{tpos.filter(t => t.status === 'DRIVE_CONFIRMED').length} confirmed • Click to view</span>
           </div>
@@ -204,12 +205,12 @@ export default function MainHRDashboard({
           title="Click to view Campus Drives & Students"
         >
           <div className="metric-header">
-            <span className="metric-title">Total Students</span>
-            <div className="metric-icon-box">
-              <Users size={18} color="#09090b" />
+            <span className="metric-title" style={{ color: '#154360' }}>Total Students</span>
+            <div className="metric-icon-box" style={{ background: '#ebf5fb', borderColor: '#aed6f1' }}>
+              <Users size={18} color="#154360" />
             </div>
           </div>
-          <div className="metric-value">{totalStudents}</div>
+          <div className="metric-value" style={{ color: '#154360' }}>{totalStudents}</div>
           <div className="metric-subtext">
             <span>In recruitment pipeline • Click to view</span>
           </div>
@@ -222,12 +223,12 @@ export default function MainHRDashboard({
           title="Click to view Campus Drives"
         >
           <div className="metric-header">
-            <span className="metric-title">Active Drives</span>
-            <div className="metric-icon-box">
-              <Calendar size={18} color="#09090b" />
+            <span className="metric-title" style={{ color: '#154360' }}>Active Drives</span>
+            <div className="metric-icon-box" style={{ background: '#fffdf0', borderColor: '#fae27a' }}>
+              <Calendar size={18} color="#154360" />
             </div>
           </div>
-          <div className="metric-value">{drives.length}</div>
+          <div className="metric-value" style={{ color: '#154360' }}>{drives.length}</div>
           <div className="metric-subtext">
             <span>{confirmedDrives} confirmed • Click to view</span>
           </div>
@@ -302,7 +303,7 @@ export default function MainHRDashboard({
                         style={{ 
                           width: `${intern.targetProgress}%`, 
                           height: '100%', 
-                          background: intern.targetProgress >= 80 ? '#10b981' : '#09090b',
+                          background: intern.targetProgress >= 80 ? '#10b981' : '#154360',
                         }} 
                       />
                     </div>
@@ -330,11 +331,11 @@ export default function MainHRDashboard({
                           type: 'AUDIO'
                         });
                       }}
-                      className="btn-black btn-black-sm"
-                      style={{ padding: '3px 8px', fontSize: 'var(--font-xs)' }}
+                      className="btn-mustard btn-black-sm"
+                      style={{ padding: '3px 8px', fontSize: 'var(--font-xs)', gap: '4px' }}
                       title="Quick sync call"
                     >
-                      <Phone size={11} /> Call
+                      <Phone size={11} color="#154360" /> Call
                     </button>
                   </td>
                 </tr>
@@ -349,6 +350,7 @@ export default function MainHRDashboard({
             <div key={intern.id} style={{
               background: '#f8fafc',
               border: '1px solid #e2e8f0',
+              borderLeft: '4px solid #154360',
               borderRadius: 'var(--radius-sm)',
               padding: '8px 10px',
               display: 'flex',
@@ -361,7 +363,7 @@ export default function MainHRDashboard({
                     #{index + 1}
                   </div>
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: 'var(--font-sm)', color: '#09090b' }}>{intern.name}</div>
+                    <div style={{ fontWeight: 700, fontSize: 'var(--font-sm)', color: '#154360' }}>{intern.name}</div>
                     <div style={{ fontSize: 'var(--font-10)', color: '#71717a', lineHeight: 'var(--lh-10)' }}>{intern.title}</div>
                   </div>
                 </div>
@@ -381,13 +383,13 @@ export default function MainHRDashboard({
               }}>
                 <div>
                   <div style={{ fontSize: 'var(--font-10)', color: '#71717a', fontWeight: 600 }}>Talk Time</div>
-                  <div style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, fontSize: 'var(--font-sm)', color: '#09090b' }}>
+                  <div style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, fontSize: 'var(--font-sm)', color: '#154360' }}>
                     {formatDuration(intern.totalSeconds)}
                   </div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: 'var(--font-10)', color: '#71717a', fontWeight: 600 }}>Calls</div>
-                  <div style={{ fontWeight: 800, fontSize: 'var(--font-xs)' }}>{intern.callCount}</div>
+                  <div style={{ fontWeight: 800, fontSize: 'var(--font-xs)', color: '#154360' }}>{intern.callCount}</div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: 'var(--font-10)', color: '#71717a', fontWeight: 600 }}>Goal</div>
@@ -402,10 +404,10 @@ export default function MainHRDashboard({
                       type: 'AUDIO'
                     });
                   }}
-                  className="btn-black btn-black-sm"
+                  className="btn-mustard btn-black-sm"
                   style={{ padding: '3px 8px', fontSize: 'var(--font-xs)', gap: '4px' }}
                 >
-                  <Phone size={11} /> Call
+                  <Phone size={11} color="#154360" /> Call
                 </button>
               </div>
             </div>
@@ -497,8 +499,9 @@ export default function MainHRDashboard({
                       <span style={{ 
                         fontFamily: 'Space Grotesk, sans-serif', 
                         fontWeight: 700, 
-                        color: '#09090b',
-                        background: '#f1f5f9',
+                        color: '#154360',
+                        background: '#ebf5fb',
+                        border: '1px solid #aed6f1',
                         padding: '2px 6px',
                         borderRadius: '4px',
                         fontSize: 'var(--font-xs)'

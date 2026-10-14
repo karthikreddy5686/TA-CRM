@@ -83,7 +83,7 @@ export default function CallDispositionModal({
                 <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#71717a', textTransform: 'uppercase' }}>
                   Logged Talk Time
                 </div>
-                <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#09090b', fontFamily: 'Space Grotesk, sans-serif' }}>
+                <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#154360', fontFamily: 'Space Grotesk, sans-serif' }}>
                   {formatDuration(sessionData.duration)}
                 </div>
                 <div style={{ fontSize: '0.78rem', color: '#52525b', marginTop: '2px' }}>
@@ -215,7 +215,7 @@ export default function CallDispositionModal({
             <button type="button" onClick={onCancel} className="btn-secondary">
               Discard Log
             </button>
-            <button type="submit" className="btn-black">
+            <button type="submit" className="btn-mustard" style={{ fontWeight: 800 }}>
               Save Log & Update CRM Roster
             </button>
           </div>

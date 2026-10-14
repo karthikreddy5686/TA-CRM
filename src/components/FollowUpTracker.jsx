@@ -84,7 +84,7 @@ export default function FollowUpTracker({
         gap: '14px'
       }}>
         <div>
-          <h1 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#09090b' }}>
+          <h1 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#154360' }}>
             Follow-Ups
           </h1>
           <p style={{ color: '#52525b', fontSize: '0.85rem' }}>
@@ -92,18 +92,18 @@ export default function FollowUpTracker({
           </p>
         </div>
 
-        <button onClick={() => setIsAddModalOpen(true)} className="btn-black btn-black-sm">
-          <Plus size={15} /> + Add Follow-Up
+        <button onClick={() => setIsAddModalOpen(true)} className="btn-mustard btn-black-sm" style={{ fontWeight: 800 }}>
+          <Plus size={15} color="#154360" /> Add Follow-Up
         </button>
       </div>
 
       {/* Mini KPI banner - Compact */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '8px', marginBottom: '12px' }}>
         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px 12px' }}>
-          <div style={{ fontSize: '0.65rem', fontWeight: 600, color: '#71717a', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: '0.65rem', fontWeight: 600, color: '#154360', textTransform: 'uppercase' }}>
             Pending
           </div>
-          <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#09090b', marginTop: '1px' }}>
+          <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#154360', marginTop: '1px' }}>
             {pendingCount}
           </div>
         </div>
@@ -112,7 +112,7 @@ export default function FollowUpTracker({
           <div style={{ fontSize: '0.65rem', fontWeight: 600, color: '#71717a', textTransform: 'uppercase' }}>
             Urgent
           </div>
-          <div style={{ fontSize: '1.1rem', fontWeight: 800, color: urgentCount > 0 ? '#ef4444' : '#09090b', marginTop: '1px' }}>
+          <div style={{ fontSize: '1.1rem', fontWeight: 800, color: urgentCount > 0 ? '#ef4444' : '#154360', marginTop: '1px' }}>
             {urgentCount}
           </div>
         </div>
@@ -205,7 +205,7 @@ export default function FollowUpTracker({
                         type="checkbox"
                         checked={fup.status === 'COMPLETED'}
                         onChange={() => onToggleCompleteFollowUp(fup.id)}
-                        style={{ width: '14px', height: '14px', accentColor: '#09090b', cursor: 'pointer' }}
+                        style={{ width: '14px', height: '14px', accentColor: '#154360', cursor: 'pointer' }}
                         title="Mark Completed"
                       />
                     </td>
@@ -214,7 +214,7 @@ export default function FollowUpTracker({
                       <div style={{ 
                         fontWeight: 700,
                         fontSize: '0.78rem',
-                        color: fup.status === 'COMPLETED' ? '#71717a' : '#09090b',
+                        color: fup.status === 'COMPLETED' ? '#71717a' : '#154360',
                         textDecoration: fup.status === 'COMPLETED' ? 'line-through' : 'none'
                       }}>
                         {fup.entityTitle}
@@ -265,16 +265,16 @@ export default function FollowUpTracker({
                                 type: 'AUDIO',
                                 followUpId: fup.id
                               })}
-                              className="btn-black btn-black-sm"
-                              style={{ padding: '2px 6px', fontSize: '0.7rem' }}
+                              className="btn-mustard btn-black-sm"
+                              style={{ padding: '2px 6px', fontSize: '0.7rem', gap: '3px' }}
                               title="Call immediately"
                             >
-                              <Phone size={11} /> Call
+                              <Phone size={11} color="#154360" /> Call
                             </button>
 
                             <button 
                               onClick={() => onSnoozeFollowUp(fup.id, 1)}
-                              className="btn-secondary btn-black-sm"
+                              className="btn-navy-outline btn-black-sm"
                               style={{ padding: '2px 5px', fontSize: '0.7rem' }}
                               title="Snooze 1 day"
                             >
@@ -318,6 +318,7 @@ export default function FollowUpTracker({
               <div key={fup.id} style={{
                 background: fup.status === 'COMPLETED' ? '#f1f5f9' : '#f8fafc',
                 border: '1px solid #e2e8f0',
+                borderLeft: fup.status === 'COMPLETED' ? '4px solid #cbd5e1' : '4px solid #154360',
                 borderRadius: '8px',
                 padding: '8px 10px',
                 display: 'flex',
@@ -333,13 +334,13 @@ export default function FollowUpTracker({
                       type="checkbox" 
                       checked={fup.status === 'COMPLETED'}
                       onChange={() => onToggleCompleteFollowUp(fup.id)}
-                      style={{ width: '14px', height: '14px', accentColor: '#09090b', cursor: 'pointer', marginTop: '2px' }}
+                      style={{ width: '14px', height: '14px', accentColor: '#154360', cursor: 'pointer', marginTop: '2px' }}
                     />
                     <div>
                       <div style={{ 
                         fontWeight: 700, 
                         fontSize: '0.8rem', 
-                        color: fup.status === 'COMPLETED' ? '#71717a' : '#09090b',
+                        color: fup.status === 'COMPLETED' ? '#71717a' : '#154360',
                         textDecoration: fup.status === 'COMPLETED' ? 'line-through' : 'none'
                       }}>
                         {fup.entityTitle}
@@ -379,15 +380,15 @@ export default function FollowUpTracker({
                             type: 'AUDIO',
                             followUpId: fup.id
                           })}
-                          className="btn-black btn-black-sm"
+                          className="btn-mustard btn-black-sm"
                           style={{ padding: '3px 8px', fontSize: '0.72rem', gap: '3px' }}
                         >
-                          <Phone size={11} /> Call
+                          <Phone size={11} color="#154360" /> Call
                         </button>
 
                         <button 
                           onClick={() => onSnoozeFollowUp(fup.id, 1)}
-                          className="btn-secondary btn-black-sm"
+                          className="btn-navy-outline btn-black-sm"
                           style={{ padding: '3px 7px', fontSize: '0.72rem' }}
                         >
                           +1d
@@ -513,7 +514,7 @@ export default function FollowUpTracker({
                 <button type="button" onClick={() => setIsAddModalOpen(false)} className="btn-secondary">
                   Cancel
                 </button>
-                <button type="submit" className="btn-black">
+                <button type="submit" className="btn-mustard" style={{ fontWeight: 800 }}>
                   Create Follow-Up Reminder
                 </button>
               </div>

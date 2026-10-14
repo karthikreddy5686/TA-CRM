@@ -98,7 +98,7 @@ export default function TPODirectory({
         gap: '14px'
       }}>
         <div>
-          <h1 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#09090b' }}>
+          <h1 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#154360' }}>
             College TPOs
           </h1>
           <p style={{ color: '#52525b', fontSize: '0.85rem' }}>
@@ -106,8 +106,8 @@ export default function TPODirectory({
           </p>
         </div>
 
-        <button onClick={() => setIsAddModalOpen(true)} className="btn-black btn-black-sm">
-          <Plus size={15} /> + Add TPO
+        <button onClick={() => setIsAddModalOpen(true)} className="btn-mustard btn-black-sm" style={{ fontWeight: 800 }}>
+          <Plus size={15} color="#154360" /> Add TPO
         </button>
       </div>
 
@@ -187,8 +187,8 @@ export default function TPODirectory({
                 filteredTpos.map(tpo => (
                   <tr key={tpo.id}>
                     <td>
-                      <div style={{ fontWeight: 700, color: '#09090b', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <Building2 size={15} color="#52525b" />
+                      <div style={{ fontWeight: 700, color: '#154360', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Building2 size={15} color="#154360" />
                         {tpo.collegeName}
                       </div>
                       <div style={{ fontSize: '0.75rem', color: '#71717a', marginLeft: '21px' }}>
@@ -256,10 +256,11 @@ export default function TPODirectory({
                             type: 'AUDIO',
                             tpoId: tpo.id
                           })}
-                          className="btn-black btn-black-sm"
+                          className="btn-mustard btn-black-sm"
+                          style={{ padding: '3px 8px', fontSize: 'var(--font-xs)', gap: '4px' }}
                           title="Call TPO from HR Phone"
                         >
-                          <Phone size={13} /> Call
+                          <Phone size={13} color="#154360" /> Call
                         </button>
 
                         <button 
@@ -271,10 +272,11 @@ export default function TPODirectory({
                             type: 'VIDEO',
                             tpoId: tpo.id
                           })}
-                          className="btn-secondary btn-black-sm"
+                          className="btn-navy btn-black-sm"
+                          style={{ padding: '3px 8px', fontSize: 'var(--font-xs)', gap: '4px' }}
                           title="Launch Video Conference on Laptop"
                         >
-                          <Video size={13} /> Video
+                          <Video size={13} color="#FFDB58" /> Video
                         </button>
 
                         <button 
@@ -316,6 +318,7 @@ export default function TPODirectory({
               <div key={tpo.id} style={{
                 background: '#f8fafc',
                 border: '1px solid #e2e8f0',
+                borderLeft: '4px solid #154360',
                 borderRadius: '10px',
                 padding: '12px',
                 display: 'flex',
@@ -324,8 +327,8 @@ export default function TPODirectory({
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <div style={{ fontWeight: 800, fontSize: '0.925rem', color: '#09090b', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                      <Building2 size={15} color="#52525b" />
+                    <div style={{ fontWeight: 800, fontSize: '0.925rem', color: '#154360', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      <Building2 size={15} color="#154360" />
                       {tpo.collegeName}
                     </div>
                     <div style={{ fontSize: '0.75rem', color: '#71717a', marginLeft: '20px' }}>
@@ -371,11 +374,11 @@ export default function TPODirectory({
                       type: 'AUDIO',
                       tpoId: tpo.id
                     })}
-                    className="btn-black btn-black-sm"
+                    className="btn-mustard btn-black-sm"
                     style={{ padding: '4px 10px', fontSize: '0.75rem', gap: '4px' }}
                     title="Call TPO"
                   >
-                    <Phone size={12} /> Call
+                    <Phone size={12} color="#154360" /> Call
                   </button>
 
                   <button 
@@ -387,11 +390,11 @@ export default function TPODirectory({
                       type: 'VIDEO',
                       tpoId: tpo.id
                     })}
-                    className="btn-secondary btn-black-sm"
+                    className="btn-navy btn-black-sm"
                     style={{ padding: '4px 8px', fontSize: '0.75rem', gap: '4px' }}
                     title="Video Meeting"
                   >
-                    <Video size={12} /> Video
+                    <Video size={12} color="#FFDB58" /> Video
                   </button>
 
                   <button 
@@ -549,7 +552,7 @@ export default function TPODirectory({
                 <button type="button" onClick={() => setIsAddModalOpen(false)} className="btn-secondary">
                   Cancel
                 </button>
-                <button type="submit" className="btn-black">
+                <button type="submit" className="btn-mustard" style={{ fontWeight: 800 }}>
                   Add TPO Record
                 </button>
               </div>

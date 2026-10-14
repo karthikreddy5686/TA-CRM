@@ -85,15 +85,16 @@ export default function LoginScreen({ onLogin }) {
         border: '1px solid #e2e8f0',
         borderRadius: '16px',
         padding: '36px 32px',
-        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02)'
+        boxShadow: '0 20px 25px -5px rgba(21, 67, 96, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.02)'
       }}>
         {/* Brand Header */}
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>
           <div style={{
             width: '48px',
             height: '48px',
-            background: '#09090b',
-            color: '#ffffff',
+            background: '#154360',
+            color: '#FFDB58',
+            border: '2px solid #FFDB58',
             borderRadius: '12px',
             display: 'flex',
             alignItems: 'center',
@@ -101,11 +102,12 @@ export default function LoginScreen({ onLogin }) {
             margin: '0 auto 12px',
             fontWeight: 800,
             fontSize: '1.25rem',
-            fontFamily: 'Space Grotesk, sans-serif'
+            fontFamily: 'Space Grotesk, sans-serif',
+            boxShadow: '0 4px 6px -1px rgba(21, 67, 96, 0.25)'
           }}>
             TA
           </div>
-          <h1 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#09090b', letterSpacing: '-0.02em', margin: 0 }}>
+          <h1 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#154360', letterSpacing: '-0.02em', margin: 0 }}>
             TalentConnect HR
           </h1>
           <p style={{ fontSize: '0.85rem', color: '#71717a', marginTop: '4px' }}>
@@ -116,7 +118,7 @@ export default function LoginScreen({ onLogin }) {
         {/* Login Form */}
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#09090b', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#154360', marginBottom: '6px' }}>
               Work Email
             </label>
             <div style={{ position: 'relative' }}>
@@ -134,7 +136,7 @@ export default function LoginScreen({ onLogin }) {
           </div>
 
           <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#09090b', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#154360', marginBottom: '6px' }}>
               Password
             </label>
             <div style={{ position: 'relative' }}>
@@ -172,10 +174,10 @@ export default function LoginScreen({ onLogin }) {
 
           <button 
             type="submit" 
-            className="btn-black" 
-            style={{ width: '100%', padding: '12px', justifyContent: 'center', fontSize: '0.9rem', fontWeight: 700 }}
+            className="btn-mustard" 
+            style={{ width: '100%', padding: '12px', justifyContent: 'center', fontSize: '0.9rem', fontWeight: 800, borderRadius: '8px' }}
           >
-            Sign In <ArrowRight size={15} />
+            Sign In <ArrowRight size={15} color="#154360" />
           </button>
         </form>
 
@@ -185,7 +187,7 @@ export default function LoginScreen({ onLogin }) {
           paddingTop: '20px',
           borderTop: '1px solid #e2e8f0'
         }}>
-          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#154360', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>
             Specific User Credentials:
           </div>
 
@@ -195,8 +197,8 @@ export default function LoginScreen({ onLogin }) {
                 key={acc.email}
                 onClick={() => handleSelectPreset(acc)}
                 style={{
-                  background: email === acc.email ? '#f1f5f9' : '#f8fafc',
-                  border: email === acc.email ? '1px solid #09090b' : '1px solid #e2e8f0',
+                  background: email === acc.email ? '#ebf5fb' : '#f8fafc',
+                  border: email === acc.email ? '2px solid #154360' : '1px solid #e2e8f0',
                   borderRadius: '10px',
                   padding: '10px 12px',
                   cursor: 'pointer',
@@ -207,7 +209,7 @@ export default function LoginScreen({ onLogin }) {
                 }}
               >
                 <div>
-                  <div style={{ fontSize: '0.825rem', fontWeight: 700, color: '#09090b' }}>
+                  <div style={{ fontSize: '0.825rem', fontWeight: 700, color: '#154360' }}>
                     {acc.name} <span style={{ fontSize: '0.72rem', color: '#71717a', fontWeight: 500 }}>({acc.roleLabel})</span>
                   </div>
                   <div style={{ fontSize: '0.75rem', color: '#52525b', fontFamily: 'monospace', marginTop: '2px' }}>
@@ -217,7 +219,7 @@ export default function LoginScreen({ onLogin }) {
 
                 <button 
                   type="button" 
-                  className="btn-secondary btn-black-sm"
+                  className={email === acc.email ? 'btn-mustard btn-black-sm' : 'btn-secondary btn-black-sm'}
                   style={{ fontSize: '0.72rem', padding: '3px 8px' }}
                 >
                   Use

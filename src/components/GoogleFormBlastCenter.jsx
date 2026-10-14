@@ -439,18 +439,18 @@ export default function GoogleFormBlastCenter({
         boxShadow: 'var(--shadow-card)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ background: '#09090b', color: '#ffffff', borderRadius: '50%', width: '16px', height: '16px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--font-10)', fontWeight: 800 }}>1</span>
-          <span style={{ fontWeight: 700, color: '#09090b' }}>Select Target Drive</span>
+          <span style={{ background: '#154360', color: '#FFDB58', borderRadius: '50%', width: '16px', height: '16px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--font-10)', fontWeight: 800 }}>1</span>
+          <span style={{ fontWeight: 700, color: '#154360' }}>Select Target Drive</span>
         </div>
         <span style={{ color: '#cbd5e1' }}>→</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ background: '#09090b', color: '#ffffff', borderRadius: '50%', width: '16px', height: '16px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--font-10)', fontWeight: 800 }}>2</span>
-          <span style={{ fontWeight: 700, color: '#09090b' }}>Paste Sheets Cells</span>
+          <span style={{ background: '#154360', color: '#FFDB58', borderRadius: '50%', width: '16px', height: '16px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--font-10)', fontWeight: 800 }}>2</span>
+          <span style={{ fontWeight: 700, color: '#154360' }}>Paste Sheets Cells</span>
         </div>
         <span style={{ color: '#cbd5e1' }}>→</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ background: '#09090b', color: '#ffffff', borderRadius: '50%', width: '16px', height: '16px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--font-10)', fontWeight: 800 }}>3</span>
-          <span style={{ fontWeight: 700, color: '#09090b' }}>Post Students</span>
+          <span style={{ background: '#154360', color: '#FFDB58', borderRadius: '50%', width: '16px', height: '16px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--font-10)', fontWeight: 800 }}>3</span>
+          <span style={{ fontWeight: 700, color: '#154360' }}>Post Students</span>
         </div>
       </div>
 
@@ -540,24 +540,24 @@ export default function GoogleFormBlastCenter({
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
             <button 
               onClick={() => setIsNewDriveModalOpen(true)}
-              className="btn-black btn-black-sm"
-              style={{ fontSize: '0.78rem' }}
+              className="btn-mustard btn-black-sm"
+              style={{ fontSize: '0.78rem', fontWeight: 800 }}
             >
-              <Plus size={13} /> + New Drive
+              <Plus size={13} color="#154360" /> New Drive
             </button>
             <button 
               onClick={() => setIsManualStudentModalOpen(true)}
               className="btn-secondary btn-black-sm"
               style={{ fontSize: '0.78rem' }}
             >
-              <UserPlus size={13} /> + Add Student
+              <UserPlus size={13} /> Add Student
             </button>
             <button 
               onClick={onGoToLiveBoard}
-              className="btn-secondary btn-black-sm"
+              className="btn-navy-outline btn-black-sm"
               style={{ fontSize: '0.78rem' }}
             >
-              <Globe size={13} /> View Posted Students
+              <Globe size={13} color="#154360" /> View Posted Students
             </button>
           </div>
         </div>
@@ -567,8 +567,8 @@ export default function GoogleFormBlastCenter({
       <div className="content-card" style={{ marginBottom: '20px', padding: '20px', border: '1px solid #cbd5e1' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <FileSpreadsheet size={20} color="#09090b" />
-            <h2 style={{ fontSize: '0.98rem', fontWeight: 700, color: '#09090b' }}>
+            <FileSpreadsheet size={20} color="#154360" />
+            <h2 style={{ fontSize: '0.98rem', fontWeight: 700, color: '#154360' }}>
               Paste Google Sheet Details
             </h2>
           </div>
@@ -609,10 +609,10 @@ Columns accepted: Full Name, Roll Number, Email, Phone/WhatsApp, Branch, CGPA"
             <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginTop: '10px', gap: '10px' }}>
               <button 
                 onClick={handleProcessPastedText}
-                className="btn-black btn-black-sm"
+                className="btn-navy btn-black-sm"
                 style={{ padding: '8px 18px', fontWeight: 700 }}
               >
-                <FileSpreadsheet size={14} /> Import & Show Student Details
+                <FileSpreadsheet size={14} color="#FFDB58" /> Import & Show Student Details
               </button>
             </div>
           </div>
@@ -634,7 +634,7 @@ Columns accepted: Full Name, Roll Number, Email, Phone/WhatsApp, Branch, CGPA"
               <button 
                 onClick={handleFetchGoogleSheetUrl}
                 disabled={isLoadingSheet}
-                className="btn-black btn-black-sm"
+                className="btn-navy btn-black-sm"
                 style={{ whiteSpace: 'nowrap', padding: '8px 18px', fontWeight: 700 }}
               >
                 {isLoadingSheet ? 'Fetching...' : 'Fetch & Show Details'}
@@ -716,12 +716,12 @@ Columns accepted: Full Name, Roll Number, Email, Phone/WhatsApp, Branch, CGPA"
             {/* Meaningful Action Button */}
             <button 
               onClick={openBlastConfirmation}
-              className="btn-black btn-black-sm"
+              className="btn-mustard btn-black-sm"
               disabled={filteredResponses.length === 0}
-              style={{ fontWeight: 700 }}
+              style={{ fontWeight: 800 }}
               title="Post candidates to campus drive roster"
             >
-              <Send size={13} /> {selectedIds.length > 0 ? `Post Selected (${selectedIds.length})` : 'Post Students'}
+              <Send size={13} color="#154360" /> {selectedIds.length > 0 ? `Post Selected (${selectedIds.length})` : 'Post Students'}
             </button>
           </div>
         </div>
@@ -735,7 +735,7 @@ Columns accepted: Full Name, Roll Number, Email, Phone/WhatsApp, Branch, CGPA"
                     type="checkbox" 
                     onChange={handleSelectAll}
                     checked={filteredResponses.length > 0 && selectedIds.length === filteredResponses.length}
-                    style={{ cursor: 'pointer', width: '15px', height: '15px', accentColor: '#09090b' }}
+                    style={{ cursor: 'pointer', width: '15px', height: '15px', accentColor: '#154360' }}
                   />
                 </th>
                 <th>Student Name</th>
@@ -758,18 +758,18 @@ Columns accepted: Full Name, Roll Number, Email, Phone/WhatsApp, Branch, CGPA"
                 filteredResponses.map(resp => {
                   const isSelected = selectedIds.includes(resp.id);
                   return (
-                    <tr key={resp.id} style={{ background: isSelected ? '#f8fafc' : 'transparent' }}>
+                    <tr key={resp.id} style={{ background: isSelected ? '#ebf5fb' : 'transparent' }}>
                       <td>
                         <input 
                           type="checkbox" 
                           checked={isSelected}
                           onChange={() => handleToggleSelect(resp.id)}
-                          style={{ cursor: 'pointer', width: '15px', height: '15px', accentColor: '#09090b' }}
+                          style={{ cursor: 'pointer', width: '15px', height: '15px', accentColor: '#154360' }}
                         />
                       </td>
 
                       <td>
-                        <div style={{ fontWeight: 700, color: '#09090b', fontSize: '0.875rem' }}>
+                        <div style={{ fontWeight: 700, color: '#154360', fontSize: '0.875rem' }}>
                           {resp.name}
                         </div>
                         <div style={{ fontSize: '0.72rem', color: '#52525b' }}>
@@ -792,8 +792,9 @@ Columns accepted: Full Name, Roll Number, Email, Phone/WhatsApp, Branch, CGPA"
                       <td>
                         <span style={{ 
                           fontWeight: 700, 
-                          color: '#09090b',
-                          background: '#f1f5f9',
+                          color: '#154360',
+                          background: '#FFDB58',
+                          border: '1px solid #fae27a',
                           padding: '2px 7px',
                           borderRadius: '4px',
                           fontSize: '0.8rem'
@@ -821,7 +822,7 @@ Columns accepted: Full Name, Roll Number, Email, Phone/WhatsApp, Branch, CGPA"
                               setSelectedIds([resp.id]);
                               setIsBlastModalOpen(true);
                             }}
-                            className="btn-secondary btn-black-sm"
+                            className="btn-mustard btn-black-sm"
                             style={{ fontSize: '0.72rem', padding: '3px 8px' }}
                             title="Post candidate to campus drive roster"
                           >
@@ -859,8 +860,9 @@ Columns accepted: Full Name, Roll Number, Email, Phone/WhatsApp, Branch, CGPA"
               const isSelected = selectedIds.includes(resp.id);
               return (
                 <div key={resp.id} style={{
-                  background: isSelected ? '#f1f5f9' : '#f8fafc',
-                  border: isSelected ? '1px solid #09090b' : '1px solid #e2e8f0',
+                  background: isSelected ? '#ebf5fb' : '#f8fafc',
+                  border: isSelected ? '1px solid #154360' : '1px solid #e2e8f0',
+                  borderLeft: '4px solid #154360',
                   borderRadius: '10px',
                   padding: '12px',
                   display: 'flex',
@@ -873,10 +875,10 @@ Columns accepted: Full Name, Roll Number, Email, Phone/WhatsApp, Branch, CGPA"
                         type="checkbox" 
                         checked={isSelected}
                         onChange={() => handleToggleSelect(resp.id)}
-                        style={{ cursor: 'pointer', width: '16px', height: '16px', marginTop: '2px', accentColor: '#09090b' }}
+                        style={{ cursor: 'pointer', width: '16px', height: '16px', marginTop: '2px', accentColor: '#154360' }}
                       />
                       <div>
-                        <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#09090b' }}>
+                        <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#154360' }}>
                           {resp.name}
                         </div>
                         <div style={{ fontSize: '0.72rem', color: '#71717a' }}>
@@ -890,12 +892,12 @@ Columns accepted: Full Name, Roll Number, Email, Phone/WhatsApp, Branch, CGPA"
 
                     <span style={{
                       fontWeight: 700,
-                      background: '#ffffff',
-                      border: '1px solid #e2e8f0',
+                      background: '#FFDB58',
+                      border: '1px solid #fae27a',
                       padding: '2px 7px',
                       borderRadius: '6px',
                       fontSize: '0.75rem',
-                      color: '#09090b',
+                      color: '#154360',
                       whiteSpace: 'nowrap'
                     }}>
                       ⭐ {resp.cgpa} CGPA
@@ -925,7 +927,7 @@ Columns accepted: Full Name, Roll Number, Email, Phone/WhatsApp, Branch, CGPA"
                           setSelectedIds([resp.id]);
                           setIsBlastModalOpen(true);
                         }}
-                        className="btn-secondary btn-black-sm"
+                        className="btn-mustard btn-black-sm"
                         style={{ fontSize: '0.72rem', padding: '3px 9px' }}
                       >
                         Invite
@@ -1033,7 +1035,7 @@ Columns accepted: Full Name, Roll Number, Email, Phone/WhatsApp, Branch, CGPA"
                 >
                   Cancel
                 </button>
-                <button type="submit" className="btn-black btn-black-sm">
+                <button type="submit" className="btn-mustard btn-black-sm" style={{ fontWeight: 800 }}>
                   Create Drive
                 </button>
               </div>
@@ -1155,7 +1157,7 @@ Columns accepted: Full Name, Roll Number, Email, Phone/WhatsApp, Branch, CGPA"
                 >
                   Cancel
                 </button>
-                <button type="submit" className="btn-black btn-black-sm">
+                <button type="submit" className="btn-mustard btn-black-sm" style={{ fontWeight: 800 }}>
                   Add Student
                 </button>
               </div>
@@ -1201,12 +1203,12 @@ Columns accepted: Full Name, Roll Number, Email, Phone/WhatsApp, Branch, CGPA"
                       style={{ 
                         width: `${blastingProgress}%`, 
                         height: '100%', 
-                        background: '#09090b', 
+                        background: '#154360', 
                         transition: 'width 0.2s ease-in-out' 
                       }} 
                     />
                   </div>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#09090b', marginTop: '6px' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#154360', marginTop: '6px' }}>
                     {blastingProgress}% Complete
                   </div>
                 </div>
@@ -1274,10 +1276,10 @@ Columns accepted: Full Name, Roll Number, Email, Phone/WhatsApp, Branch, CGPA"
 
                 <button 
                   onClick={handleExecuteBlast}
-                  className="btn-black btn-black-sm"
+                  className="btn-mustard btn-black-sm"
                   style={{ fontWeight: 800 }}
                 >
-                  <Send size={13} /> Confirm & Send Invites ({selectedIds.length})
+                  <Send size={13} color="#154360" /> Confirm & Send Invites ({selectedIds.length})
                 </button>
               </div>
             )}

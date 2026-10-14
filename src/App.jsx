@@ -758,7 +758,8 @@ export default function App() {
   const NAV_MODULES = [
     { id: 'dashboard', name: 'Dashboard Overview', category: 'Main', icon: <BarChart3 size={15} /> },
     { id: 'googleFormBlast', name: 'Google Sheets Student Intake', category: 'Main', icon: <FileSpreadsheet size={15} /> },
-    { id: 'drives', name: 'Campus Drives & Students', category: 'Main', icon: <Calendar size={15} /> },
+    { id: 'drives', name: 'Campus Drives', category: 'Main', icon: <Calendar size={15} /> },
+    { id: 'liveBoard', name: 'Posted Students', category: 'Main', icon: <Users size={15} /> },
     { id: 'tpos', name: 'College TPOs', category: 'Outreach & Calls', icon: <Building2 size={15} /> },
     { id: 'followups', name: 'Follow-Ups', category: 'Outreach & Calls', icon: <Clock size={15} /> },
     { id: 'calls', name: 'Call Logs', category: 'Outreach & Calls', icon: <PhoneCall size={15} /> },
@@ -832,6 +833,9 @@ export default function App() {
           >
             <BarChart3 size={17} />
             <span className="nav-label">Dashboard</span>
+            {activeTab === 'dashboard' && (
+              <span style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', background: '#FFDB58' }} />
+            )}
           </button>
 
           <button 
@@ -841,15 +845,33 @@ export default function App() {
           >
             <FileSpreadsheet size={17} />
             <span className="nav-label">Google Sheets Intake</span>
+            {activeTab === 'googleFormBlast' && (
+              <span style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', background: '#FFDB58' }} />
+            )}
           </button>
 
           <button 
             onClick={() => { setActiveTab('drives'); setIsMobileSidebarOpen(false); }}
-            className={`nav-item ${activeTab === 'drives' || activeTab === 'liveBoard' ? 'active' : ''}`}
-            title="Campus Drives & Students"
+            className={`nav-item ${activeTab === 'drives' ? 'active' : ''}`}
+            title="Campus Drives"
           >
             <Calendar size={17} />
-            <span className="nav-label">Campus Drives & Students</span>
+            <span className="nav-label">Campus Drives</span>
+            {activeTab === 'drives' && (
+              <span style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', background: '#FFDB58' }} />
+            )}
+          </button>
+
+          <button 
+            onClick={() => { setActiveTab('liveBoard'); setIsMobileSidebarOpen(false); }}
+            className={`nav-item ${activeTab === 'liveBoard' ? 'active' : ''}`}
+            title="Posted Students"
+          >
+            <Users size={17} />
+            <span className="nav-label">Posted Students</span>
+            {activeTab === 'liveBoard' && (
+              <span style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', background: '#FFDB58' }} />
+            )}
           </button>
 
           <div className="nav-section-title">Outreach & Calls</div>
@@ -861,6 +883,9 @@ export default function App() {
           >
             <Building2 size={17} />
             <span className="nav-label">College TPOs</span>
+            {activeTab === 'tpos' && (
+              <span style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', background: '#FFDB58' }} />
+            )}
           </button>
 
           <button 
@@ -870,6 +895,9 @@ export default function App() {
           >
             <Clock size={17} />
             <span className="nav-label">Follow-Ups</span>
+            {activeTab === 'followups' && (
+              <span style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', background: '#FFDB58' }} />
+            )}
           </button>
 
           <button 
@@ -879,6 +907,9 @@ export default function App() {
           >
             <PhoneCall size={17} />
             <span className="nav-label">Call Logs</span>
+            {activeTab === 'calls' && (
+              <span style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', background: '#FFDB58' }} />
+            )}
           </button>
         </nav>
 
@@ -917,8 +948,8 @@ export default function App() {
         {/* Mobile-only Top App Bar */}
         <div className="mobile-only mobile-top-bar" style={{
           height: '44px',
-          background: '#ffffff',
-          borderBottom: '1px solid #e2e8f0',
+          background: '#154360',
+          borderBottom: '1px solid #0e2e42',
           padding: '0 12px',
           display: 'flex',
           alignItems: 'center',
@@ -928,16 +959,19 @@ export default function App() {
           flexShrink: 0
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div className="brand-dot" />
-            <span style={{ fontWeight: 800, fontSize: '0.88rem', color: '#09090b', letterSpacing: '-0.02em' }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FFDB58' }} />
+            <span style={{ fontWeight: 800, fontSize: '0.88rem', color: '#ffffff', letterSpacing: '-0.02em' }}>
               TalentConnect
+            </span>
+            <span style={{ fontSize: '0.62rem', background: '#FFDB58', color: '#154360', padding: '1px 5px', borderRadius: '4px', fontWeight: 800 }}>
+              CRM
             </span>
           </div>
           <button 
             type="button"
             onClick={() => setIsMobileSidebarOpen(true)}
             className="btn-icon"
-            style={{ width: '30px', height: '30px' }}
+            style={{ width: '30px', height: '30px', background: '#0e2e42', color: '#FFDB58', borderColor: '#1b557a' }}
             title="Open Menu"
           >
             <Menu size={16} />
@@ -995,7 +1029,7 @@ export default function App() {
               onDeleteFormResponse={handleDeleteFormResponse}
               onBatchDeleteFormResponses={handleBatchDeleteFormResponses}
               onClearAllFormResponses={handleClearAllFormResponses}
-              onGoToLiveBoard={() => setActiveTab('drives')}
+              onGoToLiveBoard={() => setActiveTab('liveBoard')}
             />
           )}
 
@@ -1013,7 +1047,7 @@ export default function App() {
             />
           )}
 
-          {(activeTab === 'drives' || activeTab === 'liveBoard') && (
+          {activeTab === 'drives' && (
             <DriveManagement 
               drives={drives}
               students={students}
@@ -1028,9 +1062,26 @@ export default function App() {
               onDeleteDrive={handleDeleteDrive}
               onClearAllDrives={handleClearAllDrives}
               onLoadDemoData={handleLoadDemoData}
-              defaultTab={activeTab === 'liveBoard' ? 'pipeline' : 'drives'}
+              defaultTab="drives"
               hrPhoneNumber={hrPhoneNumber}
               onOpenPhoneConnectModal={() => setIsPhoneConnectModalOpen(true)}
+              onNavigateToLiveBoard={() => setActiveTab('liveBoard')}
+            />
+          )}
+
+          {activeTab === 'liveBoard' && (
+            <PublishedDriveBoard 
+              drives={drives}
+              students={students}
+              formResponses={formResponses}
+              onStartCall={handleStartCall}
+              onDeleteStudent={handleDeleteStudent}
+              onNavigateToBlast={() => setActiveTab('googleFormBlast')}
+              onUpdateCandidateStage={handleUpdateCandidateStage}
+              onLoadDemoData={handleLoadDemoData}
+              hrPhoneNumber={hrPhoneNumber}
+              onOpenPhoneConnectModal={() => setIsPhoneConnectModalOpen(true)}
+              onNavigateToDrives={() => setActiveTab('drives')}
             />
           )}
 
@@ -1052,9 +1103,11 @@ export default function App() {
             <div className="content-card">
               <div className="card-header-row" style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
                 <div>
-                  <h2 className="card-title" style={{ fontSize: '0.95rem' }}>All Logged Call Records & Talk Time</h2>
+                  <h2 className="card-title" style={{ fontSize: '0.95rem', color: '#154360', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <PhoneCall size={16} color="#154360" /> All Logged Call Records & Talk Time
+                  </h2>
                   <p className="card-subtitle" style={{ fontSize: '0.75rem' }}>
-                    Total talk time clocked: <strong>{formatDuration(callSessions.reduce((s, c) => s + (c.durationSeconds || 0), 0))}</strong> across {callSessions.length} total sessions
+                    Total talk time clocked: <strong style={{ color: '#154360' }}>{formatDuration(callSessions.reduce((s, c) => s + (c.durationSeconds || 0), 0))}</strong> across {callSessions.length} total sessions
                   </p>
                 </div>
               </div>
@@ -1064,14 +1117,14 @@ export default function App() {
                 <table className="crm-table" style={{ width: '100%', tableLayout: 'auto' }}>
                   <thead>
                     <tr>
-                      <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>Date & Time</th>
-                      <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>HR Caller</th>
-                      <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>Recipient</th>
-                      <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>Mode</th>
-                      <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>Duration</th>
-                      <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>Outcome</th>
-                      <th style={{ fontSize: '0.68rem', padding: '6px 8px' }}>Notes</th>
-                      <th style={{ width: '30px', padding: '6px 4px' }}></th>
+                      <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>Date & Time</th>
+                      <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>HR Caller</th>
+                      <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>Recipient</th>
+                      <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>Mode</th>
+                      <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>Duration</th>
+                      <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>Outcome</th>
+                      <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>Notes</th>
+                      <th style={{ width: '30px', padding: '6px 4px', background: '#154360', color: '#ffffff' }}></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1166,6 +1219,7 @@ export default function App() {
                     <div key={c.id} style={{
                       background: '#f8fafc',
                       border: '1px solid #e2e8f0',
+                      borderLeft: '4px solid #154360',
                       borderRadius: '8px',
                       padding: '8px 10px',
                       display: 'flex',
@@ -1176,8 +1230,8 @@ export default function App() {
                     }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#09090b', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                            {c.callType === 'VIDEO' ? <Video size={12} color="#0284c7" /> : <Phone size={12} color="#16a34a" />}
+                          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#154360', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            {c.callType === 'VIDEO' ? <Video size={12} color="#154360" /> : <Phone size={12} color="#154360" />}
                             {c.recipientName}
                           </span>
                           <span className="badge badge-grey" style={{ fontSize: '0.62rem', padding: '1px 4px' }}>
@@ -1188,7 +1242,9 @@ export default function App() {
                           fontFamily: 'monospace',
                           fontWeight: 700,
                           fontSize: '0.72rem',
-                          background: '#e2e8f0',
+                          background: '#ebf5fb',
+                          color: '#154360',
+                          border: '1px solid #aed6f1',
                           padding: '2px 6px',
                           borderRadius: '4px'
                         }}>
@@ -1197,7 +1253,7 @@ export default function App() {
                       </div>
 
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.68rem', color: '#71717a' }}>
-                        <span>Caller: <strong>{c.internName}</strong></span>
+                        <span>Caller: <strong style={{ color: '#154360' }}>{c.internName}</strong></span>
                         <span>{new Date(c.startedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                       </div>
 
@@ -1496,10 +1552,20 @@ export default function App() {
         <button 
           type="button"
           onClick={() => { setActiveTab('drives'); setIsMobileSidebarOpen(false); }} 
-          className={`mobile-nav-btn ${activeTab === 'drives' || activeTab === 'liveBoard' ? 'active' : ''}`}
+          className={`mobile-nav-btn ${activeTab === 'drives' ? 'active' : ''}`}
+          style={activeTab === 'drives' ? { color: '#154360' } : {}}
         >
-          <Calendar size={18} />
-          <span>Drives & Students</span>
+          <Calendar size={18} color={activeTab === 'drives' ? '#154360' : undefined} />
+          <span style={activeTab === 'drives' ? { fontWeight: 700 } : {}}>Drives</span>
+        </button>
+        <button 
+          type="button"
+          onClick={() => { setActiveTab('liveBoard'); setIsMobileSidebarOpen(false); }} 
+          className={`mobile-nav-btn ${activeTab === 'liveBoard' ? 'active' : ''}`}
+          style={activeTab === 'liveBoard' ? { color: '#154360' } : {}}
+        >
+          <Users size={18} color={activeTab === 'liveBoard' ? '#154360' : undefined} />
+          <span style={activeTab === 'liveBoard' ? { fontWeight: 700 } : {}}>Students</span>
         </button>
         <button 
           type="button"
