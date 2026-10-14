@@ -73,39 +73,40 @@ export default function MainHRDashboard({
       <div className="dashboard-banner" style={{ 
         background: '#ffffff', 
         border: '1px solid #e2e8f0', 
-        borderRadius: '14px', 
-        padding: '16px 20px',
-        marginBottom: '16px',
+        borderRadius: 'var(--radius-md)', 
+        padding: '12px 14px',
+        marginBottom: '12px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         flexWrap: 'wrap',
-        gap: '12px',
+        gap: '10px',
         boxShadow: 'var(--shadow-card)',
         width: '100%',
         boxSizing: 'border-box'
       }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px' }}>
             <span style={{ 
               background: drives.length > 0 ? '#ecfdf5' : '#f1f5f9', 
               color: drives.length > 0 ? '#065f46' : '#52525b', 
-              padding: '2px 8px', 
+              padding: '2px 7px', 
               borderRadius: '20px', 
-              fontSize: '0.68rem', 
+              fontSize: 'var(--font-10)', 
+              lineHeight: 'var(--lh-10)',
               fontWeight: 800,
               letterSpacing: '0.04em'
             }}>
               {drives.length > 0 ? '● WORKSPACE ACTIVE' : '○ EMPTY STATE (0)'}
             </span>
-            <span style={{ fontSize: '0.78rem', color: '#71717a' }}>
+            <span style={{ fontSize: 'var(--font-xs)', lineHeight: 'var(--lh-xs)', color: '#71717a' }}>
               {drives.length} Drives • {students.length} Candidates • {tpos.length} TPOs
             </span>
           </div>
-          <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#09090b', letterSpacing: '-0.02em', margin: 0 }}>
+          <h1 style={{ fontSize: 'var(--font-2xl)', lineHeight: 'var(--lh-2xl)', fontWeight: 800, color: '#09090b', letterSpacing: '-0.02em', margin: 0 }}>
             HR Dashboard
           </h1>
-          <p style={{ color: '#52525b', fontSize: '0.84rem', marginTop: '2px' }}>
+          <p style={{ color: '#52525b', fontSize: 'var(--font-xs)', lineHeight: 'var(--lh-xs)', marginTop: '2px' }}>
             Track intern calling hours, college outreach, and campus recruitment drives.
           </p>
         </div>
@@ -247,12 +248,12 @@ export default function MainHRDashboard({
 
       {/* Intern Productivity Leaderboard */}
       <div className="content-card">
-        <div className="card-header-row" style={{ padding: '14px 20px' }}>
+        <div className="card-header-row" style={{ padding: '10px 14px' }}>
           <div>
-            <h2 className="card-title" style={{ fontSize: '0.98rem' }}>Intern Leaderboard</h2>
-            <p className="card-subtitle">Ranked by total call time logged today</p>
+            <h2 className="card-title" style={{ fontSize: 'var(--font-base)', lineHeight: 'var(--lh-base)' }}>Intern Leaderboard</h2>
+            <p className="card-subtitle" style={{ fontSize: 'var(--font-11)', lineHeight: 'var(--lh-11)', color: '#71717a' }}>Ranked by total call time logged today</p>
           </div>
-          <span className="badge badge-grey" style={{ fontSize: '0.72rem' }}>
+          <span className="badge badge-grey" style={{ fontSize: 'var(--font-10)', lineHeight: 'var(--lh-10)' }}>
             {interns.length} Interns
           </span>
         </div>
@@ -276,15 +277,15 @@ export default function MainHRDashboard({
               {internStats.map((intern, index) => (
                 <tr key={intern.id}>
                   <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div className={`rank-badge ${index === 0 ? 'top-1' : ''}`} style={{ width: '22px', height: '22px', fontSize: '0.75rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div className={`rank-badge ${index === 0 ? 'top-1' : ''}`} style={{ width: '20px', height: '20px', fontSize: 'var(--font-10)' }}>
                         {index + 1}
                       </div>
                       <div>
-                        <div style={{ fontWeight: 700, color: '#09090b', fontSize: '0.875rem' }}>
+                        <div style={{ fontWeight: 700, color: '#09090b', fontSize: 'var(--font-sm)' }}>
                           {intern.name}
                         </div>
-                        <div style={{ fontSize: '0.72rem', color: '#71717a' }}>
+                        <div style={{ fontSize: 'var(--font-11)', color: '#71717a', lineHeight: 'var(--lh-11)' }}>
                           {intern.title}
                         </div>
                       </div>
@@ -292,23 +293,23 @@ export default function MainHRDashboard({
                   </td>
 
                   <td>
-                    <span className={`badge ${intern.status === 'on-call' ? 'badge-amber' : 'badge-green'}`} style={{ fontSize: '0.72rem' }}>
+                    <span className={`badge ${intern.status === 'on-call' ? 'badge-amber' : 'badge-green'}`} style={{ fontSize: 'var(--font-10)' }}>
                       {intern.status === 'on-call' ? 'On Call' : 'Available'}
                     </span>
                   </td>
 
                   <td>
-                    <div style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700, fontSize: '0.925rem' }}>
+                    <div style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700, fontSize: 'var(--font-sm)' }}>
                       {formatDuration(intern.totalSeconds)}
                     </div>
                   </td>
 
-                  <td style={{ minWidth: '130px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', fontWeight: 600, marginBottom: '3px' }}>
+                  <td style={{ minWidth: '120px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--font-11)', fontWeight: 600, marginBottom: '2px' }}>
                       <span>{intern.targetProgress}%</span>
                       <span style={{ color: '#71717a' }}>{intern.dailyTargetHours}h goal</span>
                     </div>
-                    <div style={{ width: '100%', height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{ width: '100%', height: '5px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
                       <div 
                         style={{ 
                           width: `${intern.targetProgress}%`, 
@@ -320,15 +321,15 @@ export default function MainHRDashboard({
                   </td>
 
                   <td>
-                    <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>{intern.callCount}</span>
+                    <span style={{ fontWeight: 600, fontSize: 'var(--font-xs)' }}>{intern.callCount}</span>
                   </td>
 
                   <td>
-                    <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>{intern.tpoCount}</span>
+                    <span style={{ fontWeight: 600, fontSize: 'var(--font-xs)' }}>{intern.tpoCount}</span>
                   </td>
 
                   <td>
-                    <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>{intern.studentCount}</span>
+                    <span style={{ fontWeight: 600, fontSize: 'var(--font-xs)' }}>{intern.studentCount}</span>
                   </td>
 
                   <td>
@@ -342,7 +343,7 @@ export default function MainHRDashboard({
                         });
                       }}
                       className="btn-black btn-black-sm"
-                      style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                      style={{ padding: '3px 8px', fontSize: 'var(--font-xs)' }}
                       title="Quick sync call"
                     >
                       <Phone size={11} /> Call
@@ -355,28 +356,28 @@ export default function MainHRDashboard({
         </div>
 
         {/* Mobile View: Clean, Simple Intern Cards */}
-        <div className="mobile-only" style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div className="mobile-only" style={{ padding: '6px 10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
           {internStats.map((intern, index) => (
             <div key={intern.id} style={{
               background: '#f8fafc',
               border: '1px solid #e2e8f0',
-              borderRadius: '10px',
-              padding: '12px',
+              borderRadius: 'var(--radius-sm)',
+              padding: '8px 10px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '8px'
+              gap: '6px'
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div className={`rank-badge ${index === 0 ? 'top-1' : ''}`} style={{ width: '22px', height: '22px', fontSize: '0.72rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div className={`rank-badge ${index === 0 ? 'top-1' : ''}`} style={{ width: '20px', height: '20px', fontSize: 'var(--font-10)' }}>
                     #{index + 1}
                   </div>
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#09090b' }}>{intern.name}</div>
-                    <div style={{ fontSize: '0.72rem', color: '#71717a' }}>{intern.title}</div>
+                    <div style={{ fontWeight: 700, fontSize: 'var(--font-sm)', color: '#09090b' }}>{intern.name}</div>
+                    <div style={{ fontSize: 'var(--font-10)', color: '#71717a', lineHeight: 'var(--lh-10)' }}>{intern.title}</div>
                   </div>
                 </div>
-                <span className={`badge ${intern.status === 'on-call' ? 'badge-amber' : 'badge-green'}`} style={{ fontSize: '0.68rem' }}>
+                <span className={`badge ${intern.status === 'on-call' ? 'badge-amber' : 'badge-green'}`} style={{ fontSize: 'var(--font-10)' }}>
                   {intern.status === 'on-call' ? 'On Call' : 'Available'}
                 </span>
               </div>
@@ -386,23 +387,23 @@ export default function MainHRDashboard({
                 justifyContent: 'space-between', 
                 alignItems: 'center', 
                 background: '#ffffff', 
-                padding: '8px 10px', 
-                borderRadius: '8px', 
+                padding: '6px 8px', 
+                borderRadius: 'var(--radius-sm)', 
                 border: '1px solid #e2e8f0' 
               }}>
                 <div>
-                  <div style={{ fontSize: '0.68rem', color: '#71717a', fontWeight: 600 }}>Talk Time</div>
-                  <div style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, fontSize: '0.925rem', color: '#09090b' }}>
+                  <div style={{ fontSize: 'var(--font-10)', color: '#71717a', fontWeight: 600 }}>Talk Time</div>
+                  <div style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, fontSize: 'var(--font-sm)', color: '#09090b' }}>
                     {formatDuration(intern.totalSeconds)}
                   </div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.68rem', color: '#71717a', fontWeight: 600 }}>Calls</div>
-                  <div style={{ fontWeight: 800, fontSize: '0.85rem' }}>{intern.callCount}</div>
+                  <div style={{ fontSize: 'var(--font-10)', color: '#71717a', fontWeight: 600 }}>Calls</div>
+                  <div style={{ fontWeight: 800, fontSize: 'var(--font-xs)' }}>{intern.callCount}</div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.68rem', color: '#71717a', fontWeight: 600 }}>Goal</div>
-                  <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>{intern.targetProgress}%</div>
+                  <div style={{ fontSize: 'var(--font-10)', color: '#71717a', fontWeight: 600 }}>Goal</div>
+                  <div style={{ fontWeight: 700, fontSize: 'var(--font-xs)' }}>{intern.targetProgress}%</div>
                 </div>
                 <button 
                   onClick={() => {
@@ -414,7 +415,7 @@ export default function MainHRDashboard({
                     });
                   }}
                   className="btn-black btn-black-sm"
-                  style={{ padding: '5px 10px', fontSize: '0.72rem', gap: '4px' }}
+                  style={{ padding: '3px 8px', fontSize: 'var(--font-xs)', gap: '4px' }}
                 >
                   <Phone size={11} /> Call
                 </button>
@@ -426,16 +427,16 @@ export default function MainHRDashboard({
 
       {/* Call History */}
       <div className="content-card">
-        <div className="card-header-row" style={{ padding: '14px 20px' }}>
+        <div className="card-header-row" style={{ padding: '10px 14px' }}>
           <div>
-            <h2 className="card-title" style={{ fontSize: '0.98rem' }}>Call History</h2>
-            <p className="card-subtitle">Calls made inside the app with recorded talk time</p>
+            <h2 className="card-title" style={{ fontSize: 'var(--font-base)', lineHeight: 'var(--lh-base)' }}>Call History</h2>
+            <p className="card-subtitle" style={{ fontSize: 'var(--font-11)', lineHeight: 'var(--lh-11)', color: '#71717a' }}>Calls made inside the app with recorded talk time</p>
           </div>
 
           <div style={{ display: 'flex', gap: '8px' }}>
             <select 
               className="form-select" 
-              style={{ padding: '5px 10px', fontSize: '0.8rem', width: 'auto' }}
+              style={{ padding: '4px 8px', fontSize: 'var(--font-xs)', width: 'auto' }}
               value={internFilter}
               onChange={(e) => setInternFilter(e.target.value)}
             >
@@ -447,7 +448,7 @@ export default function MainHRDashboard({
 
             <select 
               className="form-select" 
-              style={{ padding: '5px 10px', fontSize: '0.8rem', width: 'auto' }}
+              style={{ padding: '4px 8px', fontSize: 'var(--font-xs)', width: 'auto' }}
               value={callTypeFilter}
               onChange={(e) => setCallTypeFilter(e.target.value)}
             >
@@ -475,31 +476,31 @@ export default function MainHRDashboard({
             <tbody>
               {filteredCalls.length === 0 ? (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: 'center', padding: '36px', color: '#71717a' }}>
+                  <td colSpan={7} style={{ textAlign: 'center', padding: '28px', color: '#71717a', fontSize: 'var(--font-sm)' }}>
                     No calls logged yet. Start an audio or video call with any contact to track talk time.
                   </td>
                 </tr>
               ) : (
                 filteredCalls.map(call => (
                   <tr key={call.id}>
-                    <td style={{ whiteSpace: 'nowrap', fontSize: '0.78rem', color: '#52525b' }}>
+                    <td style={{ whiteSpace: 'nowrap', fontSize: 'var(--font-xs)', color: '#52525b' }}>
                       {new Date(call.startedAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                     </td>
 
                     <td>
-                      <strong>{call.internName}</strong>
+                      <strong style={{ fontSize: 'var(--font-sm)' }}>{call.internName}</strong>
                     </td>
 
                     <td>
-                      <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{call.recipientName}</div>
-                      <span className="badge badge-grey" style={{ fontSize: '0.68rem', padding: '1px 5px' }}>
+                      <div style={{ fontWeight: 600, fontSize: 'var(--font-sm)' }}>{call.recipientName}</div>
+                      <span className="badge badge-grey" style={{ fontSize: 'var(--font-10)', padding: '1px 5px' }}>
                         {call.recipientType}
                       </span>
                     </td>
 
                     <td>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem' }}>
-                        {call.callType === 'VIDEO' ? <Video size={13} /> : <Phone size={13} />}
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: 'var(--font-xs)' }}>
+                        {call.callType === 'VIDEO' ? <Video size={12} /> : <Phone size={12} />}
                         {call.callType === 'VIDEO' ? 'Video' : 'Audio'}
                       </span>
                     </td>
@@ -510,9 +511,9 @@ export default function MainHRDashboard({
                         fontWeight: 700, 
                         color: '#09090b',
                         background: '#f1f5f9',
-                        padding: '2px 7px',
-                        borderRadius: '5px',
-                        fontSize: '0.825rem'
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        fontSize: 'var(--font-xs)'
                       }}>
                         {formatDuration(call.durationSeconds)}
                       </span>
@@ -525,12 +526,12 @@ export default function MainHRDashboard({
                           : call.disposition === 'PITCHED' || call.disposition === 'FOLLOW_UP_NEEDED'
                           ? 'badge-amber'
                           : 'badge-grey'
-                      }`} style={{ fontSize: '0.72rem' }}>
+                      }`} style={{ fontSize: 'var(--font-10)' }}>
                         {call.disposition ? call.disposition.replace(/_/g, ' ') : 'COMPLETED'}
                       </span>
                     </td>
 
-                    <td style={{ maxWidth: '280px', fontSize: '0.8rem', color: '#52525b' }}>
+                    <td style={{ maxWidth: '280px', fontSize: 'var(--font-xs)', color: '#52525b' }}>
                       {call.notes || 'No notes.'}
                     </td>
                   </tr>
@@ -541,9 +542,9 @@ export default function MainHRDashboard({
         </div>
 
         {/* Mobile View: Clean Call Record Cards */}
-        <div className="mobile-only" style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div className="mobile-only" style={{ padding: '6px 10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
           {filteredCalls.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '24px 12px', color: '#71717a', fontSize: '0.8rem' }}>
+            <div style={{ textAlign: 'center', padding: '20px 10px', color: '#71717a', fontSize: 'var(--font-xs)' }}>
               No calls logged yet. Dial any candidate or TPO to record talk time.
             </div>
           ) : (
@@ -551,18 +552,18 @@ export default function MainHRDashboard({
               <div key={call.id} style={{
                 background: '#f8fafc',
                 border: '1px solid #e2e8f0',
-                borderRadius: '10px',
-                padding: '10px 12px',
+                borderRadius: 'var(--radius-sm)',
+                padding: '8px 10px',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '6px'
+                gap: '5px'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#09090b' }}>
+                    <div style={{ fontWeight: 700, fontSize: 'var(--font-sm)', color: '#09090b' }}>
                       {call.recipientName}
                     </div>
-                    <div style={{ fontSize: '0.72rem', color: '#71717a' }}>
+                    <div style={{ fontSize: 'var(--font-10)', color: '#71717a', lineHeight: 'var(--lh-10)' }}>
                       {call.recipientType} • By {call.internName}
                     </div>
                   </div>
@@ -570,14 +571,14 @@ export default function MainHRDashboard({
                     call.disposition === 'DRIVE_CONFIRMED' || call.disposition === 'SCREENING_PASSED'
                       ? 'badge-green'
                       : 'badge-amber'
-                  }`} style={{ fontSize: '0.65rem' }}>
+                  }`} style={{ fontSize: 'var(--font-10)' }}>
                     {call.disposition ? call.disposition.replace(/_/g, ' ') : 'COMPLETED'}
                   </span>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: '#52525b' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 'var(--font-xs)', color: '#52525b' }}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                    {call.callType === 'VIDEO' ? <Video size={12} /> : <Phone size={12} />}
+                    {call.callType === 'VIDEO' ? <Video size={11} /> : <Phone size={11} />}
                     {call.callType === 'VIDEO' ? 'Video Meet' : 'Audio Call'}
                   </span>
                   <span style={{ 
@@ -585,13 +586,13 @@ export default function MainHRDashboard({
                     fontWeight: 700, 
                     background: '#ffffff', 
                     border: '1px solid #e2e8f0', 
-                    padding: '2px 6px', 
+                    padding: '1px 5px', 
                     borderRadius: '4px',
                     color: '#09090b'
                   }}>
                     {formatDuration(call.durationSeconds)}
                   </span>
-                  <span>{new Date(call.startedAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>
+                  <span style={{ fontSize: 'var(--font-11)' }}>{new Date(call.startedAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>
                 </div>
               </div>
             ))

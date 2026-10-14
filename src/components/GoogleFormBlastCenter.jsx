@@ -425,43 +425,44 @@ export default function GoogleFormBlastCenter({
       <div style={{
         background: '#ffffff',
         border: '1px solid #e2e8f0',
-        borderRadius: '12px',
-        padding: '10px 14px',
-        marginBottom: '14px',
+        borderRadius: 'var(--radius-md)',
+        padding: '8px 12px',
+        marginBottom: '10px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        gap: '8px',
+        gap: '6px',
         flexWrap: 'wrap',
-        fontSize: '0.78rem',
+        fontSize: 'var(--font-xs)',
+        lineHeight: 'var(--lh-xs)',
         color: '#52525b',
         boxShadow: 'var(--shadow-card)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ background: '#09090b', color: '#ffffff', borderRadius: '50%', width: '18px', height: '18px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.68rem', fontWeight: 800 }}>1</span>
+          <span style={{ background: '#09090b', color: '#ffffff', borderRadius: '50%', width: '16px', height: '16px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--font-10)', fontWeight: 800 }}>1</span>
           <span style={{ fontWeight: 700, color: '#09090b' }}>Select Target Drive</span>
         </div>
         <span style={{ color: '#cbd5e1' }}>→</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ background: '#09090b', color: '#ffffff', borderRadius: '50%', width: '18px', height: '18px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.68rem', fontWeight: 800 }}>2</span>
+          <span style={{ background: '#09090b', color: '#ffffff', borderRadius: '50%', width: '16px', height: '16px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--font-10)', fontWeight: 800 }}>2</span>
           <span style={{ fontWeight: 700, color: '#09090b' }}>Paste Sheets Cells</span>
         </div>
         <span style={{ color: '#cbd5e1' }}>→</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ background: '#09090b', color: '#ffffff', borderRadius: '50%', width: '18px', height: '18px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.68rem', fontWeight: 800 }}>3</span>
+          <span style={{ background: '#09090b', color: '#ffffff', borderRadius: '50%', width: '16px', height: '16px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--font-10)', fontWeight: 800 }}>3</span>
           <span style={{ fontWeight: 700, color: '#09090b' }}>Post & WhatsApp Invites</span>
         </div>
       </div>
 
       {/* Target Drive Selector & Drive Creator Bar */}
-      <div className="content-card" style={{ marginBottom: '16px', padding: '16px 20px', background: '#f8fafc' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px' }}>
+      <div className="content-card" style={{ marginBottom: '12px', padding: '12px 14px', background: '#f8fafc' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
           
           {/* Drive Selector / Inline Setup */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             {drives.length > 0 ? (
               <>
-                <span style={{ fontWeight: 700, fontSize: '0.875rem', color: '#09090b' }}>
+                <span style={{ fontWeight: 700, fontSize: 'var(--font-sm)', color: '#09090b' }}>
                   Target Drive:
                 </span>
                 <select 
@@ -471,7 +472,7 @@ export default function GoogleFormBlastCenter({
                     setSelectedDriveId(e.target.value);
                     setSelectedIds([]);
                   }}
-                  style={{ fontWeight: 600, width: 'auto', padding: '6px 12px', fontSize: '0.85rem' }}
+                  style={{ fontWeight: 600, width: 'auto', padding: '5px 10px', fontSize: 'var(--font-xs)' }}
                 >
                   <option value="ALL">All Drives / All Candidates ({formResponses.length} records)</option>
                   {drives.map(d => {
@@ -482,8 +483,8 @@ export default function GoogleFormBlastCenter({
                   })}
                 </select>
                 {activeDrive ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '0.8rem', color: '#71717a' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: 'var(--font-11)', color: '#71717a' }}>
                       Filtered to <strong>{activeDrive.collegeName}</strong>.
                     </span>
                     {onDeleteDrive && (
@@ -493,15 +494,15 @@ export default function GoogleFormBlastCenter({
                           setSelectedDriveId('ALL');
                         }}
                         className="btn-secondary"
-                        style={{ color: '#ef4444', borderColor: '#fca5a5', fontSize: '0.75rem', padding: '3px 8px' }}
+                        style={{ color: '#ef4444', borderColor: '#fca5a5', fontSize: 'var(--font-10)', padding: '2px 6px' }}
                         title="Delete this drive"
                       >
-                        <Trash2 size={12} /> Delete Drive
+                        <Trash2 size={11} /> Delete Drive
                       </button>
                     )}
                   </div>
                 ) : (
-                  <span style={{ fontSize: '0.8rem', color: '#71717a' }}>
+                  <span style={{ fontSize: 'var(--font-11)', color: '#71717a' }}>
                     Showing all intake records across all campus drives.
                   </span>
                 )}
