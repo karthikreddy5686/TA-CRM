@@ -12,13 +12,13 @@ import {
 
 const PRESET_ACCOUNTS = [
   {
-    roleLabel: 'Main HR Manager',
+    roleLabel: 'HR Manager',
     email: 'hr@company.com',
     password: 'admin',
-    name: 'Priya Nair',
+    name: 'HR Manager',
     role: 'MAIN_HR',
     title: 'Head of Talent Acquisition',
-    avatar: 'PN',
+    avatar: 'HR',
   },
   {
     roleLabel: 'HR Intern 1',

@@ -3,7 +3,7 @@
 export const INITIAL_USERS = [
   {
     id: 'user-main-hr',
-    name: 'Main HR Manager',
+    name: 'HR Manager',
     role: 'MAIN_HR',
     title: 'Head of Talent Acquisition',
     email: 'hr.head@company.com',
@@ -505,7 +505,7 @@ export const WORKING_DEMO_DATA = {
       id: 'blast-1',
       driveId: 'drv-1',
       driveTitle: 'Graduate Software Engineer 2026',
-      blastedBy: 'Main HR Manager',
+      blastedBy: 'HR Manager',
       timestamp: new Date(Date.now() - 3600000 * 12).toISOString().replace('T', ' ').substring(0, 19),
       channels: ['WhatsApp', 'Email'],
       candidatesCount: 2,

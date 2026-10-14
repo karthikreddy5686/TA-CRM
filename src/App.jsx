@@ -62,7 +62,16 @@ export default function App() {
   // Authentication State
   const [currentUser, setCurrentUser] = useState(() => {
     const savedUser = localStorage.getItem('tacrm_auth_user');
-    return savedUser ? JSON.parse(savedUser) : INITIAL_USERS[0]; // Defaults to Main HR if not logged out
+    let user = savedUser ? JSON.parse(savedUser) : INITIAL_USERS[0];
+    if (user && (user.name === 'Main HR Manager' || user.name === 'Main HR')) {
+      user = { ...user, name: 'HR Manager' };
+      try {
+        localStorage.setItem('tacrm_auth_user', JSON.stringify(user));
+      } catch (e) {
+        // ignore
+      }
+    }
+    return user;
   });
 
   // Navigation State
@@ -923,10 +932,10 @@ export default function App() {
               </div>
               <div className="user-details user-card-info">
                 <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#09090b', lineHeight: 1.2 }}>
-                  {currentUser.name}
+                  {currentUser.name === 'Main HR Manager' || currentUser.name === 'Main HR' ? 'HR Manager' : currentUser.name}
                 </div>
                 <div style={{ fontSize: '0.68rem', color: '#71717a' }}>
-                  {currentUser.role === 'MAIN_HR' ? 'Main HR' : 'HR Intern'}
+                  {currentUser.role === 'MAIN_HR' ? 'HR Manager' : 'HR Intern'}
                 </div>
               </div>
             </div>

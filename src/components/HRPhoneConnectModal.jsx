@@ -87,7 +87,7 @@ export default function HRPhoneConnectModal({
                   {currentUser?.name || 'Recruitment Officer'}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                  {currentUser?.role === 'MAIN_HR' ? 'Main HR Manager' : 'HR Intern'} • {currentUser?.email}
+                  {currentUser?.role === 'MAIN_HR' ? 'HR Manager' : 'HR Intern'} • {currentUser?.email}
                 </div>
               </div>
               <span className="badge badge-green" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
