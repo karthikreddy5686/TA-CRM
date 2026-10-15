@@ -1654,19 +1654,7 @@ export default function PublishedDriveBoard({
                     </select>
                   </div>
 
-                  <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label">Buffer Between Slots</label>
-                    <select 
-                      className="form-select"
-                      value={scheduleBufferMinutes}
-                      onChange={e => setScheduleBufferMinutes(parseInt(e.target.value, 10))}
-                    >
-                      <option value="0">0 mins (Back-to-back)</option>
-                      <option value="5">5 mins break</option>
-                      <option value="10">10 mins break</option>
-                      <option value="15">15 mins break</option>
-                    </select>
-                  </div>
+
                 </div>
 
                 {/* Scope & Batch Limit */}
@@ -1768,39 +1756,7 @@ export default function PublishedDriveBoard({
                 </div>
               </div>
 
-              {/* Real-time Calculation Summary Banner */}
-              {calculatedTimeSlots.length > 0 && (
-                <div style={{
-                  background: 'linear-gradient(135deg, #154360 0%, #1e5f8a 100%)',
-                  borderRadius: '10px',
-                  padding: '12px 16px',
-                  color: '#ffffff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  flexWrap: 'wrap',
-                  gap: '12px',
-                  boxShadow: '0 4px 6px -1px rgba(21, 67, 96, 0.2)'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ background: '#FFDB58', color: '#154360', width: '34px', height: '34px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
-                      {calculatedTimeSlots.length}
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#ffffff' }}>
-                        {calculatedTimeSlots.length} Candidates Scheduled Automatically
-                      </div>
-                      <div style={{ fontSize: '0.74rem', color: '#FFDB58' }}>
-                        Time Window: <strong>{calculatedTimeSlots[0].startFormatted}</strong> to <strong>{calculatedTimeSlots[calculatedTimeSlots.length - 1].endFormatted}</strong> ({scheduleSlotMinutes}m per candidate)
-                      </div>
-                    </div>
-                  </div>
 
-                  <div style={{ fontSize: '0.74rem', background: 'rgba(255,255,255,0.12)', padding: '6px 12px', borderRadius: '6px' }}>
-                    📅 {scheduleDate} • 🔗 Google Meet Attached
-                  </div>
-                </div>
-              )}
 
               {/* Time Slot Live Preview Table */}
               <div style={{ border: '1px solid #e2e8f0', borderRadius: '10px', overflow: 'hidden' }}>
@@ -1897,26 +1853,7 @@ export default function PublishedDriveBoard({
                 </div>
               </div>
 
-              {/* Automatic Dispatch to Student Notification Preview */}
-              <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '10px', padding: '12px 14px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 800, color: '#065f46' }}>
-                    <input 
-                      type="checkbox" 
-                      checked={autoDispatchInvites}
-                      onChange={e => setAutoDispatchInvites(e.target.checked)}
-                      style={{ accentColor: '#059669', width: '16px', height: '16px' }}
-                    />
-                    <span>Automatically Dispatch Interview Timings & Google Meet Link to Students</span>
-                  </label>
-                  <span style={{ fontSize: '0.7rem', color: '#047857', fontWeight: 700 }}>
-                    📧 Email • 💬 WhatsApp Dispatch Ready
-                  </span>
-                </div>
-                <div style={{ fontSize: '0.72rem', color: '#047857', lineHeight: 1.4, paddingLeft: '24px' }}>
-                  Each student will receive their <strong>exact allotted time slot</strong>, date ({scheduleDate}), and direct clickable <strong>Google Meet link</strong> immediately upon confirmation.
-                </div>
-              </div>
+
             </div>
 
             {/* Modal Footer */}
