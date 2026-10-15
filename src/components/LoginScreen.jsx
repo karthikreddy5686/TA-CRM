@@ -1,85 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Lock,
   User,
   ArrowRight,
-  ShieldCheck,
-  UserCheck,
-  CheckCircle2,
   AlertCircle,
-  RefreshCw,
-  Smartphone,
-  ChevronDown,
-  ChevronUp,
-  Key
+  Eye,
+  EyeOff,
+  Loader2
 } from 'lucide-react';
 
 export default function LoginScreen({ onLogin, users = [] }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [syncStatus, setSyncStatus] = useState(null); // { success: boolean, msg: string }
-  const [liveUsers, setLiveUsers] = useState(users);
-  const [showAccountList, setShowAccountList] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Sync latest provisioned employee accounts from central server on mount
-  // Crucial for mobile phones & secondary PCs that start with empty localStorage
-  const syncServerUsers = async () => {
-    setIsSyncing(true);
-    setSyncStatus(null);
-    try {
-      const res = await fetch('/api/users', { cache: 'no-store' });
-      if (res.ok) {
-        const data = await res.json();
-        if (data && Array.isArray(data.users) && data.users.length > 0) {
-          setLiveUsers(data.users);
-          try {
-            localStorage.setItem('tacrm_users', JSON.stringify(data.users));
-          } catch (e) {}
-          setSyncStatus({ success: true, msg: `Synced ${data.users.length} staff account(s) from server!` });
-          setTimeout(() => setSyncStatus(null), 3500);
-          return;
-        }
-      }
-      setSyncStatus({ success: false, msg: 'Connected to local storage' });
-      setTimeout(() => setSyncStatus(null), 3000);
-    } catch {
-      setSyncStatus({ success: false, msg: 'Offline mode: using cached accounts' });
-      setTimeout(() => setSyncStatus(null), 3000);
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
-  useEffect(() => {
-    syncServerUsers();
-  }, []);
-
-  // Update liveUsers when parent prop changes
-  useEffect(() => {
-    if (Array.isArray(users) && users.length > 0) {
-      setLiveUsers(prev => {
-        // Merge without losing any dynamically fetched users
-        const map = new Map();
-        users.forEach(u => map.set(u.id || u.email, u));
-        prev.forEach(u => {
-          if (!map.has(u.id || u.email)) map.set(u.id || u.email, u);
-        });
-        return Array.from(map.values());
-      });
-    }
-  }, [users]);
-
-  // Combined accounts list from live server data and defaults
-  const activeStaffAccounts = (liveUsers && liveUsers.length > 0 ? liveUsers : users)
-    .filter(u => u && u.email && u.password);
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
 
-    const inputEmail = email.trim().toLowerCase();
+    const inputEmail = email.trim();
     const cleanPassword = password.trim();
 
     if (!inputEmail || !cleanPassword) {
@@ -87,67 +28,95 @@ export default function LoginScreen({ onLogin, users = [] }) {
       return;
     }
 
-    // 1. Explicit check for Master Admin credentials
-    if (
-      (inputEmail === 'admin@geonixa' || 
-       inputEmail === 'admin@geonixa.com' || 
-       inputEmail === 'admin' ||
-       inputEmail === 'geonixa admin') && 
-      cleanPassword === 'geonixa@123'
-    ) {
-      onLogin({
-        id: 'user-admin',
-        name: 'Geonixa Admin',
-        role: 'ADMIN',
-        title: 'Super Administrator',
-        email: 'admin@geonixa',
-        password: 'geonixa@123',
-        avatar: 'AD',
-        status: 'online',
+    setIsLoading(true);
+
+    try {
+      // 1. Direct Central Server Authentication
+      // Authenticates against the central database so any PC, phone, or tablet logs in seamlessly
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: inputEmail, password: cleanPassword })
       });
-      return;
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.success && data.user) {
+          try {
+            localStorage.setItem('tacrm_auth_user', JSON.stringify(data.user));
+          } catch (err) {}
+          onLogin(data.user);
+          return;
+        }
+      } else if (response.status === 401) {
+        setErrorMessage('Invalid username or password. Please verify your credentials.');
+        return;
+      }
+    } catch {
+      // 2. Offline fallback if device loses network connection to server
+      const normalizedInput = inputEmail.toLowerCase();
+      
+      // Super Admin fallback check
+      if (
+        (normalizedInput === 'admin@geonixa' || 
+         normalizedInput === 'admin@geonixa.com' || 
+         normalizedInput === 'admin' ||
+         normalizedInput === 'geonixa admin') && 
+        cleanPassword === 'geonixa@123'
+      ) {
+        onLogin({
+          id: 'user-admin',
+          name: 'Geonixa Admin',
+          role: 'ADMIN',
+          title: 'Super Administrator',
+          email: 'admin@geonixa',
+          password: 'geonixa@123',
+          avatar: 'AD',
+          status: 'online',
+        });
+        return;
+      }
+
+      // Check against local cached users
+      let cachedUsers = Array.isArray(users) ? users : [];
+      try {
+        const saved = localStorage.getItem('tacrm_users');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            cachedUsers = parsed;
+          }
+        }
+      } catch (err) {}
+
+      const matched = cachedUsers.find(acc => {
+        if (!acc) return false;
+        const accEmail = (acc.email || '').trim().toLowerCase();
+        const accPrefix = accEmail.includes('@') ? accEmail.split('@')[0] : accEmail;
+        const accName = (acc.name || '').trim().toLowerCase();
+        const accNameNoSpaces = accName.replace(/\s+/g, '');
+        const inputNoSpaces = normalizedInput.replace(/\s+/g, '');
+        const accPassword = (acc.password || '').trim();
+
+        const usernameMatches = 
+          accEmail === normalizedInput ||
+          accPrefix === normalizedInput ||
+          accName === normalizedInput ||
+          accNameNoSpaces === inputNoSpaces ||
+          acc.id === normalizedInput;
+
+        return usernameMatches && accPassword === cleanPassword;
+      });
+
+      if (matched) {
+        onLogin(matched);
+        return;
+      }
+
+      setErrorMessage('Invalid username or password. Please verify your credentials.');
+    } finally {
+      setIsLoading(false);
     }
-
-    // 2. Multi-source matching across all provisioned staff (Admin, HR Manager, HR Interns)
-    // Matches by:
-    // - Full email (e.g. ananya.sharma@talentconnect.io)
-    // - Username before '@' (e.g. ananya.sharma)
-    // - Full Name (e.g. Ananya Sharma)
-    // - Name without spaces (e.g. ananyasharma)
-    // - Phone number digits
-    const matched = activeStaffAccounts.find(acc => {
-      if (!acc) return false;
-      const accEmail = (acc.email || '').trim().toLowerCase();
-      const accPrefix = accEmail.split('@')[0];
-      const accName = (acc.name || '').trim().toLowerCase();
-      const accNameNoSpaces = accName.replace(/\s+/g, '');
-      const inputNoSpaces = inputEmail.replace(/\s+/g, '');
-      const accPassword = (acc.password || '').trim();
-
-      const usernameMatches = 
-        accEmail === inputEmail ||
-        accPrefix === inputEmail ||
-        accName === inputEmail ||
-        accNameNoSpaces === inputNoSpaces;
-
-      const passwordMatches = accPassword === cleanPassword;
-
-      return usernameMatches && passwordMatches;
-    });
-
-    if (matched) {
-      onLogin(matched);
-    } else {
-      setErrorMessage(
-        'Invalid username or password. If you were just added in Admin, tap "Sync Accounts" below to pull latest credentials to this device.'
-      );
-    }
-  };
-
-  const handleSelectAccount = (acc) => {
-    setEmail(acc.email);
-    setPassword(acc.password);
-    setErrorMessage('');
   };
 
   return (
@@ -158,142 +127,148 @@ export default function LoginScreen({ onLogin, users = [] }) {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '20px 16px',
-      fontFamily: 'Inter, system-ui, sans-serif',
+      padding: '24px 16px',
+      fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
       boxSizing: 'border-box'
     }}>
       <div style={{
-        maxWidth: '440px',
+        maxWidth: '420px',
         width: '100%',
         background: '#ffffff',
         border: '1px solid #e2e8f0',
         borderRadius: '16px',
-        padding: '32px 28px',
+        padding: '36px 30px',
         boxShadow: '0 20px 25px -5px rgba(21, 67, 96, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.02)'
       }}>
         {/* Brand Header */}
-        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
           <div style={{
-            width: '48px',
-            height: '48px',
+            width: '52px',
+            height: '52px',
             background: '#154360',
             color: '#FFDB58',
             border: '2px solid #FFDB58',
-            borderRadius: '12px',
+            borderRadius: '14px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            margin: '0 auto 12px',
+            margin: '0 auto 14px',
             fontWeight: 800,
-            fontSize: '1.25rem',
+            fontSize: '1.3rem',
             fontFamily: 'Space Grotesk, sans-serif',
             boxShadow: '0 4px 6px -1px rgba(21, 67, 96, 0.25)'
           }}>
             TA
           </div>
-          <h1 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#154360', letterSpacing: '-0.02em', margin: 0 }}>
+          <h1 style={{ 
+            fontSize: '1.45rem', 
+            fontWeight: 800, 
+            color: '#154360', 
+            letterSpacing: '-0.02em', 
+            margin: 0 
+          }}>
             TalentConnect CRM
           </h1>
-          <p style={{ fontSize: '0.82rem', color: '#71717a', marginTop: '4px' }}>
+          <p style={{ 
+            fontSize: '0.85rem', 
+            color: '#64748b', 
+            marginTop: '6px',
+            fontWeight: 500
+          }}>
             Campus Recruitment & Placement System
           </p>
         </div>
 
-        {/* Server Cross-Device Sync Status Banner */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          background: '#f0f9ff',
-          border: '1px solid #bae6fd',
-          borderRadius: '8px',
-          padding: '8px 12px',
-          marginBottom: '20px',
-          fontSize: '0.75rem',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#0369a1', fontWeight: 600 }}>
-            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#0ea5e9', display: 'inline-block' }}></span>
-            <span>{activeStaffAccounts.length} Staff Account(s) Active</span>
-          </div>
-          <button
-            type="button"
-            onClick={syncServerUsers}
-            disabled={isSyncing}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#0284c7',
-              cursor: 'pointer',
-              fontWeight: 700,
-              fontSize: '0.72rem',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px',
-              padding: '2px 6px',
-              borderRadius: '4px',
-            }}
-            title="Fetch newly added employees from central server"
-          >
-            <RefreshCw size={12} className={isSyncing ? 'spinning' : ''} />
-            {isSyncing ? 'Syncing...' : 'Sync Accounts'}
-          </button>
-        </div>
-
-        {syncStatus && (
-          <div style={{
-            background: syncStatus.success ? '#f0fdf4' : '#fffbeb',
-            border: `1px solid ${syncStatus.success ? '#bbf7d0' : '#fde68a'}`,
-            color: syncStatus.success ? '#15803d' : '#b45309',
-            padding: '7px 12px',
-            borderRadius: '6px',
-            fontSize: '0.74rem',
-            fontWeight: 600,
-            marginBottom: '16px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-          }}>
-            <CheckCircle2 size={13} /> {syncStatus.msg}
-          </div>
-        )}
-
         {/* Login Form */}
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#154360', marginBottom: '6px' }}>
+          <div style={{ marginBottom: '18px' }}>
+            <label style={{ 
+              display: 'block', 
+              fontSize: '0.82rem', 
+              fontWeight: 700, 
+              color: '#154360', 
+              marginBottom: '6px' 
+            }}>
               Username or Email
             </label>
             <div style={{ position: 'relative' }}>
-              <User size={16} color="#71717a" style={{ position: 'absolute', left: '12px', top: '12px' }} />
+              <User 
+                size={17} 
+                color="#94a3b8" 
+                style={{ position: 'absolute', left: '12px', top: '12px', pointerEvents: 'none' }} 
+              />
               <input
                 type="text"
                 className="form-input"
-                placeholder="Username (e.g. admin or employee email)"
+                placeholder="Username or Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                style={{ paddingLeft: '36px', fontSize: '0.88rem' }}
+                style={{ 
+                  paddingLeft: '38px', 
+                  fontSize: '0.9rem',
+                  height: '42px',
+                  borderRadius: '8px'
+                }}
                 autoCapitalize="none"
                 autoCorrect="off"
                 required
+                disabled={isLoading}
               />
             </div>
           </div>
 
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#154360', marginBottom: '6px' }}>
+          <div style={{ marginBottom: '22px' }}>
+            <label style={{ 
+              display: 'block', 
+              fontSize: '0.82rem', 
+              fontWeight: 700, 
+              color: '#154360', 
+              marginBottom: '6px' 
+            }}>
               Password
             </label>
             <div style={{ position: 'relative' }}>
-              <Lock size={16} color="#71717a" style={{ position: 'absolute', left: '12px', top: '12px' }} />
+              <Lock 
+                size={17} 
+                color="#94a3b8" 
+                style={{ position: 'absolute', left: '12px', top: '12px', pointerEvents: 'none' }} 
+              />
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 className="form-input"
-                placeholder="••••••••"
+                placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                style={{ paddingLeft: '36px', fontSize: '0.88rem' }}
+                style={{ 
+                  paddingLeft: '38px', 
+                  paddingRight: '38px',
+                  fontSize: '0.9rem',
+                  height: '42px',
+                  borderRadius: '8px'
+                }}
                 required
+                disabled={isLoading}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(prev => !prev)}
+                style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '10px',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  color: '#94a3b8',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
           </div>
 
@@ -302,17 +277,17 @@ export default function LoginScreen({ onLogin, users = [] }) {
               background: '#fef2f2',
               border: '1px solid #fecaca',
               color: '#991b1b',
-              padding: '10px 12px',
+              padding: '10px 14px',
               borderRadius: '8px',
-              fontSize: '0.78rem',
+              fontSize: '0.8rem',
               fontWeight: 600,
               display: 'flex',
-              alignItems: 'flex-start',
+              alignItems: 'center',
               gap: '8px',
-              marginBottom: '16px',
+              marginBottom: '18px',
               lineHeight: 1.4,
             }}>
-              <AlertCircle size={15} style={{ flexShrink: 0, marginTop: '2px' }} />
+              <AlertCircle size={16} style={{ flexShrink: 0 }} />
               <div>{errorMessage}</div>
             </div>
           )}
@@ -320,108 +295,39 @@ export default function LoginScreen({ onLogin, users = [] }) {
           <button
             type="submit"
             className="btn-mustard"
+            disabled={isLoading}
             style={{ 
               width: '100%', 
               padding: '12px', 
               justifyContent: 'center', 
-              fontSize: '0.9rem', 
+              fontSize: '0.92rem', 
               fontWeight: 800, 
-              borderRadius: '8px' 
+              borderRadius: '8px',
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+              opacity: isLoading ? 0.85 : 1
             }}
           >
-            Sign In <ArrowRight size={15} color="#154360" />
+            {isLoading ? (
+              <>
+                <Loader2 size={16} className="spinning" /> Verifying...
+              </>
+            ) : (
+              <>
+                Sign In <ArrowRight size={16} color="#154360" />
+              </>
+            )}
           </button>
         </form>
 
-        {/* Quick Staff Accounts Dropdown for Instant Mobile Testing */}
-        <div style={{ marginTop: '22px', borderTop: '1px solid #f1f5f9', paddingTop: '16px' }}>
-          <button
-            type="button"
-            onClick={() => setShowAccountList(prev => !prev)}
-            style={{
-              width: '100%',
-              background: 'none',
-              border: 'none',
-              color: '#64748b',
-              fontSize: '0.75rem',
-              fontWeight: 700,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              cursor: 'pointer',
-              padding: '4px 0',
-            }}
-          >
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-              <Key size={13} color="#154360" /> View Provisioned Staff Logins ({activeStaffAccounts.length})
-            </span>
-            {showAccountList ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          </button>
-
-          {showAccountList && (
-            <div style={{
-              marginTop: '10px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '6px',
-              maxHeight: '180px',
-              overflowY: 'auto',
-              background: '#f8fafc',
-              padding: '8px',
-              borderRadius: '8px',
-              border: '1px solid #e2e8f0',
-            }}>
-              {activeStaffAccounts.map(acc => (
-                <div
-                  key={acc.id || acc.email}
-                  onClick={() => handleSelectAccount(acc)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '6px 10px',
-                    borderRadius: '6px',
-                    background: '#ffffff',
-                    border: '1px solid #e2e8f0',
-                    cursor: 'pointer',
-                    fontSize: '0.72rem',
-                    transition: 'all 0.15s ease',
-                  }}
-                  title="Click to fill credentials"
-                >
-                  <div>
-                    <div style={{ fontWeight: 700, color: '#154360' }}>
-                      {acc.name} <span style={{ color: '#64748b', fontWeight: 500 }}>({acc.role === 'ADMIN' ? 'Admin' : acc.role === 'MAIN_HR' ? 'HR Manager' : 'HR Intern'})</span>
-                    </div>
-                    <div style={{ color: '#71717a', fontSize: '0.68rem', fontFamily: 'monospace' }}>
-                      {acc.email}
-                    </div>
-                  </div>
-                  <span style={{
-                    fontSize: '0.65rem',
-                    fontWeight: 700,
-                    color: '#0284c7',
-                    background: '#e0f2fe',
-                    padding: '2px 6px',
-                    borderRadius: '4px',
-                  }}>
-                    Fill
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Mobile Device Tips Footer */}
         <div style={{
-          marginTop: '16px',
+          marginTop: '24px',
           textAlign: 'center',
-          fontSize: '0.7rem',
+          fontSize: '0.74rem',
           color: '#94a3b8',
-          lineHeight: 1.4,
+          borderTop: '1px solid #f1f5f9',
+          paddingTop: '14px'
         }}>
-          📱 <strong>Multi-Device Access:</strong> Open <code>http://192.168.0.3:5174/</code> on mobile phone while connected to same Wi-Fi.
+          TalentConnect Recruitment & Placement System
         </div>
       </div>
     </div>

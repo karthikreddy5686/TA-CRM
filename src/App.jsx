@@ -183,14 +183,6 @@ export default function App() {
     } catch (e) {
       // ignore
     }
-    // Cross-device network sync: push updated staff list to central server storage
-    if (Array.isArray(users) && users.length > 0) {
-      fetch('/api/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ users }),
-      }).catch(() => {});
-    }
   }, [users]);
 
   // Pull latest users and database from centralized server storage on initial app load
@@ -201,9 +193,32 @@ export default function App() {
         if (!data) return;
         if (Array.isArray(data.users) && data.users.length > 0) {
           const sanitized = sanitizeUsers(data.users);
-          setUsers(sanitized);
+          
+          // Cross-merge with any local users that might be in localStorage from this device
+          const localSaved = localStorage.getItem('tacrm_users');
+          let merged = [...sanitized];
+          if (localSaved) {
+            try {
+              const localUsers = JSON.parse(localSaved);
+              if (Array.isArray(localUsers)) {
+                localUsers.forEach(lu => {
+                  if (lu && (lu.email || lu.name) && !merged.some(su => su.id === lu.id || (su.email && lu.email && su.email.toLowerCase() === lu.email.toLowerCase()))) {
+                    merged.push(lu);
+                    // Upload this newly found local user to central server so all other devices see them
+                    fetch('/api/users/add', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ user: lu })
+                    }).catch(() => {});
+                  }
+                });
+              }
+            } catch (e) {}
+          }
+
+          setUsers(merged);
           try {
-            localStorage.setItem('tacrm_users', JSON.stringify(sanitized));
+            localStorage.setItem('tacrm_users', JSON.stringify(merged));
           } catch (e) {}
         }
         if (Array.isArray(data.drives) && data.drives.length > 0) {
@@ -1109,9 +1124,41 @@ export default function App() {
   const handleUpdateCallSession = (updatedCall) => setCallSessions(prev => prev.map(c => c.id === updatedCall.id ? updatedCall : c));
 
   // Admin User Provisioning Handlers
-  const handleAddUser = (newUser) => setUsers(prev => [newUser, ...prev]);
-  const handleUpdateUser = (updatedUser) => setUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
-  const handleDeleteUser = (userId) => setUsers(prev => prev.filter(u => u.id !== userId));
+  const handleAddUser = (newUser) => {
+    setUsers(prev => {
+      const next = [newUser, ...prev.filter(u => u.id !== newUser.id)];
+      try { localStorage.setItem('tacrm_users', JSON.stringify(next)); } catch (e) {}
+      return next;
+    });
+    fetch('/api/users/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user: newUser }),
+    }).catch(err => console.warn('Server sync error on add user:', err));
+  };
+
+  const handleUpdateUser = (updatedUser) => {
+    setUsers(prev => {
+      const next = prev.map(u => u.id === updatedUser.id ? updatedUser : u);
+      try { localStorage.setItem('tacrm_users', JSON.stringify(next)); } catch (e) {}
+      return next;
+    });
+    fetch('/api/users/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user: updatedUser }),
+    }).catch(err => console.warn('Server sync error on update user:', err));
+  };
+
+  const handleDeleteUser = (userId) => {
+    setUsers(prev => {
+      const next = prev.filter(u => u.id !== userId);
+      try { localStorage.setItem('tacrm_users', JSON.stringify(next)); } catch (e) {}
+      return next;
+    });
+    fetch(`/api/users/${userId}`, { method: 'DELETE' })
+      .catch(err => console.warn('Server sync error on delete user:', err));
+  };
   
   const handleToggleCompleteFollowUp = (fupId) => {
     setFollowUps(prev => prev.map(f => {

@@ -58,7 +58,152 @@ function crmServerStoragePlugin() {
 
     const cleanUrl = req.url ? req.url.split('?')[0] : ''
 
-    // 1. GET & POST full storage database
+    // 1. Direct Central Authentication for all devices (Mobile, PC, Tablet)
+    if (cleanUrl === '/api/login' && req.method === 'POST') {
+      let body = ''
+      req.on('data', chunk => { body += chunk })
+      req.on('end', () => {
+        try {
+          const { username, password } = JSON.parse(body || '{}')
+          const cleanUser = (username || '').trim().toLowerCase()
+          const cleanPass = (password || '').trim()
+
+          if (!cleanUser || !cleanPass) {
+            res.statusCode = 400
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ error: 'Username and password are required' }))
+            return
+          }
+
+          // Check Master Super Admin credentials
+          if (
+            (cleanUser === 'admin@geonixa' || 
+             cleanUser === 'admin@geonixa.com' || 
+             cleanUser === 'admin' || 
+             cleanUser === 'geonixa admin') && 
+            cleanPass === 'geonixa@123'
+          ) {
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({
+              success: true,
+              user: {
+                id: 'user-admin',
+                name: 'Geonixa Admin',
+                role: 'ADMIN',
+                title: 'Super Administrator',
+                email: 'admin@geonixa',
+                password: 'geonixa@123',
+                avatar: 'AD',
+                status: 'online',
+              }
+            }))
+            return
+          }
+
+          // Check against persisted staff users
+          const db = readDb()
+          const usersList = Array.isArray(db.users) ? db.users : []
+
+          const matched = usersList.find(u => {
+            if (!u) return false
+            const uEmail = (u.email || '').trim().toLowerCase()
+            const uPrefix = uEmail.includes('@') ? uEmail.split('@')[0] : uEmail
+            const uName = (u.name || '').trim().toLowerCase()
+            const uNameNoSpaces = uName.replace(/\s+/g, '')
+            const inputNoSpaces = cleanUser.replace(/\s+/g, '')
+            const uPass = (u.password || '').trim()
+
+            const userMatches = 
+              uEmail === cleanUser ||
+              uPrefix === cleanUser ||
+              uName === cleanUser ||
+              uNameNoSpaces === inputNoSpaces ||
+              u.id === cleanUser
+
+            return userMatches && uPass === cleanPass
+          })
+
+          if (matched) {
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ success: true, user: matched }))
+            return
+          }
+
+          res.statusCode = 401
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ success: false, error: 'Invalid username or password' }))
+        } catch (err) {
+          res.statusCode = 500
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ error: err.message }))
+        }
+      })
+      return
+    }
+
+    // 2. Add or Update a single staff user (Instant server persistence from Admin Dashboard)
+    if (cleanUrl === '/api/users/add' && req.method === 'POST') {
+      let body = ''
+      req.on('data', chunk => { body += chunk })
+      req.on('end', () => {
+        try {
+          const { user } = JSON.parse(body || '{}')
+          if (user && (user.email || user.name)) {
+            const current = readDb()
+            const existingUsers = Array.isArray(current.users) ? current.users : []
+            const idx = existingUsers.findIndex(u => 
+              (user.id && u.id === user.id) || 
+              (user.email && u.email && u.email.trim().toLowerCase() === user.email.trim().toLowerCase())
+            )
+            if (idx >= 0) {
+              existingUsers[idx] = { ...existingUsers[idx], ...user }
+            } else {
+              existingUsers.unshift(user)
+            }
+            current.users = existingUsers
+            current.updatedAt = new Date().toISOString()
+            writeDb(current)
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ success: true, user, totalUsers: existingUsers.length }))
+            return
+          }
+          res.statusCode = 400
+          res.end(JSON.stringify({ error: 'Valid user object required' }))
+        } catch (err) {
+          res.statusCode = 500
+          res.end(JSON.stringify({ error: err.message }))
+        }
+      })
+      return
+    }
+
+    // 3. Delete a staff user
+    if ((cleanUrl.startsWith('/api/users/') || cleanUrl === '/api/users/delete') && (req.method === 'DELETE' || req.method === 'POST')) {
+      let userId = cleanUrl.replace('/api/users/', '').trim()
+      let body = ''
+      req.on('data', chunk => { body += chunk })
+      req.on('end', () => {
+        try {
+          if (cleanUrl === '/api/users/delete') {
+            const parsed = JSON.parse(body || '{}')
+            userId = parsed.userId || userId
+          }
+          const current = readDb()
+          const existing = Array.isArray(current.users) ? current.users : []
+          current.users = existing.filter(u => u.id !== userId && u.email !== userId)
+          current.updatedAt = new Date().toISOString()
+          writeDb(current)
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ success: true, remaining: current.users.length }))
+        } catch (err) {
+          res.statusCode = 500
+          res.end(JSON.stringify({ error: err.message }))
+        }
+      })
+      return
+    }
+
+    // 4. GET & POST full storage database
     if (cleanUrl === '/api/storage') {
       if (req.method === 'GET') {
         const db = readDb()
@@ -73,9 +218,26 @@ function crmServerStoragePlugin() {
           try {
             const incoming = JSON.parse(body || '{}')
             const current = readDb()
+            
+            // Smart merge users to never wipe custom provisioned staff
+            let mergedUsers = current.users || []
+            if (Array.isArray(incoming.users) && incoming.users.length > 0) {
+              const uMap = new Map()
+              mergedUsers.forEach(u => {
+                const k = u.id || (u.email && u.email.toLowerCase())
+                if (k) uMap.set(k, u)
+              })
+              incoming.users.forEach(u => {
+                const k = u.id || (u.email && u.email.toLowerCase())
+                if (k) uMap.set(k, { ...(uMap.get(k) || {}), ...u })
+              })
+              mergedUsers = Array.from(uMap.values())
+            }
+
             const updated = {
               ...current,
               ...incoming,
+              users: mergedUsers,
               updatedAt: new Date().toISOString(),
             }
             writeDb(updated)
@@ -90,7 +252,7 @@ function crmServerStoragePlugin() {
       }
     }
 
-    // 2. GET & POST users specifically (for quick mobile login sync)
+    // 5. GET & POST users specifically (Smart merge to preserve newly provisioned staff)
     if (cleanUrl === '/api/users') {
       if (req.method === 'GET') {
         const db = readDb()
@@ -106,11 +268,24 @@ function crmServerStoragePlugin() {
             const { users } = JSON.parse(body || '{}')
             if (Array.isArray(users)) {
               const current = readDb()
-              current.users = users
+              const existingUsers = Array.isArray(current.users) ? current.users : []
+              
+              // Smart merge: preserve all existing custom users
+              const uMap = new Map()
+              existingUsers.forEach(u => {
+                const k = u.id || (u.email && u.email.toLowerCase())
+                if (k) uMap.set(k, u)
+              })
+              users.forEach(u => {
+                const k = u.id || (u.email && u.email.toLowerCase())
+                if (k) uMap.set(k, { ...(uMap.get(k) || {}), ...u })
+              })
+              
+              current.users = Array.from(uMap.values())
               current.updatedAt = new Date().toISOString()
               writeDb(current)
               res.setHeader('Content-Type', 'application/json')
-              res.end(JSON.stringify({ success: true, userCount: users.length }))
+              res.end(JSON.stringify({ success: true, userCount: current.users.length }))
               return
             }
             res.statusCode = 400
@@ -124,7 +299,7 @@ function crmServerStoragePlugin() {
       }
     }
 
-    // 3. Network connection info for mobile devices
+    // 6. Network connection info for mobile devices
     if (cleanUrl === '/api/network-info') {
       const ip = getLocalIpAddress()
       res.setHeader('Content-Type', 'application/json')
@@ -156,6 +331,9 @@ export default defineConfig({
   server: {
     host: true, // Listen on all IP addresses (0.0.0.0) so mobile and other PCs can connect
     port: 5174,
+    watch: {
+      ignored: ['**/crm_persisted_storage.json'],
+    },
   },
   preview: {
     host: true,
