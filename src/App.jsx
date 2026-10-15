@@ -1116,8 +1116,8 @@ export default function App() {
 
   const NAV_MODULES = [
     { id: 'dashboard', name: 'Dashboard Overview', category: 'Main', icon: <BarChart3 size={15} /> },
-    { id: 'drives', name: 'Campus Drives', category: 'Main', icon: <Calendar size={15} /> },
-    { id: 'liveBoard', name: 'Posted Students', category: 'Main', icon: <Users size={15} /> },
+    { id: 'drives', name: 'Drives', category: 'Main', icon: <Calendar size={15} /> },
+    { id: 'liveBoard', name: 'Students', category: 'Main', icon: <Users size={15} /> },
     { id: 'tpos', name: 'College TPOs', category: 'Outreach & Calls', icon: <Building2 size={15} /> },
     { id: 'followups', name: 'Follow-Ups', category: 'Outreach & Calls', icon: <Clock size={15} /> },
     { id: 'calls', name: 'Call Logs', category: 'Outreach & Calls', icon: <PhoneCall size={15} /> },
@@ -1214,10 +1214,10 @@ export default function App() {
           <button 
             onClick={() => { setActiveTab('drives'); setIsMobileSidebarOpen(false); }}
             className={`nav-item ${activeTab === 'drives' ? 'active' : ''}`}
-            title="Campus Drives"
+            title="Drives"
           >
             <Calendar size={17} />
-            <span className="nav-label">Campus Drives</span>
+            <span className="nav-label">Drives</span>
             {activeTab === 'drives' && (
               <span style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', background: '#FFDB58' }} />
             )}
@@ -1226,10 +1226,10 @@ export default function App() {
           <button 
             onClick={() => { setActiveTab('liveBoard'); setIsMobileSidebarOpen(false); }}
             className={`nav-item ${activeTab === 'liveBoard' ? 'active' : ''}`}
-            title="Posted Students"
+            title="Students"
           >
             <Users size={17} />
-            <span className="nav-label">Posted Students</span>
+            <span className="nav-label">Students</span>
             {activeTab === 'liveBoard' && (
               <span style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', background: '#FFDB58' }} />
             )}

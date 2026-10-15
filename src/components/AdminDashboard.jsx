@@ -636,7 +636,7 @@ export default function AdminDashboard({
 
         <div className="metric-card" onClick={() => setActiveAdminTab('drives')} style={{ cursor: 'pointer' }}>
           <div className="metric-header">
-            <span className="metric-title">Campus Drives</span>
+            <span className="metric-title">Drives</span>
             <div className="metric-icon-box" style={{ background: '#fffdf0', borderColor: '#fae27a' }}>
               <Calendar size={18} color="#154360" />
             </div>
@@ -649,7 +649,7 @@ export default function AdminDashboard({
 
         <div className="metric-card" onClick={() => setActiveAdminTab('students')} style={{ cursor: 'pointer' }}>
           <div className="metric-header">
-            <span className="metric-title">Posted Students</span>
+            <span className="metric-title">Students</span>
             <div className="metric-icon-box" style={{ background: '#ebf5fb', borderColor: '#aed6f1' }}>
               <Briefcase size={18} color="#154360" />
             </div>
@@ -698,8 +698,8 @@ export default function AdminDashboard({
       }}>
         {[
           { id: 'staff', label: 'HR Staff & Credentials' },
-          { id: 'drives', label: 'Campus Drives' },
-          { id: 'students', label: 'Posted Students' },
+          { id: 'drives', label: 'Drives' },
+          { id: 'students', label: 'Students' },
           { id: 'tpos', label: 'College TPOs' },
           { id: 'followups', label: 'Follow-Ups' },
           { id: 'calls', label: 'Call Records' }
@@ -935,7 +935,7 @@ export default function AdminDashboard({
           <div className="card-header-row" style={{ padding: '14px 18px' }}>
             <div>
               <h2 className="card-title">
-                Master Campus Drives Control
+                Master Drives Control
               </h2>
               <p className="card-subtitle">
                 Edit drive dates, packages, roles, or post new campus recruitment drives across all colleges.
@@ -1029,7 +1029,7 @@ export default function AdminDashboard({
           <div className="card-header-row" style={{ padding: '14px 18px' }}>
             <div>
               <h2 className="card-title">
-                Master Posted Students Control
+                Master Students Control
               </h2>
               <p className="card-subtitle">
                 Edit candidate contact details, change recruitment stages, or post new candidates directly.

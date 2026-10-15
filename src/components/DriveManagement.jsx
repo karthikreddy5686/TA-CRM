@@ -327,7 +327,7 @@ export default function DriveManagement({
               boxShadow: activeTab === 'drives' ? '0 1px 3px rgba(21, 67, 96, 0.2)' : 'none'
             }}
           >
-            <Calendar size={14} color={activeTab === 'drives' ? '#FFDB58' : '#154360'} /> Campus Drives ({drives.length})
+            <Calendar size={14} color={activeTab === 'drives' ? '#FFDB58' : '#154360'} /> Drives ({drives.length})
             {activeTab === 'drives' && (
               <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#FFDB58', marginLeft: '2px' }} />
             )}
@@ -365,9 +365,9 @@ export default function DriveManagement({
               onClick={onNavigateToLiveBoard}
               className="btn-navy-outline btn-black-sm"
               style={{ fontSize: '0.75rem', padding: '4px 9px', gap: '4px' }}
-              title="Go to Posted Students board"
+              title="Go to Students board"
             >
-              <Users size={12} color="#154360" /> Posted Students ({students.length})
+              <Users size={12} color="#154360" /> Students ({students.length})
             </button>
           )}
 
@@ -538,7 +538,7 @@ export default function DriveManagement({
         <div className="content-card" style={{ padding: '60px 20px', textAlign: 'center', marginBottom: '20px' }}>
           <Building2 size={40} color="#a1a1aa" style={{ margin: '0 auto 12px' }} />
           <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#09090b', marginBottom: '6px' }}>
-            No Campus Drives or Students Added Yet
+            No Drives or Students Added Yet
           </h3>
           <p style={{ color: '#71717a', fontSize: '0.875rem', maxWidth: '440px', margin: '0 auto 20px' }}>
             Get started by creating a campus recruitment drive, adding an individual candidate, or pasting student rows.
@@ -552,7 +552,7 @@ export default function DriveManagement({
               }} 
               className="btn-black"
             >
-              <Plus size={14} /> Create Campus Drive
+              <Plus size={14} /> Create Drive
             </button>
             <button 
               onClick={() => {
@@ -1012,7 +1012,7 @@ export default function DriveManagement({
           <div className="card-header-row" style={{ padding: '14px 20px' }}>
             <div>
               <h2 className="card-title" style={{ fontSize: '0.98rem', color: '#154360', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Calendar size={16} color="#154360" /> All Campus Drives ({drives.length})
+                <Calendar size={16} color="#154360" /> All Drives ({drives.length})
               </h2>
               <p className="card-subtitle">Scheduled campus visits and hiring details</p>
             </div>

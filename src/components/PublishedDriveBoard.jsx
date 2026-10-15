@@ -295,15 +295,15 @@ export default function PublishedDriveBoard({
       <div className="content-card" style={{ padding: '60px 20px', textAlign: 'center' }}>
         <Building2 size={40} color="#154360" style={{ margin: '0 auto 12px' }} />
         <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#154360', marginBottom: '6px' }}>
-          No Campus Drives Created Yet
+          No Drives Created Yet
         </h3>
         <p style={{ color: '#71717a', fontSize: '0.875rem', maxWidth: '460px', margin: '0 auto 20px' }}>
-          Create a campus drive in "Campus Drives" or click "Link Sheets" above to import candidates to this board.
+          Create a drive in "Drives" or click "Link Sheets" above to import candidates to this board.
         </p>
         <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
           {onNavigateToDrives && (
             <button onClick={onNavigateToDrives} className="btn-navy btn-black-sm">
-              <Calendar size={13} color="#FFDB58" /> Go to Campus Drives
+              <Calendar size={13} color="#FFDB58" /> Go to Drives
             </button>
           )}
         </div>
@@ -319,7 +319,7 @@ export default function PublishedDriveBoard({
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ fontWeight: 800, fontSize: 'var(--font-sm)', color: '#154360', lineHeight: 'var(--lh-sm)' }}>
-                Campus Drive:
+                Drive:
               </span>
               <select
                 className="form-select"
@@ -397,7 +397,7 @@ export default function PublishedDriveBoard({
         <div className="card-header-row" style={{ padding: '10px 14px' }}>
           <div>
             <h2 className="card-title" style={{ fontSize: 'var(--font-base)', lineHeight: 'var(--lh-base)', color: '#154360', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Users size={16} color="#154360" /> Posted Students ({filteredStudents.length})
+              <Users size={16} color="#154360" /> Students ({filteredStudents.length})
             </h2>
           </div>
 
