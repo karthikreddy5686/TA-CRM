@@ -1456,6 +1456,7 @@ export default function App() {
               hrPhoneNumber={hrPhoneNumber}
               onOpenPhoneConnectModal={() => setIsPhoneConnectModalOpen(true)}
               onNavigateToDrives={() => setActiveTab('drives')}
+              onOpenNewStudentModal={() => setIsGlobalStudentModalOpen(true)}
             />
           )}
 

@@ -19,7 +19,9 @@ import {
   Upload,
   AlertCircle,
   CheckCircle2,
-  X
+  X,
+  UserPlus,
+  Plus
 } from 'lucide-react';
 
 export default function PublishedDriveBoard({
@@ -33,10 +35,19 @@ export default function PublishedDriveBoard({
   onUpdateCandidateStage,
   onLoadDemoData,
   onNavigateToDrives,
+  onOpenNewStudentModal,
   hrPhoneNumber,
   onOpenPhoneConnectModal
 }) {
   const [selectedDriveId, setSelectedDriveId] = useState(drives[0]?.id || '');
+  const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
+  const [newStudentName, setNewStudentName] = useState('');
+  const [newStudentRoll, setNewStudentRoll] = useState('');
+  const [newStudentPhone, setNewStudentPhone] = useState('');
+  const [newStudentEmail, setNewStudentEmail] = useState('');
+  const [newStudentBranch, setNewStudentBranch] = useState('Computer Science');
+  const [newStudentCgpa, setNewStudentCgpa] = useState('8.0');
+  const [newStudentStage, setNewStudentStage] = useState('ONLINE_ASSESSMENT');
   const [searchTerm, setSearchTerm] = useState('');
   const [branchFilter, setBranchFilter] = useState('ALL');
   const [copiedShareLink, setCopiedShareLink] = useState(false);
@@ -276,6 +287,42 @@ export default function PublishedDriveBoard({
     }, 1500);
   };
 
+  const handleQuickAddStudent = (e) => {
+    e.preventDefault();
+    if (!newStudentName.trim()) return;
+
+    const targetDrive = activeDrive || drives[0];
+    const newStudent = {
+      id: `stu-${Date.now()}`,
+      driveId: targetDrive?.id || `drv-${Date.now()}`,
+      driveTitle: targetDrive?.title || 'Campus Drive',
+      collegeId: targetDrive?.collegeId || 'col-default',
+      collegeName: targetDrive?.collegeName || 'Campus',
+      name: newStudentName.trim(),
+      rollNumber: newStudentRoll.trim() || `ROLL-${Date.now().toString().slice(-4)}`,
+      email: newStudentEmail.trim() || `${newStudentName.trim().toLowerCase().replace(/\s+/g, '.')}@campus.edu`,
+      phone: newStudentPhone.trim(),
+      branch: newStudentBranch.trim() || 'Computer Science',
+      cgpa: parseFloat(newStudentCgpa) || 7.5,
+      stage: newStudentStage || 'ONLINE_ASSESSMENT',
+      internId: 'staff-recruiter',
+      internName: 'Staff Recruiter',
+      notes: 'Added via Direct Add',
+    };
+
+    if (onAddStudentsBatch) {
+      onAddStudentsBatch([newStudent]);
+    }
+    setIsAddStudentModalOpen(false);
+    setNewStudentName('');
+    setNewStudentRoll('');
+    setNewStudentPhone('');
+    setNewStudentEmail('');
+    setNewStudentBranch('Computer Science');
+    setNewStudentCgpa('8.0');
+    setNewStudentStage('ONLINE_ASSESSMENT');
+  };
+
   const handleUnlinkSheet = () => {
     setLinkedSheetUrl('');
     localStorage.removeItem('tacrm_candidates_sheet_url');
@@ -340,6 +387,30 @@ export default function PublishedDriveBoard({
           </div>
 
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+            {/* Add Student Button */}
+            <button
+              type="button"
+              onClick={() => {
+                if (onOpenNewStudentModal) {
+                  onOpenNewStudentModal();
+                } else {
+                  setIsAddStudentModalOpen(true);
+                }
+              }}
+              className="btn-mustard btn-black-sm"
+              style={{
+                fontWeight: 800,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '5px 12px',
+                fontSize: 'var(--font-xs)',
+              }}
+              title="Add a candidate directly to this drive"
+            >
+              <UserPlus size={14} color="#154360" /> Add Student
+            </button>
+
             {/* Mustard Yellow Total Counter Badge */}
             <div style={{ background: '#FFDB58', border: '1px solid #fae27a', borderRadius: 'var(--radius-sm)', padding: '4px 10px', textAlign: 'center', boxShadow: '0 1px 3px rgba(255, 219, 88, 0.3)' }}>
               <span style={{ fontSize: 'var(--font-10)', lineHeight: 'var(--lh-10)', fontWeight: 800, color: '#154360', marginRight: '6px' }}>TOTAL:</span>
@@ -1006,6 +1077,142 @@ export default function PublishedDriveBoard({
                 Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Quick Add Student Modal */}
+      {isAddStudentModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsAddStudentModalOpen(false)}>
+          <div 
+            className="modal-container" 
+            onClick={e => e.stopPropagation()} 
+            style={{ maxWidth: '480px', width: '92%', borderRadius: '12px' }}
+          >
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <UserPlus size={18} color="#154360" />
+                <h3 className="modal-title" style={{ fontSize: '1rem', color: '#154360' }}>
+                  Add Student to {activeDrive?.title || 'Drive'}
+                </h3>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setIsAddStudentModalOpen(false)} 
+                className="btn-icon"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleQuickAddStudent}>
+              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div className="form-group">
+                  <label className="form-label">Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    className="form-input"
+                    placeholder="e.g. Rahul Sharma"
+                    value={newStudentName}
+                    onChange={e => setNewStudentName(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <div className="form-group">
+                    <label className="form-label">Roll / Reg Number</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="e.g. 2026CS101"
+                      value={newStudentRoll}
+                      onChange={e => setNewStudentRoll(e.target.value)}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Phone Number</label>
+                    <input
+                      type="tel"
+                      className="form-input"
+                      placeholder="e.g. +91 98765 43210"
+                      value={newStudentPhone}
+                      onChange={e => setNewStudentPhone(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Email Address</label>
+                  <input
+                    type="email"
+                    className="form-input"
+                    placeholder="e.g. rahul.sharma@campus.edu"
+                    value={newStudentEmail}
+                    onChange={e => setNewStudentEmail(e.target.value)}
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <div className="form-group">
+                    <label className="form-label">Branch / Department</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="e.g. Computer Science"
+                      value={newStudentBranch}
+                      onChange={e => setNewStudentBranch(e.target.value)}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">CGPA / Grade</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="10"
+                      className="form-input"
+                      placeholder="8.5"
+                      value={newStudentCgpa}
+                      onChange={e => setNewStudentCgpa(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Initial Hiring Stage</label>
+                  <select
+                    className="form-select"
+                    value={newStudentStage}
+                    onChange={e => setNewStudentStage(e.target.value)}
+                  >
+                    <option value="APPLIED">Applied</option>
+                    <option value="ONLINE_ASSESSMENT">Online Assessment</option>
+                    <option value="TECH_INTERVIEW">Technical Interview</option>
+                    <option value="HR_INTERVIEW">HR Interview</option>
+                    <option value="SELECTED">Selected</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button 
+                  type="button" 
+                  onClick={() => setIsAddStudentModalOpen(false)} 
+                  className="btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn-mustard"
+                  style={{ fontWeight: 800 }}
+                  disabled={!newStudentName.trim()}
+                >
+                  <UserPlus size={14} color="#154360" /> Add Student
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
