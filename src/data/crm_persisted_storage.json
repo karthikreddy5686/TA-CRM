@@ -99,10 +99,18 @@
       "phone": "+91 98112 33441",
       "branch": "Computer Science",
       "cgpa": 9.24,
-      "stage": "OFFERED",
+      "stage": "TECH_INTERVIEW",
       "internId": "intern-kavya",
       "internName": "Kavya Nair",
-      "notes": "Cleared technical round with top score in Distributed Systems."
+      "notes": "Cleared technical round with top score in Distributed Systems.",
+      "interviewDate": "2026-10-24",
+      "interviewTime": "10:00 AM - 10:10 AM",
+      "interviewStartTime": "10:00 AM",
+      "interviewEndTime": "10:10 AM",
+      "meetLink": "https://meet.google.com/tac-296k-x11",
+      "interviewPanel": "Geonixa Admin (HR Panel)",
+      "interviewStatus": "SCHEDULED",
+      "interviewDispatchedAt": "2026-10-15T12:01:16.572Z"
     },
     {
       "id": "stu-2",
@@ -119,7 +127,15 @@
       "stage": "TECH_INTERVIEW",
       "internId": "intern-kavya",
       "internName": "Kavya Nair",
-      "notes": "Video interview scheduled for tomorrow 2:00 PM."
+      "notes": "Video interview scheduled for tomorrow 2:00 PM.",
+      "interviewDate": "2026-10-24",
+      "interviewTime": "10:10 AM - 10:20 AM",
+      "interviewStartTime": "10:10 AM",
+      "interviewEndTime": "10:20 AM",
+      "meetLink": "https://meet.google.com/tac-296k-x11",
+      "interviewPanel": "Geonixa Admin (HR Panel)",
+      "interviewStatus": "SCHEDULED",
+      "interviewDispatchedAt": "2026-10-15T12:01:16.572Z"
     },
     {
       "id": "stu-3",
@@ -136,7 +152,15 @@
       "stage": "TECH_INTERVIEW",
       "internId": "intern-kavya",
       "internName": "Kavya Nair",
-      "notes": "Excellent LeetCode profile. High probability hire."
+      "notes": "Excellent LeetCode profile. High probability hire.",
+      "interviewDate": "2026-10-24",
+      "interviewTime": "10:20 AM - 10:30 AM",
+      "interviewStartTime": "10:20 AM",
+      "interviewEndTime": "10:30 AM",
+      "meetLink": "https://meet.google.com/tac-296k-x11",
+      "interviewPanel": "Geonixa Admin (HR Panel)",
+      "interviewStatus": "SCHEDULED",
+      "interviewDispatchedAt": "2026-10-15T12:01:16.572Z"
     },
     {
       "id": "stu-4",
@@ -150,10 +174,18 @@
       "phone": "+91 98440 99004",
       "branch": "Mechanical Engineering",
       "cgpa": 8.12,
-      "stage": "ONLINE_ASSESSMENT",
+      "stage": "TECH_INTERVIEW",
       "internId": "intern-kavya",
       "internName": "Kavya Nair",
-      "notes": "Aptitude test link sent."
+      "notes": "Aptitude test link sent.",
+      "interviewDate": "2026-10-24",
+      "interviewTime": "10:30 AM - 10:40 AM",
+      "interviewStartTime": "10:30 AM",
+      "interviewEndTime": "10:40 AM",
+      "meetLink": "https://meet.google.com/tac-296k-x11",
+      "interviewPanel": "Geonixa Admin (HR Panel)",
+      "interviewStatus": "SCHEDULED",
+      "interviewDispatchedAt": "2026-10-15T12:01:16.572Z"
     },
     {
       "id": "stu-5",
@@ -167,10 +199,18 @@
       "phone": "+91 98550 11225",
       "branch": "Engineering Physics",
       "cgpa": 8.4,
-      "stage": "APPLIED",
+      "stage": "TECH_INTERVIEW",
       "internId": "intern-kavya",
       "internName": "Kavya Nair",
-      "notes": "Registered via campus portal."
+      "notes": "Registered via campus portal.",
+      "interviewDate": "2026-10-24",
+      "interviewTime": "10:40 AM - 10:50 AM",
+      "interviewStartTime": "10:40 AM",
+      "interviewEndTime": "10:50 AM",
+      "meetLink": "https://meet.google.com/tac-296k-x11",
+      "interviewPanel": "Geonixa Admin (HR Panel)",
+      "interviewStatus": "SCHEDULED",
+      "interviewDispatchedAt": "2026-10-15T12:01:16.572Z"
     },
     {
       "id": "stu-6",
@@ -362,5 +402,5 @@
       "notes": "Verify test environment & send calendar invite for round 2 technical interview."
     }
   ],
-  "updatedAt": "2026-10-15T10:04:55.488Z"
+  "updatedAt": "2026-10-15T12:01:17.327Z"
 }

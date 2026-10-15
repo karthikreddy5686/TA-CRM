@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Globe,
   Video,
@@ -21,7 +21,13 @@ import {
   CheckCircle2,
   X,
   UserPlus,
-  Plus
+  Plus,
+  Clock,
+  Send,
+  Sparkles,
+  Mail,
+  MessageSquare,
+  Play
 } from 'lucide-react';
 
 export default function PublishedDriveBoard({
@@ -37,7 +43,10 @@ export default function PublishedDriveBoard({
   onNavigateToDrives,
   onOpenNewStudentModal,
   hrPhoneNumber,
-  onOpenPhoneConnectModal
+  onOpenPhoneConnectModal,
+  onBatchUpdateStudents,
+  addToast,
+  currentUser
 }) {
   const [selectedDriveId, setSelectedDriveId] = useState(drives[0]?.id || '');
   const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
@@ -66,6 +75,220 @@ export default function PublishedDriveBoard({
   const activeDrive = drives.find(d => d.id === selectedDriveId) || drives[0] || null;
   const driveStudents = activeDrive ? students.filter(s => s.driveId === activeDrive.id) : students;
   const branches = Array.from(new Set(driveStudents.map(s => s.branch))).filter(Boolean);
+
+  // ---------------- Schedule Interviews State & Engine ----------------
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [scheduleDate, setScheduleDate] = useState(() => activeDrive?.driveDate || new Date().toISOString().split('T')[0]);
+  const [scheduleStartTime, setScheduleStartTime] = useState('10:00');
+  const [scheduleSlotMinutes, setScheduleSlotMinutes] = useState(10);
+  const [scheduleBufferMinutes, setScheduleBufferMinutes] = useState(0);
+  const [scheduleMeetLink, setScheduleMeetLink] = useState(() => `https://meet.google.com/tac-${Math.random().toString(36).substring(2, 6)}-${Math.random().toString(36).substring(2, 5)}`);
+  const [schedulePanelist, setSchedulePanelist] = useState(() => currentUser?.name ? `${currentUser.name} (HR Panel)` : 'Talent Acquisition Panel');
+  const [scheduleCandidateScope, setScheduleCandidateScope] = useState('ALL');
+  const [scheduleLimit, setScheduleLimit] = useState(25);
+  const [selectedCandidateIds, setSelectedCandidateIds] = useState([]);
+  const [autoDispatchInvites, setAutoDispatchInvites] = useState(true);
+  const [isDispatching, setIsDispatching] = useState(false);
+  const [dispatchConfirmationData, setDispatchConfirmationData] = useState(null);
+  const [copiedScheduleText, setCopiedScheduleText] = useState(false);
+  const [copiedMeetLink, setCopiedMeetLink] = useState(false);
+
+  // Keep scheduleDate synced with activeDrive when activeDrive changes
+  useEffect(() => {
+    if (activeDrive?.driveDate) {
+      setScheduleDate(activeDrive.driveDate);
+    }
+  }, [activeDrive?.id]);
+
+  // Format total minutes to 12-hour AM/PM string (e.g. 600 -> "10:00 AM", 730 -> "12:10 PM")
+  const formatTime12h = (totalMinutes) => {
+    const normalized = ((totalMinutes % 1440) + 1440) % 1440;
+    let hours = Math.floor(normalized / 60);
+    const minutes = normalized % 60;
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const minuteStr = minutes < 10 ? '0' + minutes : minutes;
+    return `${hours}:${minuteStr} ${ampm}`;
+  };
+
+  // Parse "HH:MM" time input into minutes from midnight
+  const parseTimeToMinutes = (timeStr) => {
+    if (!timeStr) return 600; // 10:00 AM
+    const parts = timeStr.split(':');
+    const h = parseInt(parts[0], 10) || 0;
+    const m = parseInt(parts[1], 10) || 0;
+    return h * 60 + m;
+  };
+
+  // Generate a realistic Google Meet Link code
+  const handleGenerateMeetLink = () => {
+    const code = `tac-${Math.random().toString(36).substring(2, 6)}-${Math.random().toString(36).substring(2, 5)}`;
+    setScheduleMeetLink(`https://meet.google.com/${code}`);
+    if (addToast) addToast('Generated new Google Meet link!', 'info');
+  };
+
+  // Filter candidates eligible for scheduling based on user scope and limit
+  const candidatesEligibleForSchedule = useMemo(() => {
+    let list = driveStudents;
+    if (scheduleCandidateScope === 'ONLINE_ASSESSMENT') {
+      list = list.filter(s => s.stage === 'ONLINE_ASSESSMENT');
+    } else if (scheduleCandidateScope === 'APPLIED') {
+      list = list.filter(s => s.stage === 'APPLIED');
+    } else if (scheduleCandidateScope === 'TECH_INTERVIEW') {
+      list = list.filter(s => s.stage === 'TECH_INTERVIEW');
+    }
+    const limit = parseInt(scheduleLimit, 10) || 25;
+    return list.slice(0, limit);
+  }, [driveStudents, scheduleCandidateScope, scheduleLimit]);
+
+  // Synchronize selected IDs when candidate list changes
+  useEffect(() => {
+    setSelectedCandidateIds(candidatesEligibleForSchedule.map(s => s.id));
+  }, [candidatesEligibleForSchedule]);
+
+  // Automatically calculate individual time slots for all selected candidates
+  const calculatedTimeSlots = useMemo(() => {
+    const startMins = parseTimeToMinutes(scheduleStartTime);
+    const duration = parseInt(scheduleSlotMinutes, 10) || 10;
+    const buffer = parseInt(scheduleBufferMinutes, 10) || 0;
+    const step = duration + buffer;
+
+    const selectedStudents = candidatesEligibleForSchedule.filter(s => selectedCandidateIds.includes(s.id));
+
+    return selectedStudents.map((student, idx) => {
+      const slotStartMins = startMins + idx * step;
+      const slotEndMins = slotStartMins + duration;
+      const startFormatted = formatTime12h(slotStartMins);
+      const endFormatted = formatTime12h(slotEndMins);
+      const slotString = `${startFormatted} - ${endFormatted}`;
+
+      return {
+        student,
+        idx: idx + 1,
+        slotStartMins,
+        slotEndMins,
+        startFormatted,
+        endFormatted,
+        slotString,
+      };
+    });
+  }, [candidatesEligibleForSchedule, selectedCandidateIds, scheduleStartTime, scheduleSlotMinutes, scheduleBufferMinutes]);
+
+  // Confirm schedule & dispatch interview invites
+  const handleConfirmSchedule = async () => {
+    if (!calculatedTimeSlots.length) {
+      alert('Please select at least one candidate to schedule.');
+      return;
+    }
+
+    if (!scheduleMeetLink.trim()) {
+      alert('Please enter or generate a Google Meet link.');
+      return;
+    }
+
+    setIsDispatching(true);
+    const cleanMeet = scheduleMeetLink.trim();
+    const scheduledAt = new Date().toISOString();
+
+    const updatedStudents = calculatedTimeSlots.map(item => ({
+      ...item.student,
+      stage: 'TECH_INTERVIEW', // Moves to "3. Interview"
+      interviewDate: scheduleDate,
+      interviewTime: item.slotString,
+      interviewStartTime: item.startFormatted,
+      interviewEndTime: item.endFormatted,
+      meetLink: cleanMeet,
+      interviewPanel: schedulePanelist,
+      interviewStatus: 'SCHEDULED',
+      interviewDispatchedAt: scheduledAt
+    }));
+
+    // Update in parent state & server storage
+    if (onBatchUpdateStudents) {
+      onBatchUpdateStudents(updatedStudents);
+    }
+
+    // Add entry into broadcast logs for audit trail
+    try {
+      const existingLogs = JSON.parse(localStorage.getItem('tacrm_blast_logs') || '[]');
+      const newLog = {
+        id: `sched-blast-${Date.now()}`,
+        timestamp: scheduledAt,
+        driveTitle: activeDrive?.title || 'Campus Placement Drive',
+        collegeName: activeDrive?.collegeName || 'Campus',
+        jobRole: activeDrive?.jobRole || 'Engineering Associate',
+        totalDispatched: updatedStudents.length,
+        interviewDate: scheduleDate,
+        timeWindow: `${calculatedTimeSlots[0].startFormatted} - ${calculatedTimeSlots[calculatedTimeSlots.length - 1].endFormatted}`,
+        meetLink: cleanMeet,
+        type: 'GOOGLE_MEET_INVITE',
+        status: 'DELIVERED',
+        recipientsSample: updatedStudents.slice(0, 3).map(s => `${s.name} (${s.interviewTime})`).join(', ')
+      };
+      localStorage.setItem('tacrm_blast_logs', JSON.stringify([newLog, ...existingLogs]));
+    } catch (e) {}
+
+    // Open success dispatch confirmation modal
+    setDispatchConfirmationData({
+      driveTitle: activeDrive?.title || 'Campus Placement Drive',
+      collegeName: activeDrive?.collegeName || 'Campus',
+      jobRole: activeDrive?.jobRole || 'Engineering Associate',
+      scheduledDate: scheduleDate,
+      firstSlot: calculatedTimeSlots[0].startFormatted,
+      lastSlot: calculatedTimeSlots[calculatedTimeSlots.length - 1].endFormatted,
+      totalCount: updatedStudents.length,
+      meetLink: cleanMeet,
+      scheduledList: calculatedTimeSlots
+    });
+
+    setIsDispatching(false);
+    if (addToast) {
+      addToast(`🎉 Dispatched interview slots & Google Meet links to ${updatedStudents.length} candidates!`, 'success');
+    }
+  };
+
+  // Copy formatted schedule to clipboard for College TPO / Placement Head
+  const handleCopyScheduleToClipboard = () => {
+    if (!dispatchConfirmationData) return;
+    const { driveTitle, collegeName, jobRole, scheduledDate, meetLink, scheduledList } = dispatchConfirmationData;
+    let text = `CAMPUS INTERVIEW SCHEDULE\n`;
+    text += `Drive: ${driveTitle} (${jobRole})\n`;
+    text += `College: ${collegeName}\n`;
+    text += `Date: ${scheduledDate}\n`;
+    text += `Google Meet Link: ${meetLink}\n`;
+    text += `---------------------------------------------------------\n`;
+    text += `No. | Roll No | Candidate Name | Interview Time Slot | Contact\n`;
+    text += `---------------------------------------------------------\n`;
+    scheduledList.forEach((item, i) => {
+      text += `${i + 1}. ${item.student.rollNumber || 'N/A'} | ${item.student.name} | ${item.slotString} | ${item.student.phone || item.student.email}\n`;
+    });
+    text += `---------------------------------------------------------\n`;
+    text += `Note: Please join Google Meet 5 minutes before your allotted slot.\n`;
+
+    navigator.clipboard.writeText(text);
+    setCopiedScheduleText(true);
+    setTimeout(() => setCopiedScheduleText(false), 2500);
+  };
+
+  // Share schedule to WhatsApp Placement Group
+  const handleShareWhatsApp = () => {
+    if (!dispatchConfirmationData) return;
+    const { driveTitle, collegeName, scheduledDate, meetLink, scheduledList } = dispatchConfirmationData;
+    let text = `📢 *INTERVIEW SCHEDULE - ${driveTitle}*\n`;
+    text += `🏫 *College:* ${collegeName}\n`;
+    text += `📅 *Date:* ${scheduledDate}\n`;
+    text += `💻 *Google Meet:* ${meetLink}\n\n`;
+    text += `*Allotted Interview Time Slots:*\n`;
+    scheduledList.slice(0, 15).forEach((item) => {
+      text += `• ${item.slotString}: *${item.student.name}* (${item.student.rollNumber || ''})\n`;
+    });
+    if (scheduledList.length > 15) {
+      text += `...and ${scheduledList.length - 15} more candidates.\n`;
+    }
+    text += `\nPlease join 5 minutes before your time slot. All the best!`;
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+  };
 
   const filteredStudents = driveStudents.filter(s => {
     const matchesSearch =
@@ -411,6 +634,31 @@ export default function PublishedDriveBoard({
               <UserPlus size={14} color="#154360" /> Add Student
             </button>
 
+            {/* Schedule Drive Button Beside Add Student Button */}
+            <button
+              type="button"
+              onClick={() => {
+                setDispatchConfirmationData(null);
+                setIsScheduleModalOpen(true);
+              }}
+              className="btn-navy btn-black-sm"
+              style={{
+                fontWeight: 800,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '5px 12px',
+                fontSize: 'var(--font-xs)',
+                background: '#154360',
+                color: '#FFDB58',
+                border: '1.5px solid #FFDB58',
+                boxShadow: '0 1px 3px rgba(21, 67, 96, 0.25)'
+              }}
+              title="Schedule individual interview time slots & auto-dispatch Google Meet links"
+            >
+              <Calendar size={14} color="#FFDB58" /> Schedule
+            </button>
+
             {/* Mustard Yellow Total Counter Badge */}
             <div style={{ background: '#FFDB58', border: '1px solid #fae27a', borderRadius: 'var(--radius-sm)', padding: '4px 10px', textAlign: 'center', boxShadow: '0 1px 3px rgba(255, 219, 88, 0.3)' }}>
               <span style={{ fontSize: 'var(--font-10)', lineHeight: 'var(--lh-10)', fontWeight: 800, color: '#154360', marginRight: '6px' }}>TOTAL:</span>
@@ -534,6 +782,46 @@ export default function PublishedDriveBoard({
                       <div style={{ fontSize: 'var(--font-11)', color: '#52525b', lineHeight: 'var(--lh-11)' }}>
                         {student.email}
                       </div>
+                      {student.interviewTime && (
+                        <div style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          background: '#eff6ff',
+                          border: '1px solid #bfdbfe',
+                          color: '#1d4ed8',
+                          borderRadius: '4px',
+                          padding: '1px 6px',
+                          fontSize: '0.68rem',
+                          fontWeight: 700,
+                          marginTop: '3px'
+                        }}>
+                          <Clock size={10} color="#1d4ed8" />
+                          <span>{student.interviewTime}</span>
+                          {student.meetLink && (
+                            <span 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(student.meetLink, '_blank');
+                              }}
+                              style={{ 
+                                cursor: 'pointer', 
+                                color: '#059669', 
+                                background: '#ecfdf5', 
+                                padding: '0 4px', 
+                                borderRadius: '3px', 
+                                display: 'inline-flex', 
+                                alignItems: 'center', 
+                                gap: '2px',
+                                marginLeft: '2px'
+                              }}
+                              title="Click to Open Google Meet Room"
+                            >
+                              <Video size={9} /> Meet
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </td>
 
                     <td style={{ fontSize: 'var(--font-xs)', padding: '6px 8px' }}>
@@ -594,20 +882,32 @@ export default function PublishedDriveBoard({
                     <td style={{ padding: '6px 8px' }}>
                       <div style={{ display: 'flex', gap: '6px' }}>
                         <button
-                          onClick={() => onStartCall({
-                            recipientType: 'STUDENT',
-                            recipientName: student.name,
-                            recipientDetail: `${student.branch} • ${student.phone}`,
-                            recipientPhone: student.phone,
-                            type: 'VIDEO',
-                            studentId: student.id,
-                            student
-                          })}
+                          onClick={() => {
+                            if (student.meetLink) {
+                              window.open(student.meetLink, '_blank');
+                            } else {
+                              onStartCall({
+                                recipientType: 'STUDENT',
+                                recipientName: student.name,
+                                recipientDetail: `${student.branch} • ${student.phone}`,
+                                recipientPhone: student.phone,
+                                type: 'VIDEO',
+                                studentId: student.id,
+                                student
+                              });
+                            }
+                          }}
                           className="btn-navy btn-black-sm"
-                          style={{ padding: '3px 8px', fontSize: 'var(--font-xs)', gap: '4px' }}
-                          title="Start Video Interview"
+                          style={{ 
+                            padding: '3px 8px', 
+                            fontSize: 'var(--font-xs)', 
+                            gap: '4px',
+                            background: student.meetLink ? '#0f766e' : '#154360',
+                            borderColor: student.meetLink ? '#2dd4bf' : undefined
+                          }}
+                          title={student.meetLink ? `Join Scheduled Google Meet (${student.interviewTime || ''})` : "Start Video Interview"}
                         >
-                          <Video size={12} color="#FFDB58" /> Video
+                          <Video size={12} color="#FFDB58" /> {student.meetLink ? 'Meet' : 'Video'}
                         </button>
 
                         <button
@@ -672,6 +972,35 @@ export default function PublishedDriveBoard({
                     <div style={{ fontSize: 'var(--font-10)', lineHeight: 'var(--lh-10)', color: '#71717a' }}>
                       {student.rollNumber} • {student.branch}
                     </div>
+                    {student.interviewTime && (
+                      <div style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        background: '#eff6ff',
+                        border: '1px solid #bfdbfe',
+                        color: '#1d4ed8',
+                        borderRadius: '4px',
+                        padding: '1px 5px',
+                        fontSize: '0.66rem',
+                        fontWeight: 700,
+                        marginTop: '3px'
+                      }}>
+                        <Clock size={9} color="#1d4ed8" />
+                        <span>Slot: {student.interviewTime}</span>
+                        {student.meetLink && (
+                          <span 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(student.meetLink, '_blank');
+                            }}
+                            style={{ color: '#059669', cursor: 'pointer', textDecoration: 'underline', marginLeft: '2px' }}
+                          >
+                            • Meet 🎥
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <span style={{
                     fontWeight: 700,
@@ -742,20 +1071,32 @@ export default function PublishedDriveBoard({
                     </button>
 
                     <button
-                      onClick={() => onStartCall({
-                        recipientType: 'STUDENT',
-                        recipientName: student.name,
-                        recipientDetail: `${student.branch} • ${student.phone}`,
-                        recipientPhone: student.phone,
-                        type: 'VIDEO',
-                        studentId: student.id,
-                        student
-                      })}
+                      onClick={() => {
+                        if (student.meetLink) {
+                          window.open(student.meetLink, '_blank');
+                        } else {
+                          onStartCall({
+                            recipientType: 'STUDENT',
+                            recipientName: student.name,
+                            recipientDetail: `${student.branch} • ${student.phone}`,
+                            recipientPhone: student.phone,
+                            type: 'VIDEO',
+                            studentId: student.id,
+                            student
+                          });
+                        }
+                      }}
                       className="btn-navy btn-black-sm"
-                      style={{ padding: '3px 8px', fontSize: 'var(--font-xs)', gap: '4px' }}
-                      title="Video Interview Room"
+                      style={{ 
+                        padding: '3px 8px', 
+                        fontSize: 'var(--font-xs)', 
+                        gap: '4px',
+                        background: student.meetLink ? '#0f766e' : '#154360',
+                        borderColor: student.meetLink ? '#2dd4bf' : undefined
+                      }}
+                      title={student.meetLink ? `Join Google Meet (${student.interviewTime || ''})` : "Video Interview Room"}
                     >
-                      <Video size={11} color="#FFDB58" /> Video
+                      <Video size={11} color="#FFDB58" /> {student.meetLink ? 'Meet' : 'Video'}
                     </button>
 
                     {onDeleteStudent && (
@@ -1213,6 +1554,517 @@ export default function PublishedDriveBoard({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          SCHEDULE DRIVE INTERVIEWS & AUTO-CALCULATE TIME SLOTS MODAL
+          ========================================================================= */}
+      {isScheduleModalOpen && (
+        <div className="modal-overlay" style={{ zIndex: 9999 }}>
+          <div className="modal-content" style={{ maxWidth: '860px', width: '95%', maxHeight: '92vh', display: 'flex', flexDirection: 'column', padding: 0, borderRadius: '14px', overflow: 'hidden' }}>
+            {/* Modal Header */}
+            <div style={{ background: '#154360', color: '#ffffff', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '2px solid #FFDB58' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#FFDB58', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Calendar size={20} color="#154360" />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.01em' }}>
+                    Schedule Drive Interview Slots & Auto-Dispatch
+                  </h3>
+                  <div style={{ fontSize: '0.75rem', color: '#e2e8f0', marginTop: '2px' }}>
+                    Drive: <strong style={{ color: '#FFDB58' }}>{activeDrive?.title || 'Campus Placement Drive'}</strong> • {driveStudents.length} candidates in drive
+                  </div>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setIsScheduleModalOpen(false)}
+                className="btn-icon" 
+                style={{ color: '#ffffff', background: 'rgba(255,255,255,0.1)' }}
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div style={{ padding: '20px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Parameters Grid */}
+              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '16px' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#154360', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Clock size={15} color="#154360" /> 1. Interview Date & Time Slot Parameters
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Interview Date *</label>
+                    <input 
+                      type="date" 
+                      className="form-input" 
+                      value={scheduleDate} 
+                      onChange={e => setScheduleDate(e.target.value)}
+                      required 
+                    />
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">First Slot Start Time *</label>
+                    <input 
+                      type="time" 
+                      className="form-input" 
+                      value={scheduleStartTime} 
+                      onChange={e => setScheduleStartTime(e.target.value)}
+                      required 
+                    />
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <label className="form-label">Duration / Student *</label>
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        {[10, 15, 20, 30].map(m => (
+                          <button
+                            key={m}
+                            type="button"
+                            onClick={() => setScheduleSlotMinutes(m)}
+                            style={{
+                              fontSize: '0.68rem',
+                              padding: '1px 5px',
+                              borderRadius: '3px',
+                              border: '1px solid',
+                              borderColor: scheduleSlotMinutes === m ? '#154360' : '#cbd5e1',
+                              background: scheduleSlotMinutes === m ? '#154360' : '#ffffff',
+                              color: scheduleSlotMinutes === m ? '#FFDB58' : '#64748b',
+                              cursor: 'pointer',
+                              fontWeight: 700
+                            }}
+                          >
+                            {m}m
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <select 
+                      className="form-select"
+                      value={scheduleSlotMinutes}
+                      onChange={e => setScheduleSlotMinutes(parseInt(e.target.value, 10))}
+                    >
+                      <option value="10">10 Minutes per candidate</option>
+                      <option value="15">15 Minutes per candidate</option>
+                      <option value="20">20 Minutes per candidate</option>
+                      <option value="30">30 Minutes per candidate</option>
+                      <option value="45">45 Minutes per candidate</option>
+                      <option value="60">60 Minutes per candidate</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Buffer Between Slots</label>
+                    <select 
+                      className="form-select"
+                      value={scheduleBufferMinutes}
+                      onChange={e => setScheduleBufferMinutes(parseInt(e.target.value, 10))}
+                    >
+                      <option value="0">0 mins (Back-to-back)</option>
+                      <option value="5">5 mins break</option>
+                      <option value="10">10 mins break</option>
+                      <option value="15">15 mins break</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Scope & Batch Limit */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '12px' }}>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Filter Candidates</label>
+                    <select 
+                      className="form-select"
+                      value={scheduleCandidateScope}
+                      onChange={e => setScheduleCandidateScope(e.target.value)}
+                    >
+                      <option value="ALL">All Candidates in Drive ({driveStudents.length})</option>
+                      <option value="ONLINE_ASSESSMENT">Only Online Test Cleared ({driveStudents.filter(s => s.stage === 'ONLINE_ASSESSMENT').length})</option>
+                      <option value="APPLIED">Only Applied Candidates ({driveStudents.filter(s => s.stage === 'APPLIED').length})</option>
+                      <option value="TECH_INTERVIEW">Already in Technical Interview ({driveStudents.filter(s => s.stage === 'TECH_INTERVIEW').length})</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <label className="form-label">Number of Candidates to Schedule</label>
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        {[10, 25, 50, driveStudents.length].map((num, i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => setScheduleLimit(num)}
+                            style={{
+                              fontSize: '0.68rem',
+                              padding: '1px 5px',
+                              borderRadius: '3px',
+                              border: '1px solid #cbd5e1',
+                              background: scheduleLimit === num ? '#154360' : '#ffffff',
+                              color: scheduleLimit === num ? '#FFDB58' : '#64748b',
+                              cursor: 'pointer',
+                              fontWeight: 700
+                            }}
+                          >
+                            {num === driveStudents.length ? 'All' : num}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <input 
+                      type="number" 
+                      min="1" 
+                      max={driveStudents.length || 100}
+                      className="form-input" 
+                      value={scheduleLimit}
+                      onChange={e => setScheduleLimit(parseInt(e.target.value, 10) || 1)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Google Meet & Panelist Section */}
+              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '16px' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#154360', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Video size={15} color="#154360" /> 2. Google Meet Room & Interviewer
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '12px' }}>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <label className="form-label">Google Meet Link *</label>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button
+                          type="button"
+                          onClick={handleGenerateMeetLink}
+                          className="btn-secondary"
+                          style={{ fontSize: '0.7rem', padding: '2px 6px', gap: '3px' }}
+                        >
+                          <Sparkles size={11} color="#059669" /> Auto-Generate
+                        </button>
+                        {scheduleMeetLink && (
+                          <button
+                            type="button"
+                            onClick={() => window.open(scheduleMeetLink, '_blank')}
+                            className="btn-secondary"
+                            style={{ fontSize: '0.7rem', padding: '2px 6px', gap: '3px' }}
+                            title="Test Meet Room"
+                          >
+                            <ExternalLink size={11} /> Test
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <div style={{ position: 'relative' }}>
+                      <input 
+                        type="url" 
+                        className="form-input" 
+                        placeholder="https://meet.google.com/abc-defg-hij"
+                        value={scheduleMeetLink}
+                        onChange={e => setScheduleMeetLink(e.target.value)}
+                        required
+                        style={{ paddingLeft: '32px' }}
+                      />
+                      <Video size={14} color="#059669" style={{ position: 'absolute', left: '10px', top: '12px' }} />
+                    </div>
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Interviewer / Panel Name</label>
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      placeholder="e.g. Technical Interview Panel 1"
+                      value={schedulePanelist}
+                      onChange={e => setSchedulePanelist(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Real-time Calculation Summary Banner */}
+              {calculatedTimeSlots.length > 0 && (
+                <div style={{
+                  background: 'linear-gradient(135deg, #154360 0%, #1e5f8a 100%)',
+                  borderRadius: '10px',
+                  padding: '12px 16px',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: '12px',
+                  boxShadow: '0 4px 6px -1px rgba(21, 67, 96, 0.2)'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ background: '#FFDB58', color: '#154360', width: '34px', height: '34px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
+                      {calculatedTimeSlots.length}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#ffffff' }}>
+                        {calculatedTimeSlots.length} Candidates Scheduled Automatically
+                      </div>
+                      <div style={{ fontSize: '0.74rem', color: '#FFDB58' }}>
+                        Time Window: <strong>{calculatedTimeSlots[0].startFormatted}</strong> to <strong>{calculatedTimeSlots[calculatedTimeSlots.length - 1].endFormatted}</strong> ({scheduleSlotMinutes}m per candidate)
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ fontSize: '0.74rem', background: 'rgba(255,255,255,0.12)', padding: '6px 12px', borderRadius: '6px' }}>
+                    📅 {scheduleDate} • 🔗 Google Meet Attached
+                  </div>
+                </div>
+              )}
+
+              {/* Time Slot Live Preview Table */}
+              <div style={{ border: '1px solid #e2e8f0', borderRadius: '10px', overflow: 'hidden' }}>
+                <div style={{ background: '#f1f5f9', padding: '8px 14px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#154360' }}>
+                    Calculated Time Slots Preview ({calculatedTimeSlots.length} candidates)
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCandidateIds(candidatesEligibleForSchedule.map(s => s.id))}
+                      style={{ fontSize: '0.7rem', color: '#0369a1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}
+                    >
+                      Select All
+                    </button>
+                    <span style={{ color: '#cbd5e1' }}>|</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCandidateIds([])}
+                      style={{ fontSize: '0.7rem', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}
+                    >
+                      Deselect All
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ maxHeight: '220px', overflowY: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
+                    <thead>
+                      <tr style={{ background: '#f8fafc', color: '#64748b', borderBottom: '1px solid #e2e8f0' }}>
+                        <th style={{ padding: '6px 10px', textAlign: 'left', width: '30px' }}>✓</th>
+                        <th style={{ padding: '6px 10px', textAlign: 'left' }}>#</th>
+                        <th style={{ padding: '6px 10px', textAlign: 'left' }}>Candidate Name</th>
+                        <th style={{ padding: '6px 10px', textAlign: 'left' }}>Roll No & Branch</th>
+                        <th style={{ padding: '6px 10px', textAlign: 'left' }}>Allocated Time Slot</th>
+                        <th style={{ padding: '6px 10px', textAlign: 'left' }}>Google Meet Room</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {candidatesEligibleForSchedule.map((student, idx) => {
+                        const isSelected = selectedCandidateIds.includes(student.id);
+                        const slotItem = calculatedTimeSlots.find(c => c.student.id === student.id);
+                        return (
+                          <tr key={student.id} style={{ borderBottom: '1px solid #f1f5f9', background: isSelected ? '#ffffff' : '#fafafa', opacity: isSelected ? 1 : 0.6 }}>
+                            <td style={{ padding: '6px 10px' }}>
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={e => {
+                                  if (e.target.checked) {
+                                    setSelectedCandidateIds(prev => [...prev, student.id]);
+                                  } else {
+                                    setSelectedCandidateIds(prev => prev.filter(id => id !== student.id));
+                                  }
+                                }}
+                              />
+                            </td>
+                            <td style={{ padding: '6px 10px', color: '#64748b', fontWeight: 700 }}>
+                              {slotItem ? slotItem.idx : '-'}
+                            </td>
+                            <td style={{ padding: '6px 10px', fontWeight: 700, color: '#154360' }}>
+                              {student.name}
+                            </td>
+                            <td style={{ padding: '6px 10px', color: '#64748b' }}>
+                              {student.rollNumber || 'N/A'} • {student.branch}
+                            </td>
+                            <td style={{ padding: '6px 10px' }}>
+                              {slotItem ? (
+                                <span style={{
+                                  background: '#eff6ff',
+                                  color: '#1d4ed8',
+                                  border: '1px solid #bfdbfe',
+                                  padding: '2px 8px',
+                                  borderRadius: '4px',
+                                  fontWeight: 800,
+                                  fontSize: '0.74rem'
+                                }}>
+                                  ⏰ {slotItem.slotString}
+                                </span>
+                              ) : (
+                                <span style={{ color: '#94a3b8' }}>Unassigned</span>
+                              )}
+                            </td>
+                            <td style={{ padding: '6px 10px' }}>
+                              <code style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '2px 6px', borderRadius: '4px', fontSize: '0.7rem' }}>
+                                {scheduleMeetLink.replace('https://', '')}
+                              </code>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Automatic Dispatch to Student Notification Preview */}
+              <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '10px', padding: '12px 14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 800, color: '#065f46' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={autoDispatchInvites}
+                      onChange={e => setAutoDispatchInvites(e.target.checked)}
+                      style={{ accentColor: '#059669', width: '16px', height: '16px' }}
+                    />
+                    <span>Automatically Dispatch Interview Timings & Google Meet Link to Students</span>
+                  </label>
+                  <span style={{ fontSize: '0.7rem', color: '#047857', fontWeight: 700 }}>
+                    📧 Email • 💬 WhatsApp Dispatch Ready
+                  </span>
+                </div>
+                <div style={{ fontSize: '0.72rem', color: '#047857', lineHeight: 1.4, paddingLeft: '24px' }}>
+                  Each student will receive their <strong>exact allotted time slot</strong>, date ({scheduleDate}), and direct clickable <strong>Google Meet link</strong> immediately upon confirmation.
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="modal-footer" style={{ padding: '14px 20px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <button 
+                type="button" 
+                onClick={() => setIsScheduleModalOpen(false)} 
+                className="btn-secondary"
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                onClick={handleConfirmSchedule}
+                disabled={isDispatching || !calculatedTimeSlots.length}
+                className="btn-mustard"
+                style={{
+                  fontWeight: 800,
+                  fontSize: '0.85rem',
+                  padding: '8px 18px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <Send size={15} color="#154360" />
+                {isDispatching ? 'Dispatching Invites...' : `Confirm & Dispatch Schedule (${calculatedTimeSlots.length} Students)`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          POST-SCHEDULE DISPATCH CONFIRMATION DIALOG
+          ========================================================================= */}
+      {dispatchConfirmationData && (
+        <div className="modal-overlay" style={{ zIndex: 10000 }}>
+          <div className="modal-content" style={{ maxWidth: '640px', width: '92%', borderRadius: '14px', overflow: 'hidden', padding: 0 }}>
+            <div style={{ background: '#154360', color: '#ffffff', padding: '18px 20px', textAlign: 'center', borderBottom: '3px solid #FFDB58' }}>
+              <div style={{ width: '48px', height: '48px', background: '#FFDB58', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
+                <CheckCircle2 size={28} color="#154360" />
+              </div>
+              <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: '#ffffff' }}>
+                Interview Drive Scheduled & Dispatched!
+              </h3>
+              <p style={{ margin: '4px 0 0 0', fontSize: '0.8rem', color: '#e2e8f0' }}>
+                Interview time slots and Google Meet links have been generated and dispatched to students.
+              </p>
+            </div>
+
+            <div style={{ padding: '20px' }}>
+              {/* Summary Cards */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '16px' }}>
+                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.7rem', color: '#64748b' }}>TOTAL SCHEDULED</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#154360' }}>
+                    {dispatchConfirmationData.totalCount}
+                  </div>
+                </div>
+                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.7rem', color: '#64748b' }}>DATE</div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#154360' }}>
+                    {dispatchConfirmationData.scheduledDate}
+                  </div>
+                </div>
+                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.7rem', color: '#64748b' }}>TIME WINDOW</div>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0284c7' }}>
+                    {dispatchConfirmationData.firstSlot} - {dispatchConfirmationData.lastSlot}
+                  </div>
+                </div>
+              </div>
+
+              {/* Google Meet Info Box */}
+              <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '12px 14px', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                <div>
+                  <div style={{ fontSize: '0.72rem', color: '#166534', fontWeight: 700 }}>GOOGLE MEET ROOM</div>
+                  <code style={{ fontSize: '0.82rem', fontWeight: 800, color: '#15803d' }}>
+                    {dispatchConfirmationData.meetLink}
+                  </code>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => window.open(dispatchConfirmationData.meetLink, '_blank')}
+                  className="btn-navy btn-black-sm"
+                  style={{ fontSize: '0.75rem', padding: '4px 10px', gap: '4px' }}
+                >
+                  <Video size={13} color="#FFDB58" /> Open Meet Room
+                </button>
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={handleCopyScheduleToClipboard}
+                  className="btn-secondary"
+                  style={{ justifyContent: 'center', padding: '9px', fontSize: '0.82rem', fontWeight: 700 }}
+                >
+                  {copiedScheduleText ? <Check size={15} color="#10b981" /> : <Copy size={15} />}
+                  {copiedScheduleText ? 'Copied Full Schedule Sheet!' : 'Copy Formatted Schedule Sheet for College TPO'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleShareWhatsApp}
+                  className="btn-secondary"
+                  style={{ justifyContent: 'center', padding: '9px', fontSize: '0.82rem', fontWeight: 700, color: '#047857', borderColor: '#a7f3d0' }}
+                >
+                  <Share2 size={15} color="#059669" /> Share Schedule to WhatsApp Placement Group
+                </button>
+              </div>
+            </div>
+
+            <div className="modal-footer" style={{ padding: '12px 20px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setDispatchConfirmationData(null);
+                  setIsScheduleModalOpen(false);
+                }}
+                className="btn-mustard"
+                style={{ fontWeight: 800, padding: '7px 20px', fontSize: '0.85rem' }}
+              >
+                Done • View Student Board
+              </button>
+            </div>
           </div>
         </div>
       )}

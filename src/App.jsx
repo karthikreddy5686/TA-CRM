@@ -1168,6 +1168,20 @@ export default function App() {
   };
   const handleUpdateStudent = (updatedStudent) => setStudents(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s));
   const handleUpdateCandidateStage = (studentId, nextStage) => setStudents(prev => prev.map(s => s.id === studentId ? { ...s, stage: nextStage } : s));
+  const handleBatchUpdateStudents = (updatedStudentsList) => {
+    if (!Array.isArray(updatedStudentsList) || !updatedStudentsList.length) return;
+    setStudents(prev => {
+      const updateMap = new Map(updatedStudentsList.map(s => [s.id, s]));
+      const next = prev.map(s => updateMap.has(s.id) ? { ...s, ...updateMap.get(s.id) } : s);
+      try { localStorage.setItem('tacrm_students', JSON.stringify(next)); } catch (e) {}
+      fetch('/api/storage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ students: next })
+      }).catch(() => {});
+      return next;
+    });
+  };
   const handleAddFollowUp = (newFup) => setFollowUps(prev => [newFup, ...prev]);
   const handleUpdateFollowUp = (updatedFup) => setFollowUps(prev => prev.map(f => f.id === updatedFup.id ? updatedFup : f));
   
@@ -1610,6 +1624,9 @@ export default function App() {
               onOpenPhoneConnectModal={() => setIsPhoneConnectModalOpen(true)}
               onNavigateToDrives={() => setActiveTab('drives')}
               onOpenNewStudentModal={() => setIsGlobalStudentModalOpen(true)}
+              onBatchUpdateStudents={handleBatchUpdateStudents}
+              addToast={addToast}
+              currentUser={currentUser}
             />
           )}
 
