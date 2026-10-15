@@ -1129,7 +1129,19 @@ export default function App() {
     setTpos(prev => [...newTpos, ...prev]);
     addToast(`Successfully imported ${newTpos.length} college TPO records!`, 'success');
   };
-  const handleUpdateTpo = (updatedTpo) => setTpos(prev => prev.map(t => t.id === updatedTpo.id ? updatedTpo : t));
+  const handleUpdateTpo = (updatedTpo) => {
+    setTpos(prev => {
+      const next = prev.map(t => t.id === updatedTpo.id ? updatedTpo : t);
+      try { localStorage.setItem('tacrm_tpos', JSON.stringify(next)); } catch (e) {}
+      fetch('/api/storage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tpos: next })
+      }).catch(() => {});
+      return next;
+    });
+    addToast(`Updated details for ${updatedTpo.name} (${updatedTpo.collegeName})`, 'success');
+  };
   const handleUpdateTpoStatus = (tpoId, newStatus) => setTpos(prev => prev.map(t => t.id === tpoId ? { ...t, status: newStatus } : t));
   const handleCreateDrive = (newDrive) => setDrives(prev => [newDrive, ...prev]);
   const handleUpdateDrive = (updatedDrive) => setDrives(prev => prev.map(d => d.id === updatedDrive.id ? updatedDrive : d));
@@ -1554,6 +1566,7 @@ export default function App() {
               onStartCall={handleStartCall}
               onAddTpo={handleAddTpo}
               onAddTposBatch={handleAddTposBatch}
+              onUpdateTpo={handleUpdateTpo}
               onDeleteTpo={handleDeleteTpo}
               onUpdateTpoStatus={handleUpdateTpoStatus}
               onScheduleFollowUp={handleScheduleFollowUpFromTpo}

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   Building2, 
   Phone, 
-  Video, 
+  Edit3, 
   Plus, 
   Search, 
   Filter, 
@@ -31,6 +31,7 @@ export default function TPODirectory({
   onStartCall, 
   onAddTpo, 
   onAddTposBatch,
+  onUpdateTpo,
   onDeleteTpo,
   onUpdateTpoStatus,
   onScheduleFollowUp 
@@ -39,6 +40,67 @@ export default function TPODirectory({
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [internFilter, setInternFilter] = useState('ALL');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  // Edit TPO state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingTpo, setEditingTpo] = useState(null);
+  const [editForm, setEditForm] = useState({
+    collegeName: '',
+    city: '',
+    tier: 'Tier 1',
+    name: '',
+    designation: '',
+    phone: '',
+    email: '',
+    status: 'NEW_LEAD',
+    assignedInternId: '',
+    notes: ''
+  });
+
+  const handleOpenEditTpo = (tpo) => {
+    setEditingTpo(tpo);
+    setEditForm({
+      collegeName: tpo.collegeName || '',
+      city: tpo.city || '',
+      tier: tpo.tier || 'Tier 1',
+      name: tpo.name || '',
+      designation: tpo.designation || 'Training & Placement Officer',
+      phone: tpo.phone || '',
+      email: tpo.email || '',
+      status: tpo.status || 'NEW_LEAD',
+      assignedInternId: tpo.assignedInternId || ((users || []).find(u => u.role !== 'ADMIN')?.id || ''),
+      notes: tpo.notes || ''
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEditTpo = (e) => {
+    e.preventDefault();
+    if (!editingTpo) return;
+
+    const assignedStaff = staffMembers.find(u => u.id === editForm.assignedInternId) || (users || []).find(u => u.id === editForm.assignedInternId);
+
+    const updated = {
+      ...editingTpo,
+      collegeName: editForm.collegeName.trim(),
+      city: editForm.city.trim(),
+      tier: editForm.tier,
+      name: editForm.name.trim(),
+      designation: editForm.designation.trim(),
+      phone: editForm.phone.trim(),
+      email: editForm.email.trim(),
+      status: editForm.status,
+      assignedInternId: editForm.assignedInternId,
+      assignedInternName: assignedStaff ? assignedStaff.name : (editingTpo.assignedInternName || 'Staff Recruiter'),
+      notes: editForm.notes
+    };
+
+    if (onUpdateTpo) {
+      onUpdateTpo(updated);
+    }
+    setIsEditModalOpen(false);
+    setEditingTpo(null);
+  };
 
   // Link Google Sheets state
   const [isLinkSheetsModalOpen, setIsLinkSheetsModalOpen] = useState(false);
@@ -354,7 +416,7 @@ export default function TPODirectory({
             College TPOs
           </h1>
           <p style={{ color: '#52525b', fontSize: '0.85rem' }}>
-            Placement officer contacts and outreach. Click to call or video meet.
+            Placement officer contacts and outreach pipeline. Click call to connect or edit contact details.
           </p>
         </div>
 
@@ -542,27 +604,22 @@ export default function TPODirectory({
                             type: 'AUDIO',
                             tpoId: tpo.id
                           })}
-                          className="btn-mustard btn-black-sm"
-                          style={{ padding: '3px 8px', fontSize: 'var(--font-xs)', gap: '4px' }}
-                          title="Call TPO from HR Phone"
+                          className="btn-mustard"
+                          style={{ width: '30px', height: '30px', padding: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '6px' }}
+                          title="Call TPO"
+                          aria-label="Call TPO"
                         >
-                          <Phone size={13} color="#154360" /> Call
+                          <Phone size={14} color="#154360" />
                         </button>
 
                         <button 
-                          onClick={() => onStartCall({
-                            recipientType: 'TPO',
-                            recipientName: `${tpo.name} (${tpo.collegeName})`,
-                            recipientDetail: `${tpo.designation} • ${tpo.phone}`,
-                            recipientPhone: tpo.phone,
-                            type: 'VIDEO',
-                            tpoId: tpo.id
-                          })}
-                          className="btn-navy btn-black-sm"
-                          style={{ padding: '3px 8px', fontSize: 'var(--font-xs)', gap: '4px' }}
-                          title="Launch Video Conference on Laptop"
+                          onClick={() => handleOpenEditTpo(tpo)}
+                          className="btn-icon"
+                          style={{ width: '30px', height: '30px', color: '#154360' }}
+                          title="Edit TPO details"
+                          aria-label="Edit TPO details"
                         >
-                          <Video size={13} color="#FFDB58" /> Video
+                          <Edit3 size={14} />
                         </button>
 
                         <button 
@@ -570,6 +627,7 @@ export default function TPODirectory({
                           className="btn-icon"
                           style={{ width: '30px', height: '30px' }}
                           title="Schedule Follow-Up Date"
+                          aria-label="Schedule Follow-Up Date"
                         >
                           <Calendar size={14} />
                         </button>
@@ -580,6 +638,7 @@ export default function TPODirectory({
                             className="btn-icon"
                             style={{ width: '30px', height: '30px', color: '#ef4444' }}
                             title="Delete TPO contact"
+                            aria-label="Delete TPO contact"
                           >
                             <Trash2 size={14} />
                           </button>
@@ -660,27 +719,22 @@ export default function TPODirectory({
                       type: 'AUDIO',
                       tpoId: tpo.id
                     })}
-                    className="btn-mustard btn-black-sm"
-                    style={{ padding: '4px 10px', fontSize: '0.75rem', gap: '4px' }}
+                    className="btn-mustard"
+                    style={{ width: '28px', height: '28px', padding: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '6px' }}
                     title="Call TPO"
+                    aria-label="Call TPO"
                   >
-                    <Phone size={12} color="#154360" /> Call
+                    <Phone size={13} color="#154360" />
                   </button>
 
                   <button 
-                    onClick={() => onStartCall({
-                      recipientType: 'TPO',
-                      recipientName: `${tpo.name} (${tpo.collegeName})`,
-                      recipientDetail: `${tpo.designation} • ${tpo.phone}`,
-                      recipientPhone: tpo.phone,
-                      type: 'VIDEO',
-                      tpoId: tpo.id
-                    })}
-                    className="btn-navy btn-black-sm"
-                    style={{ padding: '4px 8px', fontSize: '0.75rem', gap: '4px' }}
-                    title="Video Meeting"
+                    onClick={() => handleOpenEditTpo(tpo)}
+                    className="btn-icon"
+                    style={{ width: '28px', height: '28px', color: '#154360' }}
+                    title="Edit TPO details"
+                    aria-label="Edit TPO details"
                   >
-                    <Video size={12} color="#FFDB58" /> Video
+                    <Edit3 size={13} />
                   </button>
 
                   <button 
@@ -688,8 +742,9 @@ export default function TPODirectory({
                     className="btn-icon"
                     style={{ width: '28px', height: '28px' }}
                     title="Follow-Up"
+                    aria-label="Schedule Follow-Up"
                   >
-                    <Calendar size={12} />
+                    <Calendar size={13} />
                   </button>
 
                   {onDeleteTpo && (
@@ -698,8 +753,9 @@ export default function TPODirectory({
                       className="btn-icon"
                       style={{ width: '28px', height: '28px', color: '#ef4444' }}
                       title="Delete TPO"
+                      aria-label="Delete TPO"
                     >
-                      <Trash2 size={12} />
+                      <Trash2 size={13} />
                     </button>
                   )}
                 </div>
@@ -709,7 +765,166 @@ export default function TPODirectory({
         </div>
       </div>
 
-      {/* Add New TPO Modal */}
+      {/* Edit TPO Modal */}
+      {isEditModalOpen && editingTpo && (
+        <div className="modal-overlay" onClick={() => setIsEditModalOpen(false)}>
+          <div className="modal-card" onClick={e => e.stopPropagation()} style={{ maxWidth: '620px' }}>
+            <div className="modal-header">
+              <div>
+                <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Edit3 size={18} color="#154360" /> Edit Placement Officer & College Details
+                </h3>
+                <p className="card-subtitle">Update contact information, status, and campus assignment</p>
+              </div>
+              <button onClick={() => setIsEditModalOpen(false)} className="btn-icon">
+                <X size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditTpo}>
+              <div className="modal-body">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                  <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                    <label className="form-label">College / University Name *</label>
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      placeholder="e.g. National Institute of Technology, Surathkal"
+                      value={editForm.collegeName}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, collegeName: e.target.value }))}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">City & State</label>
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      placeholder="e.g. Mangalore, Karnataka"
+                      value={editForm.city}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, city: e.target.value }))}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">College Tier</label>
+                    <select 
+                      className="form-select"
+                      value={editForm.tier}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, tier: e.target.value }))}
+                    >
+                      <option value="Tier 1">Tier 1 (IIT / NIT / BITS / Top Univ)</option>
+                      <option value="Tier 2">Tier 2 (State Govt / Reputed Pvt)</option>
+                      <option value="Tier 3">Tier 3 (Affiliated Regional)</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">TPO / Placement Head Name *</label>
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      placeholder="e.g. Prof. Anand Deshpande"
+                      value={editForm.name}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Designation</label>
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      value={editForm.designation}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, designation: e.target.value }))}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Direct Phone / WhatsApp *</label>
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      placeholder="+91 98..."
+                      value={editForm.phone}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Official Placement Email *</label>
+                    <input 
+                      type="email" 
+                      className="form-input" 
+                      placeholder="placement@college.ac.in"
+                      value={editForm.email}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Outreach Status</label>
+                    <select 
+                      className="form-select"
+                      value={editForm.status}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, status: e.target.value }))}
+                    >
+                      <option value="NEW_LEAD">New Lead</option>
+                      <option value="CONTACTED">Contacted</option>
+                      <option value="PITCHED">Pitched / Warm</option>
+                      <option value="DRIVE_CONFIRMED">Drive Confirmed</option>
+                      <option value="NOT_INTERESTED">Not Interested / Declined</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Assign to Staff Member</label>
+                    <select 
+                      className="form-select"
+                      value={editForm.assignedInternId}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, assignedInternId: e.target.value }))}
+                    >
+                      {staffMembers.length > 0 ? (
+                        staffMembers.map(i => (
+                          <option key={i.id} value={i.id}>{i.name} ({i.title || (i.role === 'MAIN_HR' ? 'HR Manager' : 'HR Intern')})</option>
+                        ))
+                      ) : (
+                        (users || []).map(u => (
+                          <option key={u.id} value={u.id}>{u.name} ({u.role})</option>
+                        ))
+                      )}
+                    </select>
+                  </div>
+
+                  <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                    <label className="form-label">Notes & Remarks</label>
+                    <textarea 
+                      className="form-textarea"
+                      rows={2}
+                      placeholder="Outreach notes, discussion summary, follow-up context..."
+                      value={editForm.notes}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, notes: e.target.value }))}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button type="button" onClick={() => setIsEditModalOpen(false)} className="btn-secondary">
+                  Cancel
+                </button>
+                <button type="submit" className="btn-navy" style={{ fontWeight: 800 }}>
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       {isAddModalOpen && (
         <div className="modal-overlay">
           <div className="modal-card">

@@ -306,7 +306,7 @@
       "collegeId": "col-1",
       "collegeName": "IIT Bombay",
       "name": "Dr. Rajesh Kulkarni",
-      "designation": "Head of Placement & Corporate Relations",
+      "designation": "Senior Head of Placement",
       "phone": "+91 98201 44521",
       "email": "rajesh.kulkarni@iitb.ac.in",
       "status": "DRIVE_CONFIRMED",
@@ -404,5 +404,5 @@
       "notes": "Verify test environment & send calendar invite for round 2 technical interview."
     }
   ],
-  "updatedAt": "2026-10-15T12:44:51.482Z"
+  "updatedAt": "2026-10-15T13:17:42.383Z"
 }
