@@ -237,6 +237,47 @@ export default function App() {
       .catch(() => {});
   }, []);
 
+  // Dynamic periodic sync to keep multi-device users in sync in real time
+  useEffect(() => {
+    const syncUsersWithServer = () => {
+      fetch('/api/users')
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data && Array.isArray(data.users) && data.users.length > 0) {
+            setUsers(prev => {
+              const uMap = new Map();
+              data.users.forEach(u => {
+                if (u && (u.email || u.id)) {
+                  uMap.set(u.id || u.email.toLowerCase(), u);
+                }
+              });
+              // Merge local users that server might not have yet (e.g. created on mobile offline)
+              let hasNewLocal = false;
+              prev.forEach(u => {
+                const k = u.id || (u.email && u.email.toLowerCase());
+                if (k && !uMap.has(k)) {
+                  uMap.set(k, u);
+                  hasNewLocal = true;
+                  fetch('/api/users/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user: u })
+                  }).catch(() => {});
+                }
+              });
+              const next = Array.from(uMap.values());
+              try { localStorage.setItem('tacrm_users', JSON.stringify(next)); } catch (e) {}
+              return next;
+            });
+          }
+        })
+        .catch(() => {});
+    };
+
+    const interval = setInterval(syncUsersWithServer, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Sanitize helper to purge any phantom or placeholder records from storage
   const sanitizeDrives = (list) => {
     if (!Array.isArray(list)) return [];
@@ -451,6 +492,7 @@ export default function App() {
   // Auth Handlers
   const handleLogin = (user) => {
     setCurrentUser(user);
+    setUsers(prev => prev.some(u => u.id === user.id || (u.email && user.email && u.email.toLowerCase() === user.email.toLowerCase())) ? prev : [user, ...prev]);
     localStorage.setItem('tacrm_auth_user', JSON.stringify(user));
   };
 
@@ -1134,40 +1176,57 @@ export default function App() {
   const handleUpdateCallSession = (updatedCall) => setCallSessions(prev => prev.map(c => c.id === updatedCall.id ? updatedCall : c));
 
   // Admin User Provisioning Handlers
-  const handleAddUser = (newUser) => {
+  const handleAddUser = async (newUser) => {
     setUsers(prev => {
       const next = [newUser, ...prev.filter(u => u.id !== newUser.id)];
       try { localStorage.setItem('tacrm_users', JSON.stringify(next)); } catch (e) {}
       return next;
     });
-    fetch('/api/users/add', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user: newUser }),
-    }).catch(err => console.warn('Server sync error on add user:', err));
+    try {
+      const res = await fetch('/api/users/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user: newUser }),
+      });
+      return res.ok;
+    } catch (err) {
+      console.warn('Server sync error on add user:', err);
+      return false;
+    }
   };
 
-  const handleUpdateUser = (updatedUser) => {
+  const handleUpdateUser = async (updatedUser) => {
     setUsers(prev => {
       const next = prev.map(u => u.id === updatedUser.id ? updatedUser : u);
       try { localStorage.setItem('tacrm_users', JSON.stringify(next)); } catch (e) {}
       return next;
     });
-    fetch('/api/users/add', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user: updatedUser }),
-    }).catch(err => console.warn('Server sync error on update user:', err));
+    try {
+      const res = await fetch('/api/users/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user: updatedUser }),
+      });
+      return res.ok;
+    } catch (err) {
+      console.warn('Server sync error on update user:', err);
+      return false;
+    }
   };
 
-  const handleDeleteUser = (userId) => {
+  const handleDeleteUser = async (userId) => {
     setUsers(prev => {
       const next = prev.filter(u => u.id !== userId);
       try { localStorage.setItem('tacrm_users', JSON.stringify(next)); } catch (e) {}
       return next;
     });
-    fetch(`/api/users/${userId}`, { method: 'DELETE' })
-      .catch(err => console.warn('Server sync error on delete user:', err));
+    try {
+      const res = await fetch(`/api/users/${userId}`, { method: 'DELETE' });
+      return res.ok;
+    } catch (err) {
+      console.warn('Server sync error on delete user:', err);
+      return false;
+    }
   };
   
   const handleToggleCompleteFollowUp = (fupId) => {

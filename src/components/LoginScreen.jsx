@@ -88,9 +88,24 @@ export default function LoginScreen({ onLogin, users = [] }) {
       return;
     }
 
-    // 3. Robust Client-Side Authentication (For Vercel, GitHub Pages, mobile, or offline)
+    // 3. Robust Dynamic Credential Fallback (Fetches latest server users + merges with local accounts)
     let allAccounts = Array.isArray(users) && users.length > 0 ? [...users] : [];
     
+    // Attempt dynamic fetch from /api/users to catch accounts created on mobile seconds ago
+    try {
+      const uRes = await fetch('/api/users');
+      if (uRes.ok) {
+        const uData = await uRes.json();
+        if (Array.isArray(uData.users)) {
+          uData.users.forEach(pu => {
+            if (pu && !allAccounts.some(u => u.id === pu.id || (u.email && pu.email && u.email.toLowerCase() === pu.email.toLowerCase()))) {
+              allAccounts.push(pu);
+            }
+          });
+        }
+      }
+    } catch {}
+
     // Merge with any cached accounts in local storage
     try {
       const saved = localStorage.getItem('tacrm_users');
@@ -107,10 +122,12 @@ export default function LoginScreen({ onLogin, users = [] }) {
     } catch (err) {}
 
     // Match provisioned staff by email, username prefix, full name, name without spaces, or ID
+    const inputPrefix = normalizedInput.includes('@') ? normalizedInput.split('@')[0] : normalizedInput;
     const matched = allAccounts.find(acc => {
       if (!acc) return false;
       const accEmail = (acc.email || '').trim().toLowerCase();
       const accPrefix = accEmail.includes('@') ? accEmail.split('@')[0] : accEmail;
+      const accUsername = (acc.username || '').trim().toLowerCase();
       const accName = (acc.name || '').trim().toLowerCase();
       const accNameNoSpaces = accName.replace(/\s+/g, '');
       const inputNoSpaces = normalizedInput.replace(/\s+/g, '');
@@ -119,11 +136,19 @@ export default function LoginScreen({ onLogin, users = [] }) {
       const usernameMatches = 
         accEmail === normalizedInput ||
         accPrefix === normalizedInput ||
+        accEmail === inputPrefix ||
+        accPrefix === inputPrefix ||
+        (accUsername && (accUsername === normalizedInput || accUsername === inputPrefix)) ||
         accName === normalizedInput ||
         accNameNoSpaces === inputNoSpaces ||
-        acc.id === normalizedInput;
+        (acc.id && acc.id.toLowerCase() === normalizedInput);
 
-      return usernameMatches && accPassword === cleanPassword;
+      const passwordMatches = 
+        accPassword === cleanPassword ||
+        accPassword.toLowerCase() === cleanPassword.toLowerCase() ||
+        accPassword.replace(/\s+/g, '') === cleanPassword.replace(/\s+/g, '');
+
+      return usernameMatches && passwordMatches;
     });
 
     if (matched) {

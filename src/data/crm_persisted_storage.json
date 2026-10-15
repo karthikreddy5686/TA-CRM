@@ -166,7 +166,7 @@
       "email": "sneha.patil@iitb.ac.in",
       "phone": "+91 98550 11225",
       "branch": "Engineering Physics",
-      "cgpa": 8.40,
+      "cgpa": 8.4,
       "stage": "APPLIED",
       "internId": "intern-kavya",
       "internName": "Kavya Nair",
@@ -183,7 +183,7 @@
       "email": "f20220110@pilani.bits-pilani.ac.in",
       "phone": "+91 97110 22336",
       "branch": "Computer Science",
-      "cgpa": 9.10,
+      "cgpa": 9.1,
       "stage": "OFFERED",
       "internId": "intern-kavya",
       "internName": "Kavya Nair",
@@ -217,7 +217,7 @@
       "email": "f20220312@pilani.bits-pilani.ac.in",
       "phone": "+91 97330 44558",
       "branch": "Computer Science",
-      "cgpa": 8.80,
+      "cgpa": 8.8,
       "stage": "ONLINE_ASSESSMENT",
       "internId": "intern-kavya",
       "internName": "Kavya Nair",
@@ -362,5 +362,5 @@
       "notes": "Verify test environment & send calendar invite for round 2 technical interview."
     }
   ],
-  "updatedAt": "2026-10-15T07:45:00.000Z"
+  "updatedAt": "2026-10-15T10:04:55.488Z"
 }

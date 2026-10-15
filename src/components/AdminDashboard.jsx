@@ -84,7 +84,12 @@ export default function AdminDashboard({
     dailyTargetLeads: 20
   });
 
-  const [networkUrl, setNetworkUrl] = useState('http://192.168.0.3:5174/');
+  const [networkUrl, setNetworkUrl] = useState(() => {
+    if (typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      return `${window.location.protocol}//${window.location.host}/`;
+    }
+    return 'http://192.168.29.254:5174/';
+  });
   const [showMobileQr, setShowMobileQr] = useState(false);
   const [isSyncingServer, setIsSyncingServer] = useState(false);
 
@@ -225,28 +230,42 @@ export default function AdminDashboard({
     setIsUserModalOpen(true);
   };
 
-  const handleSaveUser = (e) => {
+  const handleSaveUser = async (e) => {
     e.preventDefault();
-    if (!userFormData.email.trim() || !userFormData.password.trim() || !userFormData.name.trim()) return;
+    const cleanName = userFormData.name.trim();
+    const rawEmail = userFormData.email.trim();
+    const cleanPass = userFormData.password.trim();
+    if (!rawEmail || !cleanPass || !cleanName) return;
+
+    const cleanEmail = rawEmail.toLowerCase();
+    const cleanUsername = cleanEmail.includes('@') ? cleanEmail.split('@')[0] : cleanEmail;
 
     if (editingUser) {
-      onUpdateUser({
+      const updated = {
         ...editingUser,
-        name: userFormData.name.trim(),
-        email: userFormData.email.trim(),
-        password: userFormData.password.trim(),
+        name: cleanName,
+        email: cleanEmail,
+        username: cleanUsername,
+        password: cleanPass,
         role: userFormData.role,
         title: userFormData.title.trim() || (userFormData.role === 'MAIN_HR' ? 'HR Manager' : 'Recruitment Intern'),
         dailyTargetHours: parseFloat(userFormData.dailyTargetHours) || 3.5,
         dailyTargetLeads: parseInt(userFormData.dailyTargetLeads) || 20
-      });
-      showNotification(`Updated account credentials for ${userFormData.name}!`);
+      };
+      setIsUserModalOpen(false);
+      const ok = await onUpdateUser?.(updated);
+      if (ok !== false) {
+        showNotification(`Updated credentials for ${cleanName}! Synced across devices.`);
+      } else {
+        showNotification(`Saved locally, but PC server unreachable. Ensure phone is on same Wi-Fi.`, 'error');
+      }
     } else {
       const newUser = {
         id: `${userFormData.role === 'MAIN_HR' ? 'hr' : 'intern'}-${Date.now()}`,
-        name: userFormData.name.trim(),
-        email: userFormData.email.trim(),
-        password: userFormData.password.trim(),
+        name: cleanName,
+        email: cleanEmail,
+        username: cleanUsername,
+        password: cleanPass,
         role: userFormData.role,
         title: userFormData.title.trim() || (userFormData.role === 'MAIN_HR' ? 'HR Manager' : 'Recruitment Intern'),
         avatar: userFormData.role === 'MAIN_HR' ? 'HR' : 'IN',
@@ -254,10 +273,14 @@ export default function AdminDashboard({
         dailyTargetHours: parseFloat(userFormData.dailyTargetHours) || 3.5,
         dailyTargetLeads: parseInt(userFormData.dailyTargetLeads) || 20
       };
-      onAddUser(newUser);
-      showNotification(`Successfully provisioned new account for ${newUser.name}! Login Email: ${newUser.email}`);
+      setIsUserModalOpen(false);
+      const ok = await onAddUser?.(newUser);
+      if (ok !== false) {
+        showNotification(`Successfully provisioned account for ${cleanName}! Ready to log in.`);
+      } else {
+        showNotification(`Saved locally, but PC server unreachable. Ensure phone is on same Wi-Fi.`, 'error');
+      }
     }
-    setIsUserModalOpen(false);
   };
 
   // ---------------- Campus Drives Handlers ----------------
@@ -1691,9 +1714,12 @@ export default function AdminDashboard({
                     <input 
                       type="text" 
                       className="form-input" 
-                      placeholder="e.g. priya@company.com"
+                      placeholder="e.g. priya or priya@company.com"
                       value={userFormData.email}
                       onChange={e => setUserFormData(prev => ({ ...prev, email: e.target.value }))}
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck="false"
                       required
                     />
                   </div>
@@ -1714,6 +1740,9 @@ export default function AdminDashboard({
                       placeholder="Password"
                       value={userFormData.password}
                       onChange={e => setUserFormData(prev => ({ ...prev, password: e.target.value }))}
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck="false"
                       required
                     />
                   </div>

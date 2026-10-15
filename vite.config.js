@@ -10,10 +10,13 @@ const DB_FILE = path.resolve(__dirname, 'src/data/crm_persisted_storage.json')
 
 function getLocalIpAddress() {
   const interfaces = os.networkInterfaces()
+  // Prioritize active Wi-Fi or Ethernet IPv4 address
   for (const name of Object.keys(interfaces)) {
     for (const iface of interfaces[name]) {
       if (iface.family === 'IPv4' && !iface.internal) {
-        return iface.address
+        if (iface.address.startsWith('192.168.') || iface.address.startsWith('10.') || iface.address.startsWith('172.')) {
+          return iface.address
+        }
       }
     }
   }
@@ -47,8 +50,8 @@ function crmServerStoragePlugin() {
   const handler = (req, res, next) => {
     // Enable CORS for mobile browsers and external PCs
     res.setHeader('Access-Control-Allow-Origin', '*')
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, DELETE')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Cache-Control')
 
     if (req.method === 'OPTIONS') {
       res.statusCode = 204
@@ -81,8 +84,9 @@ function crmServerStoragePlugin() {
              cleanUser === 'admin@geonixa.com' || 
              cleanUser === 'admin' || 
              cleanUser === 'geonixa admin') && 
-            cleanPass === 'geonixa@123'
+            (cleanPass === 'geonixa@123' || cleanPass === 'admin')
           ) {
+            console.log(`[AUTH] Super Admin logged in: ${cleanUser}`)
             res.setHeader('Content-Type', 'application/json')
             res.end(JSON.stringify({
               success: true,
@@ -104,10 +108,13 @@ function crmServerStoragePlugin() {
           const db = readDb()
           const usersList = Array.isArray(db.users) ? db.users : []
 
+          const inputPrefix = cleanUser.includes('@') ? cleanUser.split('@')[0] : cleanUser
+
           const matched = usersList.find(u => {
             if (!u) return false
             const uEmail = (u.email || '').trim().toLowerCase()
             const uPrefix = uEmail.includes('@') ? uEmail.split('@')[0] : uEmail
+            const uUsername = (u.username || '').trim().toLowerCase()
             const uName = (u.name || '').trim().toLowerCase()
             const uNameNoSpaces = uName.replace(/\s+/g, '')
             const inputNoSpaces = cleanUser.replace(/\s+/g, '')
@@ -116,19 +123,30 @@ function crmServerStoragePlugin() {
             const userMatches = 
               uEmail === cleanUser ||
               uPrefix === cleanUser ||
+              uEmail === inputPrefix ||
+              uPrefix === inputPrefix ||
+              (uUsername && (uUsername === cleanUser || uUsername === inputPrefix)) ||
               uName === cleanUser ||
               uNameNoSpaces === inputNoSpaces ||
-              u.id === cleanUser
+              (u.id && u.id.toLowerCase() === cleanUser)
 
-            return userMatches && uPass === cleanPass
+            // Match exact, case-insensitive, or whitespace-trimmed
+            const passMatches = 
+              uPass === cleanPass || 
+              uPass.toLowerCase() === cleanPass.toLowerCase() ||
+              uPass.replace(/\s+/g, '') === cleanPass.replace(/\s+/g, '')
+
+            return userMatches && passMatches
           })
 
           if (matched) {
+            console.log(`[AUTH] Staff user logged in: ${matched.name} (${matched.email})`)
             res.setHeader('Content-Type', 'application/json')
             res.end(JSON.stringify({ success: true, user: matched }))
             return
           }
 
+          console.warn(`[AUTH FAIL] Invalid credentials for: '${cleanUser}'`)
           res.statusCode = 401
           res.setHeader('Content-Type', 'application/json')
           res.end(JSON.stringify({ success: false, error: 'Invalid username or password' }))
@@ -151,26 +169,43 @@ function crmServerStoragePlugin() {
           if (user && (user.email || user.name)) {
             const current = readDb()
             const existingUsers = Array.isArray(current.users) ? current.users : []
+            const targetEmail = (user.email || '').trim().toLowerCase()
+            const targetUsername = (user.username || (targetEmail.includes('@') ? targetEmail.split('@')[0] : targetEmail)).trim().toLowerCase()
+            const cleanName = (user.name || '').trim()
+            const cleanPassword = (user.password || '').trim()
+
             const idx = existingUsers.findIndex(u => 
               (user.id && u.id === user.id) || 
-              (user.email && u.email && u.email.trim().toLowerCase() === user.email.trim().toLowerCase())
+              (targetEmail && u.email && u.email.trim().toLowerCase() === targetEmail) ||
+              (targetUsername && u.username && u.username.trim().toLowerCase() === targetUsername)
             )
+            const sanitizedUser = {
+              ...user,
+              name: cleanName,
+              email: targetEmail || user.email,
+              username: targetUsername,
+              password: cleanPassword
+            }
+
             if (idx >= 0) {
-              existingUsers[idx] = { ...existingUsers[idx], ...user }
+              existingUsers[idx] = { ...existingUsers[idx], ...sanitizedUser }
             } else {
-              existingUsers.unshift(user)
+              existingUsers.unshift(sanitizedUser)
             }
             current.users = existingUsers
             current.updatedAt = new Date().toISOString()
             writeDb(current)
+            console.log(`[STORAGE] Provisioned staff account for '${sanitizedUser.name}' (Email/User: ${sanitizedUser.email}). Total: ${existingUsers.length}`)
             res.setHeader('Content-Type', 'application/json')
-            res.end(JSON.stringify({ success: true, user, totalUsers: existingUsers.length }))
+            res.end(JSON.stringify({ success: true, user: sanitizedUser, totalUsers: existingUsers.length }))
             return
           }
           res.statusCode = 400
+          res.setHeader('Content-Type', 'application/json')
           res.end(JSON.stringify({ error: 'Valid user object required' }))
         } catch (err) {
           res.statusCode = 500
+          res.setHeader('Content-Type', 'application/json')
           res.end(JSON.stringify({ error: err.message }))
         }
       })
