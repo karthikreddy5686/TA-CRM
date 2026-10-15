@@ -1169,7 +1169,6 @@ export default function App() {
           </div>
           <div className="brand-text">
             <div className="brand-title">TalentConnect</div>
-            <div className="brand-subtitle">Campus Recruitment CRM</div>
           </div>
           <button 
             type="button"
