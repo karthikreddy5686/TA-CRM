@@ -48,7 +48,6 @@ import DriveManagement from './components/DriveManagement';
 import FollowUpTracker from './components/FollowUpTracker';
 import CallModal from './components/CallModal';
 import CallDispositionModal from './components/CallDispositionModal';
-import GoogleFormBlastCenter from './components/GoogleFormBlastCenter';
 import PublishedDriveBoard from './components/PublishedDriveBoard';
 import HRPhoneConnectModal from './components/HRPhoneConnectModal';
 import InstallAppModal from './components/InstallAppModal';
@@ -80,7 +79,7 @@ export default function App() {
   });
 
   // Navigation State
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'googleFormBlast' | 'liveBoard' | 'drives' | 'tpos' | 'followups' | 'calls'
+  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'liveBoard' | 'drives' | 'tpos' | 'followups' | 'calls'
 
   // Sanitize helper to purge fake generic dummy accounts and establish realistic staff
   const sanitizeUsers = (list) => {
@@ -1058,7 +1057,11 @@ export default function App() {
   const handleUpdateTpoStatus = (tpoId, newStatus) => setTpos(prev => prev.map(t => t.id === tpoId ? { ...t, status: newStatus } : t));
   const handleCreateDrive = (newDrive) => setDrives(prev => [newDrive, ...prev]);
   const handleUpdateDrive = (updatedDrive) => setDrives(prev => prev.map(d => d.id === updatedDrive.id ? updatedDrive : d));
-  const handleAddStudentsBatch = (newStudents) => setStudents(prev => [...newStudents, ...prev]);
+  const handleAddStudentsBatch = (newStudents) => {
+    if (!newStudents || !newStudents.length) return;
+    setStudents(prev => [...newStudents, ...prev]);
+    addToast(`Successfully imported ${newStudents.length} candidate(s) to campus board!`, 'success');
+  };
   const handleUpdateStudent = (updatedStudent) => setStudents(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s));
   const handleUpdateCandidateStage = (studentId, nextStage) => setStudents(prev => prev.map(s => s.id === studentId ? { ...s, stage: nextStage } : s));
   const handleAddFollowUp = (newFup) => setFollowUps(prev => [newFup, ...prev]);
@@ -1113,7 +1116,6 @@ export default function App() {
 
   const NAV_MODULES = [
     { id: 'dashboard', name: 'Dashboard Overview', category: 'Main', icon: <BarChart3 size={15} /> },
-    { id: 'googleFormBlast', name: 'Google Sheets Student Intake', category: 'Main', icon: <FileSpreadsheet size={15} /> },
     { id: 'drives', name: 'Campus Drives', category: 'Main', icon: <Calendar size={15} /> },
     { id: 'liveBoard', name: 'Posted Students', category: 'Main', icon: <Users size={15} /> },
     { id: 'tpos', name: 'College TPOs', category: 'Outreach & Calls', icon: <Building2 size={15} /> },
@@ -1208,17 +1210,6 @@ export default function App() {
             </button>
           )}
 
-          <button 
-            onClick={() => { setActiveTab('googleFormBlast'); setIsMobileSidebarOpen(false); }}
-            className={`nav-item ${activeTab === 'googleFormBlast' ? 'active' : ''}`}
-            title="Google Sheets Intake"
-          >
-            <FileSpreadsheet size={17} />
-            <span className="nav-label">Google Sheets Intake</span>
-            {activeTab === 'googleFormBlast' && (
-              <span style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', background: '#FFDB58' }} />
-            )}
-          </button>
 
           <button 
             onClick={() => { setActiveTab('drives'); setIsMobileSidebarOpen(false); }}
@@ -1415,25 +1406,6 @@ export default function App() {
             )
           )}
 
-          {activeTab === 'googleFormBlast' && (
-            <GoogleFormBlastCenter 
-              formResponses={formResponses}
-              drives={drives}
-              users={users}
-              blastLogs={blastLogs}
-              currentUser={currentUser}
-              onBlastStudents={handleBlastStudents}
-              onImportStudentsFromSheet={(newStudents) => {
-                setFormResponses(prev => [...newStudents, ...prev]);
-              }}
-              onCreateDrive={handleCreateDrive}
-              onDeleteDrive={handleDeleteDrive}
-              onDeleteFormResponse={handleDeleteFormResponse}
-              onBatchDeleteFormResponses={handleBatchDeleteFormResponses}
-              onClearAllFormResponses={handleClearAllFormResponses}
-              onGoToLiveBoard={() => setActiveTab('liveBoard')}
-            />
-          )}
 
           {activeTab === 'tpos' && (
             <TPODirectory 
@@ -1479,7 +1451,7 @@ export default function App() {
               formResponses={formResponses}
               onStartCall={handleStartCall}
               onDeleteStudent={handleDeleteStudent}
-              onNavigateToBlast={() => setActiveTab('googleFormBlast')}
+              onAddStudentsBatch={handleAddStudentsBatch}
               onUpdateCandidateStage={handleUpdateCandidateStage}
               onLoadDemoData={handleLoadDemoData}
               hrPhoneNumber={hrPhoneNumber}
@@ -1929,14 +1901,7 @@ export default function App() {
           <BarChart3 size={18} />
           <span>Dashboard</span>
         </button>
-        <button 
-          type="button"
-          onClick={() => { setActiveTab('googleFormBlast'); setIsMobileSidebarOpen(false); }} 
-          className={`mobile-nav-btn ${activeTab === 'googleFormBlast' ? 'active' : ''}`}
-        >
-          <FileSpreadsheet size={18} />
-          <span>Intake</span>
-        </button>
+
         <button 
           type="button"
           onClick={() => { setActiveTab('drives'); setIsMobileSidebarOpen(false); }} 
@@ -2045,7 +2010,7 @@ export default function App() {
         onOpenNewTpo={() => setIsGlobalTpoModalOpen(true)}
         onOpenQuickCall={() => setIsGlobalQuickCallModalOpen(true)}
         onOpenFollowUp={() => setIsGlobalFollowUpModalOpen(true)}
-        onGoToIntake={() => setActiveTab('googleFormBlast')}
+        onGoToIntake={() => setActiveTab('liveBoard')}
         onLoadDemoData={handleLoadDemoData}
         onResetData={handleResetCleanData}
         hasData={drives.length > 0 || students.length > 0 || tpos.length > 0}

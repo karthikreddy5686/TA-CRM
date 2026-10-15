@@ -69,83 +69,75 @@ export default function MainHRDashboard({
 
   return (
     <div>
-      {/* Unified Simple Header Card */}
+      {/* Top Action Bar */}
       <div className="dashboard-banner" style={{ 
         background: '#ffffff', 
         border: '1px solid #e2e8f0', 
         borderRadius: 'var(--radius-md)', 
-        padding: '12px 14px',
+        padding: '10px 14px',
         marginBottom: '12px',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'space-between',
+        justifyContent: 'flex-start',
         flexWrap: 'wrap',
-        gap: '10px',
+        gap: '8px',
         boxShadow: 'var(--shadow-card)',
         width: '100%',
         boxSizing: 'border-box'
       }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px' }}>
-            <span style={{ 
-              background: drives.length > 0 ? '#ebf5fb' : '#f1f5f9', 
-              color: drives.length > 0 ? '#154360' : '#52525b', 
-              border: drives.length > 0 ? '1px solid #aed6f1' : '1px solid #e2e8f0',
-              padding: '2px 7px', 
-              borderRadius: '20px', 
-              fontSize: 'var(--font-10)', 
-              lineHeight: 'var(--lh-10)',
-              fontWeight: 800,
-              letterSpacing: '0.04em'
-            }}>
-              {drives.length > 0 ? '● WORKSPACE ACTIVE' : '○ EMPTY STATE (0)'}
-            </span>
-            <span style={{ fontSize: 'var(--font-xs)', lineHeight: 'var(--lh-xs)', color: '#71717a' }}>
-              {drives.length} Drives • {students.length} Candidates • {tpos.length} TPOs
-            </span>
-          </div>
-          <h1 style={{ fontSize: 'var(--font-2xl)', lineHeight: 'var(--lh-2xl)', fontWeight: 800, color: '#154360', letterSpacing: '-0.02em', margin: 0 }}>
-            HR Dashboard
-          </h1>
-          <p style={{ color: '#52525b', fontSize: 'var(--font-xs)', lineHeight: 'var(--lh-xs)', marginTop: '2px' }}>
-            Track intern calling hours, college outreach, and campus recruitment drives.
-          </p>
-        </div>
-
-        {/* Dashboard Direct Action Buttons (All 100% Functional) */}
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-          {onOpenNewDriveModal && (
-            <button 
-              type="button" 
-              onClick={onOpenNewDriveModal} 
-              className="btn-mustard btn-black-sm"
-              style={{ fontWeight: 800 }}
-              title="Schedule a new campus recruitment drive"
-            >
-              <Plus size={14} color="#154360" /> New Drive
-            </button>
-          )}
-
-          {onOpenNewStudentModal && (
-            <button 
-              type="button" 
-              onClick={onOpenNewStudentModal} 
-              className="btn-secondary btn-black-sm"
-              title="Add a candidate directly to the student list"
-            >
-              <UserPlus size={14} /> Add Student
-            </button>
-          )}
-
+        {onOpenNewDriveModal && (
           <button 
             type="button" 
-            onClick={() => onSelectTab('googleFormBlast')} 
-            className="btn-secondary btn-black-sm"
-            title="Import student rows from Google Sheets or WhatsApp"
+            onClick={onOpenNewDriveModal} 
+            className="btn-mustard btn-black-sm"
+            style={{ fontWeight: 800 }}
+            title="Schedule a new campus recruitment drive"
           >
-            <FileSpreadsheet size={14} /> Import Sheets
+            <Plus size={14} color="#154360" /> New Drive
           </button>
-        </div>
+        )}
+
+        <button 
+          type="button" 
+          onClick={() => onSelectTab('drives')} 
+          className="btn-secondary btn-black-sm"
+          style={{ fontWeight: 700, fontSize: 'var(--font-xs)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+          title="View Campus Drives"
+        >
+          <Calendar size={13} color="#154360" /> Drives ({drives.length})
+        </button>
+
+        <button 
+          type="button" 
+          onClick={() => onSelectTab('liveBoard')} 
+          className="btn-secondary btn-black-sm"
+          style={{ fontWeight: 700, fontSize: 'var(--font-xs)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+          title="View Campus Candidates"
+        >
+          <Users size={13} color="#154360" /> Candidates ({students.length})
+        </button>
+
+        <button 
+          type="button" 
+          onClick={() => onSelectTab('tpos')} 
+          className="btn-secondary btn-black-sm"
+          style={{ fontWeight: 700, fontSize: 'var(--font-xs)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+          title="View College TPOs"
+        >
+          <Building2 size={13} color="#154360" /> TPOs ({tpos.length})
+        </button>
+
+        {onOpenNewStudentModal && (
+          <button 
+            type="button" 
+            onClick={onOpenNewStudentModal} 
+            className="btn-secondary btn-black-sm"
+            style={{ fontWeight: 600, fontSize: 'var(--font-xs)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            title="Add a candidate directly to the student list"
+          >
+            <UserPlus size={13} /> Add Student
+          </button>
+        )}
       </div>
 
       {/* KPI Cards Grid - Clickable for Instant Module Navigation */}

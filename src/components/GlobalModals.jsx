@@ -943,11 +943,11 @@ export function GlobalActionSheetModal({
     },
     {
       id: 'intake',
-      title: 'Import from Google Sheets',
-      desc: 'Paste candidate rows from Sheets or WhatsApp',
+      title: 'Link Google Sheets',
+      desc: 'Link Google Sheet URL or paste candidate rows',
       icon: <FileSpreadsheet size={18} color="#154360" />,
       onClick: () => { onClose(); onGoToIntake(); },
-      badge: 'Fast Intake',
+      badge: 'Candidates',
     },
     {
       id: 'tpo',
