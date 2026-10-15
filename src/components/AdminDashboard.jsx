@@ -907,6 +907,17 @@ export default function AdminDashboard({
                 </tr>
               </thead>
               <tbody>
+                {hrStaffList.length === 0 && (
+                  <tr>
+                    <td colSpan="6" style={{ padding: '36px 16px', textAlign: 'center', color: '#64748b' }}>
+                      <Users size={32} color="#94a3b8" style={{ margin: '0 auto 8px', display: 'block' }} />
+                      <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#154360' }}>No Staff Accounts Provisioned Yet</div>
+                      <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '4px' }}>
+                        Click "+ Provision New Staff Account" above to create login credentials for your HR staff or interns.
+                      </div>
+                    </td>
+                  </tr>
+                )}
                 {hrStaffList.map(user => {
                   const isPassVisible = showPasswordMap[user.id];
                   const userPassword = user.password || 'admin';

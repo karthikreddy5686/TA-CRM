@@ -11,30 +11,6 @@ export const INITIAL_USERS = [
     avatar: 'AD',
     status: 'online',
   },
-  {
-    id: 'hr-ananya',
-    name: 'Ananya Sharma',
-    role: 'MAIN_HR',
-    title: 'Head of Talent Acquisition',
-    email: 'ananya.sharma@talentconnect.io',
-    password: 'admin',
-    avatar: 'AS',
-    status: 'online',
-    dailyTargetHours: 4.0,
-    dailyTargetLeads: 25,
-  },
-  {
-    id: 'intern-kavya',
-    name: 'Kavya Nair',
-    role: 'HR_INTERN',
-    title: 'Campus Talent Associate',
-    email: 'kavya.nair@talentconnect.io',
-    password: 'intern',
-    avatar: 'KN',
-    status: 'online',
-    dailyTargetHours: 3.5,
-    dailyTargetLeads: 20,
-  },
 ];
 
 // Clean Empty Data Sets (User manual mode)

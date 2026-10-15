@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Lock,
   User,
@@ -15,6 +15,29 @@ export default function LoginScreen({ onLogin, users = [] }) {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Sync latest provisioned users immediately from server on mount
+  useEffect(() => {
+    fetch('/api/users')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data && Array.isArray(data.users) && data.users.length > 0) {
+          try {
+            const local = JSON.parse(localStorage.getItem('tacrm_users') || '[]');
+            const merged = [...data.users];
+            if (Array.isArray(local)) {
+              local.forEach(lu => {
+                if (lu && !merged.some(u => u.id === lu.id || (u.email && lu.email && u.email.toLowerCase() === lu.email.toLowerCase()))) {
+                  merged.push(lu);
+                }
+              });
+            }
+            localStorage.setItem('tacrm_users', JSON.stringify(merged));
+          } catch (e) {}
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

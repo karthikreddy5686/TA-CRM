@@ -1,6 +1,32 @@
 {
   "users": [
     {
+      "id": "intern-kavya",
+      "name": "Kavya Nair",
+      "role": "HR_INTERN",
+      "title": "Campus Talent Associate",
+      "email": "kavya.nair@talentconnect.io",
+      "password": "intern",
+      "avatar": "KN",
+      "status": "online",
+      "dailyTargetHours": 3.5,
+      "dailyTargetLeads": 20,
+      "username": "kavya.nair"
+    },
+    {
+      "id": "hr-ananya",
+      "name": "Ananya Sharma",
+      "role": "MAIN_HR",
+      "title": "Head of Talent Acquisition",
+      "email": "ananya.sharma@talentconnect.io",
+      "password": "admin",
+      "avatar": "AS",
+      "status": "on-call",
+      "dailyTargetHours": 4,
+      "dailyTargetLeads": 25,
+      "username": "ananya.sharma"
+    },
+    {
       "id": "hr-karthik",
       "name": "karthik",
       "role": "MAIN_HR",
@@ -19,30 +45,6 @@
       "password": "geonixa@123",
       "avatar": "AD",
       "status": "online"
-    },
-    {
-      "id": "hr-ananya",
-      "name": "Ananya Sharma",
-      "role": "MAIN_HR",
-      "title": "Head of Talent Acquisition",
-      "email": "ananya.sharma@talentconnect.io",
-      "password": "admin",
-      "avatar": "AS",
-      "status": "on-call",
-      "dailyTargetHours": 4,
-      "dailyTargetLeads": 25
-    },
-    {
-      "id": "intern-kavya",
-      "name": "Kavya Nair",
-      "role": "HR_INTERN",
-      "title": "Campus Talent Associate",
-      "email": "kavya.nair@talentconnect.io",
-      "password": "intern",
-      "avatar": "KN",
-      "status": "online",
-      "dailyTargetHours": 3.5,
-      "dailyTargetLeads": 20
     }
   ],
   "drives": [
@@ -402,5 +404,5 @@
       "notes": "Verify test environment & send calendar invite for round 2 technical interview."
     }
   ],
-  "updatedAt": "2026-10-15T12:01:17.327Z"
+  "updatedAt": "2026-10-15T12:44:51.482Z"
 }

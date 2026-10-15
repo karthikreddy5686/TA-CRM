@@ -94,6 +94,12 @@ export default function App() {
         name === 'main hr' ||
         name === 'hr intern 1' ||
         name === 'hr intern 2' ||
+        name === 'ananya sharma' ||
+        email === 'ananya.sharma@talentconnect.io' ||
+        id === 'hr-ananya' ||
+        name === 'kavya nair' ||
+        email === 'kavya.nair@talentconnect.io' ||
+        id === 'intern-kavya' ||
         name.includes('vikram') ||
         email.includes('vikram') ||
         id.includes('vikram') ||
@@ -109,7 +115,7 @@ export default function App() {
 
     const realUsers = Array.isArray(list) ? list.filter(u => u && !isGenericDummy(u)) : [];
 
-    // Ensure Super Admin exists
+    // Ensure Master Super Admin exists
     const adminIdx = realUsers.findIndex(u => u.role === 'ADMIN');
     if (adminIdx === -1) {
       realUsers.unshift({
@@ -121,40 +127,6 @@ export default function App() {
         password: 'geonixa@123',
         avatar: 'AD',
         status: 'online',
-      });
-    }
-
-    // Ensure realistic HR Manager exists if none provisioned
-    const hasHRManager = realUsers.some(u => u.role === 'MAIN_HR');
-    if (!hasHRManager) {
-      realUsers.push({
-        id: 'hr-ananya',
-        name: 'Ananya Sharma',
-        role: 'MAIN_HR',
-        title: 'Head of Talent Acquisition',
-        email: 'ananya.sharma@talentconnect.io',
-        password: 'admin',
-        avatar: 'AS',
-        status: 'online',
-        dailyTargetHours: 4.0,
-        dailyTargetLeads: 25,
-      });
-    }
-
-    // Ensure realistic HR Recruiter exists
-    const hasIntern = realUsers.some(u => u.role === 'HR_INTERN');
-    if (!hasIntern) {
-      realUsers.push({
-        id: 'intern-kavya',
-        name: 'Kavya Nair',
-        role: 'HR_INTERN',
-        title: 'Campus Talent Associate',
-        email: 'kavya.nair@talentconnect.io',
-        password: 'intern',
-        avatar: 'KN',
-        status: 'online',
-        dailyTargetHours: 3.5,
-        dailyTargetLeads: 20,
       });
     }
 

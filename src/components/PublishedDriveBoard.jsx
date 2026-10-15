@@ -84,7 +84,7 @@ export default function PublishedDriveBoard({
   const [scheduleStartTime, setScheduleStartTime] = useState('10:00');
   const [scheduleSlotMinutes, setScheduleSlotMinutes] = useState(10);
   const [scheduleBufferMinutes, setScheduleBufferMinutes] = useState(0);
-  const [scheduleMeetLink, setScheduleMeetLink] = useState(() => `https://meet.google.com/tac-${Math.random().toString(36).substring(2, 6)}-${Math.random().toString(36).substring(2, 5)}`);
+  const [scheduleMeetLink, setScheduleMeetLink] = useState('');
   const [scheduleLimit, setScheduleLimit] = useState(25);
   const [selectedCandidateIds, setSelectedCandidateIds] = useState([]);
   const [autoDispatchInvites, setAutoDispatchInvites] = useState(true);
@@ -93,29 +93,29 @@ export default function PublishedDriveBoard({
   const [copiedScheduleText, setCopiedScheduleText] = useState(false);
   const [copiedMeetLink, setCopiedMeetLink] = useState(false);
 
-  // List of active HR Employees and Interns for Interviewer / Panel dropdown
+  // List of active real HR Employees and Interns for Interviewer dropdown (purging dummy profiles)
   const hrStaffList = useMemo(() => {
-    if (!Array.isArray(users) || users.length === 0) {
-      return [{ id: 'hr-default', name: 'Talent Acquisition Team', role: 'MAIN_HR', title: 'HR Panel' }];
-    }
-    const filtered = users.filter(u => u && (u.role === 'MAIN_HR' || u.role === 'HR_INTERN' || u.role === 'ADMIN'));
-    return filtered.length > 0 ? filtered : users;
+    if (!Array.isArray(users)) return [];
+    const dummyIds = ['hr-ananya', 'intern-kavya', 'user-main-hr', 'intern-1', 'intern-2'];
+    return users.filter(u => u && u.name && !dummyIds.includes(u.id) && !['ananya sharma', 'kavya nair', 'hr manager', 'main hr manager', 'hr intern 1'].includes(u.name.toLowerCase()));
   }, [users]);
 
   const [schedulePanelist, setSchedulePanelist] = useState(() => {
-    if (currentUser?.name) {
-      const roleLabel = currentUser.role === 'MAIN_HR' ? 'HR Manager' : currentUser.role === 'HR_INTERN' ? 'HR Intern' : 'HR Panel';
+    if (currentUser?.name && currentUser.role !== 'ADMIN') {
+      const roleLabel = currentUser.role === 'MAIN_HR' ? 'HR Manager' : 'HR Intern';
       return `${currentUser.name} (${currentUser.title || roleLabel})`;
     }
-    return 'Combined TA HR Panel';
+    return '';
   });
 
-  // Ensure schedulePanelist has a valid default if users are loaded later
+  // Ensure schedulePanelist has a valid default from real provisioned HR staff
   useEffect(() => {
     if (!schedulePanelist && hrStaffList.length > 0) {
-      const first = hrStaffList[0];
-      const roleLabel = first.role === 'MAIN_HR' ? 'HR Manager' : first.role === 'HR_INTERN' ? 'HR Intern' : 'HR Staff';
-      setSchedulePanelist(`${first.name} (${first.title || roleLabel})`);
+      const preferred = hrStaffList.find(u => u.role !== 'ADMIN') || hrStaffList[0];
+      if (preferred) {
+        const roleLabel = preferred.role === 'MAIN_HR' ? 'HR Manager' : preferred.role === 'HR_INTERN' ? 'HR Intern' : 'Administrator';
+        setSchedulePanelist(`${preferred.name} (${preferred.title || roleLabel})`);
+      }
     }
   }, [hrStaffList, schedulePanelist]);
 
@@ -642,7 +642,8 @@ export default function PublishedDriveBoard({
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '5px',
-                padding: '5px 12px',
+                padding: '0 12px',
+                height: '32px',
                 fontSize: 'var(--font-xs)',
               }}
               title="Add a candidate directly to this drive"
@@ -664,7 +665,8 @@ export default function PublishedDriveBoard({
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '5px',
-                padding: '5px 12px',
+                padding: '0 12px',
+                height: '32px',
                 fontSize: 'var(--font-xs)',
                 background: '#154360',
                 color: '#FFDB58',
@@ -677,7 +679,7 @@ export default function PublishedDriveBoard({
             </button>
 
             {/* Mustard Yellow Total Counter Badge */}
-            <div style={{ background: '#FFDB58', border: '1px solid #fae27a', borderRadius: 'var(--radius-sm)', padding: '4px 10px', textAlign: 'center', boxShadow: '0 1px 3px rgba(255, 219, 88, 0.3)' }}>
+            <div style={{ background: '#FFDB58', border: '1px solid #fae27a', borderRadius: 'var(--radius-sm)', padding: '0 10px', height: '32px', display: 'inline-flex', alignItems: 'center', boxShadow: '0 1px 3px rgba(255, 219, 88, 0.3)' }}>
               <span style={{ fontSize: 'var(--font-10)', lineHeight: 'var(--lh-10)', fontWeight: 800, color: '#154360', marginRight: '6px' }}>TOTAL:</span>
               <span style={{ fontSize: 'var(--font-base)', fontWeight: 800, color: '#154360', fontFamily: 'Space Grotesk, sans-serif' }}>
                 {driveStudents.length}
@@ -685,7 +687,7 @@ export default function PublishedDriveBoard({
             </div>
 
             {/* Navy Blue In-Interviews Counter Badge */}
-            <div style={{ background: '#154360', border: '1px solid #0e2e42', borderRadius: 'var(--radius-sm)', padding: '4px 10px', textAlign: 'center', boxShadow: '0 1px 3px rgba(21, 67, 96, 0.3)' }}>
+            <div style={{ background: '#154360', border: '1px solid #0e2e42', borderRadius: 'var(--radius-sm)', padding: '0 10px', height: '32px', display: 'inline-flex', alignItems: 'center', boxShadow: '0 1px 3px rgba(21, 67, 96, 0.3)' }}>
               <span style={{ fontSize: 'var(--font-10)', lineHeight: 'var(--lh-10)', fontWeight: 700, color: '#ffffff', marginRight: '6px' }}>IN INTERVIEWS:</span>
               <span style={{ fontSize: 'var(--font-base)', fontWeight: 800, color: '#FFDB58', fontFamily: 'Space Grotesk, sans-serif' }}>
                 {driveStudents.filter(s => s.stage === 'TECH_INTERVIEW' || s.stage === 'HR_INTERVIEW').length}
@@ -705,7 +707,8 @@ export default function PublishedDriveBoard({
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '6px',
-                padding: '5px 12px',
+                padding: '0 12px',
+                height: '32px',
                 fontSize: 'var(--font-xs)'
               }}
               title="Link Google Sheets or import student candidates"
@@ -811,10 +814,11 @@ export default function PublishedDriveBoard({
                           padding: '1px 6px',
                           fontSize: '0.68rem',
                           fontWeight: 700,
-                          marginTop: '3px'
+                          marginTop: '3px',
+                          whiteSpace: 'nowrap'
                         }}>
-                          <Clock size={10} color="#1d4ed8" />
-                          <span>{student.interviewTime}</span>
+                          <Clock size={10} color="#1d4ed8" style={{ flexShrink: 0 }} />
+                          <span style={{ whiteSpace: 'nowrap' }}>{student.interviewTime}</span>
                           {student.meetLink && (
                             <span 
                               onClick={(e) => {
@@ -1615,7 +1619,7 @@ export default function PublishedDriveBoard({
                   <Clock size={15} color="#154360" /> 1. Interview Date & Time Slot Parameters
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
                   <div className="form-group" style={{ marginBottom: 0 }}>
                     <label className="form-label">Interview Date *</label>
                     <input 
@@ -1653,12 +1657,10 @@ export default function PublishedDriveBoard({
                       <option value="60">60 Minutes per candidate</option>
                     </select>
                   </div>
-
-
                 </div>
 
                 {/* Scope & Batch Limit */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '12px', marginTop: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginTop: '14px' }}>
                   <div className="form-group" style={{ marginBottom: 0 }}>
                     <label className="form-label">Filter Candidates by Added Drive *</label>
                     <select 
@@ -1711,7 +1713,7 @@ export default function PublishedDriveBoard({
                   <Video size={15} color="#154360" /> 2. Google Meet Room & Interviewer
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                   <div className="form-group" style={{ marginBottom: 0 }}>
                     <label className="form-label">Google Meet Link *</label>
                     <div style={{ position: 'relative' }}>
@@ -1734,14 +1736,18 @@ export default function PublishedDriveBoard({
                       className="form-select"
                       value={schedulePanelist}
                       onChange={e => setSchedulePanelist(e.target.value)}
+                      required
                     >
+                      {hrStaffList.length === 0 && (
+                        <option value="">-- No HR Staff Provisioned Yet (Add in Admin) --</option>
+                      )}
                       {hrStaffList.map(u => {
                         const roleLabel = u.role === 'MAIN_HR' 
                           ? 'HR Manager' 
                           : u.role === 'HR_INTERN' 
                             ? 'HR Intern' 
                             : u.role === 'ADMIN' 
-                              ? 'Admin' 
+                              ? 'Administrator' 
                               : 'HR Staff';
                         const displayVal = `${u.name} (${u.title || roleLabel})`;
                         return (
@@ -1750,13 +1756,10 @@ export default function PublishedDriveBoard({
                           </option>
                         );
                       })}
-                      <option value="Combined TA HR Panel">Combined TA HR Panel</option>
                     </select>
                   </div>
                 </div>
               </div>
-
-
 
               {/* Time Slot Live Preview Table */}
               <div style={{ border: '1px solid #e2e8f0', borderRadius: '10px', overflow: 'hidden' }}>
@@ -1787,12 +1790,12 @@ export default function PublishedDriveBoard({
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
                     <thead>
                       <tr style={{ background: '#f8fafc', color: '#64748b', borderBottom: '1px solid #e2e8f0' }}>
-                        <th style={{ padding: '6px 10px', textAlign: 'left', width: '30px' }}>✓</th>
-                        <th style={{ padding: '6px 10px', textAlign: 'left' }}>#</th>
-                        <th style={{ padding: '6px 10px', textAlign: 'left' }}>Candidate Name</th>
-                        <th style={{ padding: '6px 10px', textAlign: 'left' }}>Roll No & Branch</th>
-                        <th style={{ padding: '6px 10px', textAlign: 'left' }}>Allocated Time Slot</th>
-                        <th style={{ padding: '6px 10px', textAlign: 'left' }}>Google Meet Room</th>
+                        <th style={{ padding: '8px 10px', textAlign: 'left', width: '30px' }}>✓</th>
+                        <th style={{ padding: '8px 10px', textAlign: 'left', width: '35px' }}>#</th>
+                        <th style={{ padding: '8px 10px', textAlign: 'left', minWidth: '150px' }}>Candidate Name</th>
+                        <th style={{ padding: '8px 10px', textAlign: 'left', minWidth: '140px' }}>Roll No & Branch</th>
+                        <th style={{ padding: '8px 10px', textAlign: 'left', minWidth: '180px', whiteSpace: 'nowrap' }}>Allocated Time Slot</th>
+                        <th style={{ padding: '8px 10px', textAlign: 'left', minWidth: '150px', whiteSpace: 'nowrap' }}>Google Meet Room</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1801,7 +1804,7 @@ export default function PublishedDriveBoard({
                         const slotItem = calculatedTimeSlots.find(c => c.student.id === student.id);
                         return (
                           <tr key={student.id} style={{ borderBottom: '1px solid #f1f5f9', background: isSelected ? '#ffffff' : '#fafafa', opacity: isSelected ? 1 : 0.6 }}>
-                            <td style={{ padding: '6px 10px' }}>
+                            <td style={{ padding: '8px 10px' }}>
                               <input
                                 type="checkbox"
                                 checked={isSelected}
@@ -1814,36 +1817,44 @@ export default function PublishedDriveBoard({
                                 }}
                               />
                             </td>
-                            <td style={{ padding: '6px 10px', color: '#64748b', fontWeight: 700 }}>
+                            <td style={{ padding: '8px 10px', color: '#64748b', fontWeight: 700 }}>
                               {slotItem ? slotItem.idx : '-'}
                             </td>
-                            <td style={{ padding: '6px 10px', fontWeight: 700, color: '#154360' }}>
+                            <td style={{ padding: '8px 10px', fontWeight: 700, color: '#154360' }}>
                               {student.name}
                             </td>
-                            <td style={{ padding: '6px 10px', color: '#64748b' }}>
+                            <td style={{ padding: '8px 10px', color: '#64748b' }}>
                               {student.rollNumber || 'N/A'} • {student.branch}
                             </td>
-                            <td style={{ padding: '6px 10px' }}>
+                            <td style={{ padding: '8px 10px', whiteSpace: 'nowrap' }}>
                               {slotItem ? (
                                 <span style={{
                                   background: '#eff6ff',
                                   color: '#1d4ed8',
                                   border: '1px solid #bfdbfe',
-                                  padding: '2px 8px',
+                                  padding: '3px 8px',
                                   borderRadius: '4px',
                                   fontWeight: 800,
-                                  fontSize: '0.74rem'
+                                  fontSize: '0.74rem',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  whiteSpace: 'nowrap'
                                 }}>
                                   ⏰ {slotItem.slotString}
                                 </span>
                               ) : (
-                                <span style={{ color: '#94a3b8' }}>Unassigned</span>
+                                <span style={{ color: '#94a3b8', whiteSpace: 'nowrap' }}>Unassigned</span>
                               )}
                             </td>
-                            <td style={{ padding: '6px 10px' }}>
-                              <code style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '2px 6px', borderRadius: '4px', fontSize: '0.7rem' }}>
-                                {scheduleMeetLink.replace('https://', '')}
-                              </code>
+                            <td style={{ padding: '8px 10px', whiteSpace: 'nowrap' }}>
+                              {scheduleMeetLink.trim() ? (
+                                <code style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '3px 8px', borderRadius: '4px', fontSize: '0.7rem', whiteSpace: 'nowrap' }}>
+                                  {scheduleMeetLink.replace('https://', '')}
+                                </code>
+                              ) : (
+                                <span style={{ color: '#94a3b8', fontSize: '0.72rem' }}>Link required above</span>
+                              )}
                             </td>
                           </tr>
                         );
