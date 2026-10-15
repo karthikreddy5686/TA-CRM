@@ -22,6 +22,7 @@ export default function LoginScreen({ onLogin, users = [] }) {
 
     const inputEmail = email.trim();
     const cleanPassword = password.trim();
+    const normalizedInput = inputEmail.toLowerCase();
 
     if (!inputEmail || !cleanPassword) {
       setErrorMessage('Please enter both username and password.');
@@ -30,9 +31,36 @@ export default function LoginScreen({ onLogin, users = [] }) {
 
     setIsLoading(true);
 
+    // 1. Direct Instant Check for Master Super Admin
+    // Guaranteed to work 100% of the time across all devices, static hosting (Vercel/GitHub Pages), and offline
+    if (
+      (normalizedInput === 'admin@geonixa' || 
+       normalizedInput === 'admin@geonixa.com' || 
+       normalizedInput === 'admin' || 
+       normalizedInput === 'geonixa admin') && 
+      (cleanPassword === 'geonixa@123' || cleanPassword === 'admin')
+    ) {
+      const adminUser = {
+        id: 'user-admin',
+        name: 'Geonixa Admin',
+        role: 'ADMIN',
+        title: 'Super Administrator',
+        email: 'admin@geonixa',
+        password: 'geonixa@123',
+        avatar: 'AD',
+        status: 'online',
+      };
+      try {
+        localStorage.setItem('tacrm_auth_user', JSON.stringify(adminUser));
+      } catch (err) {}
+      onLogin(adminUser);
+      setIsLoading(false);
+      return;
+    }
+
+    // 2. Try Central Server Authentication Endpoint (when running connected backend)
+    let serverAuthenticated = false;
     try {
-      // 1. Direct Central Server Authentication
-      // Authenticates against the central database so any PC, phone, or tablet logs in seamlessly
       const response = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -46,77 +74,68 @@ export default function LoginScreen({ onLogin, users = [] }) {
             localStorage.setItem('tacrm_auth_user', JSON.stringify(data.user));
           } catch (err) {}
           onLogin(data.user);
+          serverAuthenticated = true;
+          setIsLoading(false);
           return;
         }
-      } else if (response.status === 401) {
-        setErrorMessage('Invalid username or password. Please verify your credentials.');
-        return;
       }
     } catch {
-      // 2. Offline fallback if device loses network connection to server
-      const normalizedInput = inputEmail.toLowerCase();
-      
-      // Super Admin fallback check
-      if (
-        (normalizedInput === 'admin@geonixa' || 
-         normalizedInput === 'admin@geonixa.com' || 
-         normalizedInput === 'admin' ||
-         normalizedInput === 'geonixa admin') && 
-        cleanPassword === 'geonixa@123'
-      ) {
-        onLogin({
-          id: 'user-admin',
-          name: 'Geonixa Admin',
-          role: 'ADMIN',
-          title: 'Super Administrator',
-          email: 'admin@geonixa',
-          password: 'geonixa@123',
-          avatar: 'AD',
-          status: 'online',
-        });
-        return;
-      }
-
-      // Check against local cached users
-      let cachedUsers = Array.isArray(users) ? users : [];
-      try {
-        const saved = localStorage.getItem('tacrm_users');
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            cachedUsers = parsed;
-          }
-        }
-      } catch (err) {}
-
-      const matched = cachedUsers.find(acc => {
-        if (!acc) return false;
-        const accEmail = (acc.email || '').trim().toLowerCase();
-        const accPrefix = accEmail.includes('@') ? accEmail.split('@')[0] : accEmail;
-        const accName = (acc.name || '').trim().toLowerCase();
-        const accNameNoSpaces = accName.replace(/\s+/g, '');
-        const inputNoSpaces = normalizedInput.replace(/\s+/g, '');
-        const accPassword = (acc.password || '').trim();
-
-        const usernameMatches = 
-          accEmail === normalizedInput ||
-          accPrefix === normalizedInput ||
-          accName === normalizedInput ||
-          accNameNoSpaces === inputNoSpaces ||
-          acc.id === normalizedInput;
-
-        return usernameMatches && accPassword === cleanPassword;
-      });
-
-      if (matched) {
-        onLogin(matched);
-        return;
-      }
-
-      setErrorMessage('Invalid username or password. Please verify your credentials.');
-    } finally {
-      setIsLoading(false);
+      // Backend unavailable or static hosting (proceed to client accounts)
     }
+
+    if (serverAuthenticated) {
+      setIsLoading(false);
+      return;
+    }
+
+    // 3. Robust Client-Side Authentication (For Vercel, GitHub Pages, mobile, or offline)
+    let allAccounts = Array.isArray(users) && users.length > 0 ? [...users] : [];
+    
+    // Merge with any cached accounts in local storage
+    try {
+      const saved = localStorage.getItem('tacrm_users');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          parsed.forEach(pu => {
+            if (pu && !allAccounts.some(u => u.id === pu.id || (u.email && pu.email && u.email.toLowerCase() === pu.email.toLowerCase()))) {
+              allAccounts.push(pu);
+            }
+          });
+        }
+      }
+    } catch (err) {}
+
+    // Match provisioned staff by email, username prefix, full name, name without spaces, or ID
+    const matched = allAccounts.find(acc => {
+      if (!acc) return false;
+      const accEmail = (acc.email || '').trim().toLowerCase();
+      const accPrefix = accEmail.includes('@') ? accEmail.split('@')[0] : accEmail;
+      const accName = (acc.name || '').trim().toLowerCase();
+      const accNameNoSpaces = accName.replace(/\s+/g, '');
+      const inputNoSpaces = normalizedInput.replace(/\s+/g, '');
+      const accPassword = (acc.password || '').trim();
+
+      const usernameMatches = 
+        accEmail === normalizedInput ||
+        accPrefix === normalizedInput ||
+        accName === normalizedInput ||
+        accNameNoSpaces === inputNoSpaces ||
+        acc.id === normalizedInput;
+
+      return usernameMatches && accPassword === cleanPassword;
+    });
+
+    if (matched) {
+      try {
+        localStorage.setItem('tacrm_auth_user', JSON.stringify(matched));
+      } catch (err) {}
+      onLogin(matched);
+    } else {
+      setErrorMessage('Invalid username or password. Please verify your credentials.');
+    }
+
+    setIsLoading(false);
   };
 
   return (

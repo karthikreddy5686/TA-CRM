@@ -344,26 +344,34 @@ export default function App() {
   // Data State with Local Storage fallback
   const [colleges, setColleges] = useState(() => {
     const saved = localStorage.getItem('tacrm_colleges');
-    return saved ? JSON.parse(saved) : [];
+    if (!saved) return WORKING_DEMO_DATA.colleges || [];
+    try {
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed) && parsed.length > 0 ? parsed : (WORKING_DEMO_DATA.colleges || []);
+    } catch {
+      return WORKING_DEMO_DATA.colleges || [];
+    }
   });
 
   const [tpos, setTpos] = useState(() => {
     const saved = localStorage.getItem('tacrm_tpos');
-    if (!saved) return [];
+    if (!saved) return sanitizeTpos(WORKING_DEMO_DATA.tpos || []);
     try {
-      return sanitizeTpos(JSON.parse(saved));
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed) && parsed.length > 0 ? sanitizeTpos(parsed) : sanitizeTpos(WORKING_DEMO_DATA.tpos || []);
     } catch {
-      return [];
+      return sanitizeTpos(WORKING_DEMO_DATA.tpos || []);
     }
   });
 
   const [drives, setDrives] = useState(() => {
     const saved = localStorage.getItem('tacrm_drives');
-    if (!saved) return [];
+    if (!saved) return sanitizeDrives(WORKING_DEMO_DATA.drives || []);
     try {
-      return sanitizeDrives(JSON.parse(saved));
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed) && parsed.length > 0 ? sanitizeDrives(parsed) : sanitizeDrives(WORKING_DEMO_DATA.drives || []);
     } catch {
-      return [];
+      return sanitizeDrives(WORKING_DEMO_DATA.drives || []);
     }
   });
 
@@ -372,7 +380,7 @@ export default function App() {
     if (saved === null) return sanitizeStudents(WORKING_DEMO_DATA.students);
     try {
       const parsed = JSON.parse(saved);
-      return Array.isArray(parsed) ? sanitizeStudents(parsed) : sanitizeStudents(WORKING_DEMO_DATA.students);
+      return Array.isArray(parsed) && parsed.length > 0 ? sanitizeStudents(parsed) : sanitizeStudents(WORKING_DEMO_DATA.students);
     } catch {
       return sanitizeStudents(WORKING_DEMO_DATA.students);
     }
@@ -380,21 +388,23 @@ export default function App() {
 
   const [followUps, setFollowUps] = useState(() => {
     const saved = localStorage.getItem('tacrm_followups');
-    if (!saved) return [];
+    if (!saved) return sanitizeFollowUps(WORKING_DEMO_DATA.followUps || []);
     try {
-      return sanitizeFollowUps(JSON.parse(saved));
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed) && parsed.length > 0 ? sanitizeFollowUps(parsed) : sanitizeFollowUps(WORKING_DEMO_DATA.followUps || []);
     } catch {
-      return [];
+      return sanitizeFollowUps(WORKING_DEMO_DATA.followUps || []);
     }
   });
 
   const [callSessions, setCallSessions] = useState(() => {
     const saved = localStorage.getItem('tacrm_calls');
-    if (!saved) return [];
+    if (!saved) return sanitizeCalls(WORKING_DEMO_DATA.callSessions || []);
     try {
-      return sanitizeCalls(JSON.parse(saved));
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed) && parsed.length > 0 ? sanitizeCalls(parsed) : sanitizeCalls(WORKING_DEMO_DATA.callSessions || []);
     } catch {
-      return [];
+      return sanitizeCalls(WORKING_DEMO_DATA.callSessions || []);
     }
   });
 
