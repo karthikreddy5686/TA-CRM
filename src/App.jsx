@@ -183,7 +183,44 @@ export default function App() {
     } catch (e) {
       // ignore
     }
+    // Cross-device network sync: push updated staff list to central server storage
+    if (Array.isArray(users) && users.length > 0) {
+      fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ users }),
+      }).catch(() => {});
+    }
   }, [users]);
+
+  // Pull latest users and database from centralized server storage on initial app load
+  useEffect(() => {
+    fetch('/api/storage')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (!data) return;
+        if (Array.isArray(data.users) && data.users.length > 0) {
+          const sanitized = sanitizeUsers(data.users);
+          setUsers(sanitized);
+          try {
+            localStorage.setItem('tacrm_users', JSON.stringify(sanitized));
+          } catch (e) {}
+        }
+        if (Array.isArray(data.drives) && data.drives.length > 0) {
+          setDrives(data.drives);
+        }
+        if (Array.isArray(data.students) && data.students.length > 0) {
+          setStudents(data.students);
+        }
+        if (Array.isArray(data.tpos) && data.tpos.length > 0) {
+          setTpos(data.tpos);
+        }
+        if (Array.isArray(data.followUps) && data.followUps.length > 0) {
+          setFollowUps(data.followUps);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Sanitize helper to purge any phantom or placeholder records from storage
   const sanitizeDrives = (list) => {

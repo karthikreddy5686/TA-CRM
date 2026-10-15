@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { formatTimeDigital } from '../data/mockData';
 import { webAudio } from '../utils/audio';
+import { normalizePhoneNumber } from '../utils/phone';
 
 export default function CallModal({ 
   callState, 
@@ -57,9 +58,9 @@ export default function CallModal({
     }
   }, [callState?.recipientPhone]);
 
-  // Digits and formatting
-  const digitsOnly = (phoneNumber || '').replace(/\D/g, '');
-  const cleanPhone = digitsOnly ? (digitsOnly.startsWith('91') ? digitsOnly : `91${digitsOnly}`) : '';
+  // Phone normalization & carrier formatting (prevents "number dialed is incorrect" IVR error)
+  const phoneInfo = normalizePhoneNumber(phoneNumber);
+  const cleanPhone = phoneInfo.waNumber;
   
   // Video Interview Scorecard & Rubric
   const [techRating, setTechRating] = useState(4);
@@ -129,7 +130,7 @@ export default function CallModal({
     const text = encodeURIComponent(
       `Hello ${callState.recipientName}, here is your interview link for your Campus Recruitment interview: ${generatedMeetLink}. Please join from your laptop with video enabled.`
     );
-    window.open(`https://wa.me/${cleanPhone}?text=${text}`, '_blank');
+    window.open(`https://wa.me/${phoneInfo.waNumber}?text=${text}`, '_blank');
   };
 
   const handleEndCallWithData = () => {
@@ -380,12 +381,12 @@ export default function CallModal({
                   </div>
                 )}
 
-                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '16px' }}>
-                  {/* Native tel: dialer button - Starts Stopwatch Timer onClick */}
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
+                  {/* Standard E.164 +91 Mobile Dialer (+ prefix eliminates carrier incorrect number IVR error) */}
                   <a 
-                    href={cleanPhone ? `tel:${cleanPhone}` : '#'}
+                    href={phoneInfo.telUrl || '#'}
                     onClick={(e) => {
-                      if (!cleanPhone) {
+                      if (!phoneInfo.telUrl) {
                         e.preventDefault();
                         setIsEditingPhone(true);
                         return;
@@ -405,9 +406,40 @@ export default function CallModal({
                       alignItems: 'center',
                       gap: '6px'
                     }}
+                    title="Dial via smartphone carrier with international routing (+91)"
                   >
-                    <Phone size={14} /> Dial on Mobile {phoneNumber ? `(${phoneNumber})` : ''}
+                    <Phone size={14} /> Dial +91 {phoneInfo.local10 || phoneInfo.cleanDigits || ''}
                   </a>
+
+                  {/* Native 10-Digit Direct Dial for Indian SIMs */}
+                  {phoneInfo.local10 && (
+                    <a 
+                      href={phoneInfo.localTelUrl || '#'}
+                      onClick={(e) => {
+                        if (!phoneInfo.localTelUrl) {
+                          e.preventDefault();
+                          return;
+                        }
+                        if (onStartTimer) onStartTimer();
+                      }}
+                      className="btn-secondary"
+                      style={{ 
+                        background: '#27272a', 
+                        borderColor: '#3f3f46', 
+                        color: '#34d399', 
+                        fontSize: '0.82rem', 
+                        padding: '9px 12px',
+                        fontWeight: 600,
+                        textDecoration: 'none',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                      title="Dial pure 10-digit number without country code"
+                    >
+                      Direct 10-Digit: {phoneInfo.local10}
+                    </a>
+                  )}
 
                   {/* Copy Phone */}
                   <button
@@ -465,9 +497,9 @@ export default function CallModal({
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  {cleanPhone ? (
+                  {phoneInfo.isValid && phoneInfo.e164 ? (
                     <img 
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=114x114&data=tel:${cleanPhone}`} 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=114x114&data=tel:${encodeURIComponent(phoneInfo.e164)}`} 
                       alt="Scan to call" 
                       style={{ width: '114px', height: '114px', display: 'block' }}
                       onError={(e) => {

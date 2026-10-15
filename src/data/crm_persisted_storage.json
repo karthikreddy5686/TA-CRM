@@ -1,0 +1,43 @@
+{
+  "users": [
+    {
+      "id": "user-admin",
+      "name": "Geonixa Admin",
+      "role": "ADMIN",
+      "title": "Super Administrator",
+      "email": "admin@geonixa",
+      "password": "geonixa@123",
+      "avatar": "AD",
+      "status": "online"
+    },
+    {
+      "id": "hr-ananya",
+      "name": "Ananya Sharma",
+      "role": "MAIN_HR",
+      "title": "Head of Talent Acquisition",
+      "email": "ananya.sharma@talentconnect.io",
+      "password": "admin",
+      "avatar": "AS",
+      "status": "on-call",
+      "dailyTargetHours": 4,
+      "dailyTargetLeads": 25
+    },
+    {
+      "id": "intern-kavya",
+      "name": "Kavya Nair",
+      "role": "HR_INTERN",
+      "title": "Campus Talent Associate",
+      "email": "kavya.nair@talentconnect.io",
+      "password": "intern",
+      "avatar": "KN",
+      "status": "online",
+      "dailyTargetHours": 3.5,
+      "dailyTargetLeads": 20
+    }
+  ],
+  "drives": [],
+  "students": [],
+  "tpos": [],
+  "followUps": [],
+  "updatedAt": "2026-10-15T06:47:41.944Z"
+}

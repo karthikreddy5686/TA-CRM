@@ -27,9 +27,13 @@ import {
   Sparkles,
   ArrowRight,
   ExternalLink,
-  ChevronRight
+  ChevronRight,
+  Smartphone,
+  QrCode,
+  RefreshCw
 } from 'lucide-react';
 import { formatDuration } from '../data/mockData';
+import { normalizePhoneNumber } from '../utils/phone';
 
 export default function AdminDashboard({
   users = [],
@@ -79,6 +83,35 @@ export default function AdminDashboard({
     dailyTargetHours: 3.5,
     dailyTargetLeads: 20
   });
+
+  const [networkUrl, setNetworkUrl] = useState('http://192.168.0.3:5174/');
+  const [showMobileQr, setShowMobileQr] = useState(false);
+  const [isSyncingServer, setIsSyncingServer] = useState(false);
+
+  React.useEffect(() => {
+    fetch('/api/network-info')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d?.networkUrl) setNetworkUrl(d.networkUrl);
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleForceServerSync = async () => {
+    setIsSyncingServer(true);
+    try {
+      await fetch('/api/storage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ users, drives, students, tpos, followUps })
+      });
+      showNotification('Successfully synced all employees and CRM data to central server!');
+    } catch {
+      showNotification('Could not connect to server for sync.', 'error');
+    } finally {
+      setIsSyncingServer(false);
+    }
+  };
 
   const [isDriveModalOpen, setIsDriveModalOpen] = useState(false);
   const [editingDrive, setEditingDrive] = useState(null);
@@ -751,10 +784,91 @@ export default function AdminDashboard({
           </div>
 
           <div style={{ padding: '16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.825rem', color: '#154360', fontWeight: 600 }}>
-              <ShieldCheck size={18} color="#154360" />
-              <span>Only the Admin can create and issue login credentials. Share the generated email and password with your HR team.</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.825rem', color: '#154360', fontWeight: 600 }}>
+                <ShieldCheck size={18} color="#154360" />
+                <span>Admin Master Controls: Employees created here synchronize instantly across PCs, laptops, and mobile devices.</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={handleForceServerSync}
+                  disabled={isSyncingServer}
+                  className="btn-secondary btn-black-sm"
+                  style={{ fontSize: '0.75rem', padding: '4px 10px' }}
+                  title="Push all employees to central server database"
+                >
+                  <RefreshCw size={12} className={isSyncingServer ? 'spinning' : ''} />
+                  {isSyncingServer ? 'Syncing...' : 'Sync to Server'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowMobileQr(prev => !prev)}
+                  className="btn-secondary btn-black-sm"
+                  style={{ fontSize: '0.75rem', padding: '4px 10px' }}
+                  title="Show Mobile QR code to open CRM on smartphone"
+                >
+                  <Smartphone size={12} color="#154360" />
+                  {showMobileQr ? 'Hide Mobile Link' : 'Mobile Access'}
+                </button>
+              </div>
             </div>
+
+            {/* Mobile / Other PC Access Box */}
+            {showMobileQr && (
+              <div style={{
+                background: '#ffffff',
+                border: '1px solid #bae6fd',
+                borderRadius: '10px',
+                padding: '14px',
+                marginTop: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '16px',
+                flexWrap: 'wrap'
+              }}>
+                <div style={{
+                  background: '#ffffff',
+                  padding: '6px',
+                  borderRadius: '6px',
+                  border: '1px solid #e2e8f0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '90px',
+                  height: '90px',
+                  flexShrink: 0
+                }}>
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=84x84&data=${encodeURIComponent(networkUrl)}`}
+                    alt="Scan for Mobile Login"
+                    style={{ width: '84px', height: '84px' }}
+                  />
+                </div>
+                <div style={{ flex: '1 1 220px' }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0369a1', marginBottom: '4px' }}>
+                    📱 Connect from Mobile or Another PC
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: '#52525b', marginBottom: '8px' }}>
+                    Scan with your phone camera or enter this URL in any browser on the same Wi-Fi:
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <code style={{ background: '#f0f9ff', border: '1px solid #bae6fd', color: '#0284c7', padding: '4px 10px', borderRadius: '4px', fontWeight: 700, fontSize: '0.85rem' }}>
+                      {networkUrl}
+                    </code>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyText(networkUrl, 'network-url')}
+                      className="btn-secondary btn-black-sm"
+                      style={{ padding: '4px 8px', fontSize: '0.72rem' }}
+                    >
+                      {copiedKey === 'network-url' ? <Check size={12} color="#10b981" /> : <Copy size={12} />}
+                      {copiedKey === 'network-url' ? 'Copied' : 'Copy URL'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="desktop-only" style={{ width: '100%', overflowX: 'hidden' }}>
@@ -1074,7 +1188,7 @@ export default function AdminDashboard({
                         {student.cgpa || 'N/A'}
                       </td>
                       <td style={{ padding: '10px 14px', fontSize: '0.8rem' }}>
-                        <a href={`tel:${student.phone}`} style={{ color: '#154360', fontWeight: 600 }}>{student.phone}</a>
+                        <a href={normalizePhoneNumber(student.phone).telUrl || `tel:${student.phone}`} style={{ color: '#154360', fontWeight: 600 }}>{student.phone}</a>
                       </td>
                       <td style={{ padding: '10px 14px' }}>
                         <select
@@ -1226,7 +1340,7 @@ export default function AdminDashboard({
                       </td>
                       <td style={{ padding: '10px 14px', fontSize: '0.825rem', fontWeight: 600 }}>{tpo.collegeName}</td>
                       <td style={{ padding: '10px 14px', fontSize: '0.8rem' }}>
-                        <a href={`tel:${tpo.phone}`} style={{ color: '#154360', fontWeight: 600 }}>{tpo.phone}</a>
+                        <a href={normalizePhoneNumber(tpo.phone).telUrl || `tel:${tpo.phone}`} style={{ color: '#154360', fontWeight: 600 }}>{tpo.phone}</a>
                       </td>
                       <td style={{ padding: '10px 14px', fontSize: '0.8rem', color: '#52525b' }}>{tpo.email || 'N/A'}</td>
                       <td style={{ padding: '10px 14px' }}>
