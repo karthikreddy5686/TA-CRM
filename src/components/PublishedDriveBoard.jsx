@@ -46,7 +46,8 @@ export default function PublishedDriveBoard({
   onOpenPhoneConnectModal,
   onBatchUpdateStudents,
   addToast,
-  currentUser
+  currentUser,
+  users = []
 }) {
   const [selectedDriveId, setSelectedDriveId] = useState(drives[0]?.id || '');
   const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
@@ -78,13 +79,12 @@ export default function PublishedDriveBoard({
 
   // ---------------- Schedule Interviews State & Engine ----------------
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [scheduleDriveId, setScheduleDriveId] = useState(() => selectedDriveId || activeDrive?.id || drives[0]?.id || 'ALL');
   const [scheduleDate, setScheduleDate] = useState(() => activeDrive?.driveDate || new Date().toISOString().split('T')[0]);
   const [scheduleStartTime, setScheduleStartTime] = useState('10:00');
   const [scheduleSlotMinutes, setScheduleSlotMinutes] = useState(10);
   const [scheduleBufferMinutes, setScheduleBufferMinutes] = useState(0);
   const [scheduleMeetLink, setScheduleMeetLink] = useState(() => `https://meet.google.com/tac-${Math.random().toString(36).substring(2, 6)}-${Math.random().toString(36).substring(2, 5)}`);
-  const [schedulePanelist, setSchedulePanelist] = useState(() => currentUser?.name ? `${currentUser.name} (HR Panel)` : 'Talent Acquisition Panel');
-  const [scheduleCandidateScope, setScheduleCandidateScope] = useState('ALL');
   const [scheduleLimit, setScheduleLimit] = useState(25);
   const [selectedCandidateIds, setSelectedCandidateIds] = useState([]);
   const [autoDispatchInvites, setAutoDispatchInvites] = useState(true);
@@ -92,6 +92,32 @@ export default function PublishedDriveBoard({
   const [dispatchConfirmationData, setDispatchConfirmationData] = useState(null);
   const [copiedScheduleText, setCopiedScheduleText] = useState(false);
   const [copiedMeetLink, setCopiedMeetLink] = useState(false);
+
+  // List of active HR Employees and Interns for Interviewer / Panel dropdown
+  const hrStaffList = useMemo(() => {
+    if (!Array.isArray(users) || users.length === 0) {
+      return [{ id: 'hr-default', name: 'Talent Acquisition Team', role: 'MAIN_HR', title: 'HR Panel' }];
+    }
+    const filtered = users.filter(u => u && (u.role === 'MAIN_HR' || u.role === 'HR_INTERN' || u.role === 'ADMIN'));
+    return filtered.length > 0 ? filtered : users;
+  }, [users]);
+
+  const [schedulePanelist, setSchedulePanelist] = useState(() => {
+    if (currentUser?.name) {
+      const roleLabel = currentUser.role === 'MAIN_HR' ? 'HR Manager' : currentUser.role === 'HR_INTERN' ? 'HR Intern' : 'HR Panel';
+      return `${currentUser.name} (${currentUser.title || roleLabel})`;
+    }
+    return 'Combined TA HR Panel';
+  });
+
+  // Ensure schedulePanelist has a valid default if users are loaded later
+  useEffect(() => {
+    if (!schedulePanelist && hrStaffList.length > 0) {
+      const first = hrStaffList[0];
+      const roleLabel = first.role === 'MAIN_HR' ? 'HR Manager' : first.role === 'HR_INTERN' ? 'HR Intern' : 'HR Staff';
+      setSchedulePanelist(`${first.name} (${first.title || roleLabel})`);
+    }
+  }, [hrStaffList, schedulePanelist]);
 
   // Keep scheduleDate synced with activeDrive when activeDrive changes
   useEffect(() => {
@@ -121,26 +147,14 @@ export default function PublishedDriveBoard({
     return h * 60 + m;
   };
 
-  // Generate a realistic Google Meet Link code
-  const handleGenerateMeetLink = () => {
-    const code = `tac-${Math.random().toString(36).substring(2, 6)}-${Math.random().toString(36).substring(2, 5)}`;
-    setScheduleMeetLink(`https://meet.google.com/${code}`);
-    if (addToast) addToast('Generated new Google Meet link!', 'info');
-  };
-
-  // Filter candidates eligible for scheduling based on user scope and limit
+  // Filter candidates eligible for scheduling based on selected drive and batch limit (shows added drives)
   const candidatesEligibleForSchedule = useMemo(() => {
-    let list = driveStudents;
-    if (scheduleCandidateScope === 'ONLINE_ASSESSMENT') {
-      list = list.filter(s => s.stage === 'ONLINE_ASSESSMENT');
-    } else if (scheduleCandidateScope === 'APPLIED') {
-      list = list.filter(s => s.stage === 'APPLIED');
-    } else if (scheduleCandidateScope === 'TECH_INTERVIEW') {
-      list = list.filter(s => s.stage === 'TECH_INTERVIEW');
-    }
-    const limit = parseInt(scheduleLimit, 10) || 25;
+    const list = scheduleDriveId === 'ALL'
+      ? students
+      : students.filter(s => s.driveId === scheduleDriveId);
+    const limit = parseInt(scheduleLimit, 10) || 99999;
     return list.slice(0, limit);
-  }, [driveStudents, scheduleCandidateScope, scheduleLimit]);
+  }, [students, scheduleDriveId, scheduleLimit]);
 
   // Synchronize selected IDs when candidate list changes
   useEffect(() => {
@@ -209,15 +223,17 @@ export default function PublishedDriveBoard({
       onBatchUpdateStudents(updatedStudents);
     }
 
+    const targetDrive = drives.find(d => d.id === scheduleDriveId) || activeDrive;
+
     // Add entry into broadcast logs for audit trail
     try {
       const existingLogs = JSON.parse(localStorage.getItem('tacrm_blast_logs') || '[]');
       const newLog = {
         id: `sched-blast-${Date.now()}`,
         timestamp: scheduledAt,
-        driveTitle: activeDrive?.title || 'Campus Placement Drive',
-        collegeName: activeDrive?.collegeName || 'Campus',
-        jobRole: activeDrive?.jobRole || 'Engineering Associate',
+        driveTitle: targetDrive?.title || 'Campus Placement Drive',
+        collegeName: targetDrive?.collegeName || 'Campus',
+        jobRole: targetDrive?.jobRole || 'Engineering Associate',
         totalDispatched: updatedStudents.length,
         interviewDate: scheduleDate,
         timeWindow: `${calculatedTimeSlots[0].startFormatted} - ${calculatedTimeSlots[calculatedTimeSlots.length - 1].endFormatted}`,
@@ -231,9 +247,9 @@ export default function PublishedDriveBoard({
 
     // Open success dispatch confirmation modal
     setDispatchConfirmationData({
-      driveTitle: activeDrive?.title || 'Campus Placement Drive',
-      collegeName: activeDrive?.collegeName || 'Campus',
-      jobRole: activeDrive?.jobRole || 'Engineering Associate',
+      driveTitle: targetDrive?.title || 'Campus Placement Drive',
+      collegeName: targetDrive?.collegeName || 'Campus',
+      jobRole: targetDrive?.jobRole || 'Engineering Associate',
       scheduledDate: scheduleDate,
       firstSlot: calculatedTimeSlots[0].startFormatted,
       lastSlot: calculatedTimeSlots[calculatedTimeSlots.length - 1].endFormatted,
@@ -638,6 +654,7 @@ export default function PublishedDriveBoard({
             <button
               type="button"
               onClick={() => {
+                setScheduleDriveId(selectedDriveId || activeDrive?.id || drives[0]?.id || 'ALL');
                 setDispatchConfirmationData(null);
                 setIsScheduleModalOpen(true);
               }}
@@ -1575,7 +1592,7 @@ export default function PublishedDriveBoard({
                     Schedule Drive Interview Slots & Auto-Dispatch
                   </h3>
                   <div style={{ fontSize: '0.75rem', color: '#e2e8f0', marginTop: '2px' }}>
-                    Drive: <strong style={{ color: '#FFDB58' }}>{activeDrive?.title || 'Campus Placement Drive'}</strong> • {driveStudents.length} candidates in drive
+                    Drive: <strong style={{ color: '#FFDB58' }}>{scheduleDriveId === 'ALL' ? 'All Added Drives' : (drives.find(d => d.id === scheduleDriveId)?.title || activeDrive?.title || 'Campus Placement Drive')}</strong> • {candidatesEligibleForSchedule.length} candidates ready
                   </div>
                 </div>
               </div>
@@ -1622,31 +1639,7 @@ export default function PublishedDriveBoard({
                   </div>
 
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <label className="form-label">Duration / Student *</label>
-                      <div style={{ display: 'flex', gap: '4px' }}>
-                        {[10, 15, 20, 30].map(m => (
-                          <button
-                            key={m}
-                            type="button"
-                            onClick={() => setScheduleSlotMinutes(m)}
-                            style={{
-                              fontSize: '0.68rem',
-                              padding: '1px 5px',
-                              borderRadius: '3px',
-                              border: '1px solid',
-                              borderColor: scheduleSlotMinutes === m ? '#154360' : '#cbd5e1',
-                              background: scheduleSlotMinutes === m ? '#154360' : '#ffffff',
-                              color: scheduleSlotMinutes === m ? '#FFDB58' : '#64748b',
-                              cursor: 'pointer',
-                              fontWeight: 700
-                            }}
-                          >
-                            {m}m
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                    <label className="form-label">Duration / Student *</label>
                     <select 
                       className="form-select"
                       value={scheduleSlotMinutes}
@@ -1677,54 +1670,49 @@ export default function PublishedDriveBoard({
                 </div>
 
                 {/* Scope & Batch Limit */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '12px', marginTop: '12px' }}>
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label">Filter Candidates</label>
+                    <label className="form-label">Filter Candidates by Added Drive *</label>
                     <select 
                       className="form-select"
-                      value={scheduleCandidateScope}
-                      onChange={e => setScheduleCandidateScope(e.target.value)}
+                      value={scheduleDriveId}
+                      onChange={e => {
+                        const dId = e.target.value;
+                        setScheduleDriveId(dId);
+                        const chosen = drives.find(d => d.id === dId);
+                        if (chosen?.driveDate) {
+                          setScheduleDate(chosen.driveDate);
+                        }
+                      }}
                     >
-                      <option value="ALL">All Candidates in Drive ({driveStudents.length})</option>
-                      <option value="ONLINE_ASSESSMENT">Only Online Test Cleared ({driveStudents.filter(s => s.stage === 'ONLINE_ASSESSMENT').length})</option>
-                      <option value="APPLIED">Only Applied Candidates ({driveStudents.filter(s => s.stage === 'APPLIED').length})</option>
-                      <option value="TECH_INTERVIEW">Already in Technical Interview ({driveStudents.filter(s => s.stage === 'TECH_INTERVIEW').length})</option>
+                      {drives.map(d => {
+                        const driveCount = students.filter(s => s.driveId === d.id).length;
+                        return (
+                          <option key={d.id} value={d.id}>
+                            {d.title} ({d.collegeName || 'Campus'}) — {driveCount} Candidates
+                          </option>
+                        );
+                      })}
+                      {drives.length > 1 && (
+                        <option value="ALL">All Added Drives ({students.length} Candidates)</option>
+                      )}
                     </select>
                   </div>
 
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <label className="form-label">Number of Candidates to Schedule</label>
-                      <div style={{ display: 'flex', gap: '4px' }}>
-                        {[10, 25, 50, driveStudents.length].map((num, i) => (
-                          <button
-                            key={i}
-                            type="button"
-                            onClick={() => setScheduleLimit(num)}
-                            style={{
-                              fontSize: '0.68rem',
-                              padding: '1px 5px',
-                              borderRadius: '3px',
-                              border: '1px solid #cbd5e1',
-                              background: scheduleLimit === num ? '#154360' : '#ffffff',
-                              color: scheduleLimit === num ? '#FFDB58' : '#64748b',
-                              cursor: 'pointer',
-                              fontWeight: 700
-                            }}
-                          >
-                            {num === driveStudents.length ? 'All' : num}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <input 
-                      type="number" 
-                      min="1" 
-                      max={driveStudents.length || 100}
-                      className="form-input" 
+                    <label className="form-label">Number of Candidates to Schedule *</label>
+                    <select 
+                      className="form-select"
                       value={scheduleLimit}
-                      onChange={e => setScheduleLimit(parseInt(e.target.value, 10) || 1)}
-                    />
+                      onChange={e => setScheduleLimit(parseInt(e.target.value, 10))}
+                    >
+                      <option value="5">First 5 Candidates</option>
+                      <option value="10">First 10 Candidates</option>
+                      <option value="25">First 25 Candidates</option>
+                      <option value="50">First 50 Candidates</option>
+                      <option value="100">First 100 Candidates</option>
+                      <option value="99999">All Candidates in Selected Drive</option>
+                    </select>
                   </div>
                 </div>
               </div>
@@ -1735,37 +1723,14 @@ export default function PublishedDriveBoard({
                   <Video size={15} color="#154360" /> 2. Google Meet Room & Interviewer
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '12px' }}>
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <label className="form-label">Google Meet Link *</label>
-                      <div style={{ display: 'flex', gap: '6px' }}>
-                        <button
-                          type="button"
-                          onClick={handleGenerateMeetLink}
-                          className="btn-secondary"
-                          style={{ fontSize: '0.7rem', padding: '2px 6px', gap: '3px' }}
-                        >
-                          <Sparkles size={11} color="#059669" /> Auto-Generate
-                        </button>
-                        {scheduleMeetLink && (
-                          <button
-                            type="button"
-                            onClick={() => window.open(scheduleMeetLink, '_blank')}
-                            className="btn-secondary"
-                            style={{ fontSize: '0.7rem', padding: '2px 6px', gap: '3px' }}
-                            title="Test Meet Room"
-                          >
-                            <ExternalLink size={11} /> Test
-                          </button>
-                        )}
-                      </div>
-                    </div>
+                    <label className="form-label">Google Meet Link *</label>
                     <div style={{ position: 'relative' }}>
                       <input 
                         type="url" 
                         className="form-input" 
-                        placeholder="https://meet.google.com/abc-defg-hij"
+                        placeholder="https://meet.google.com/xxx-yyyy-zzz"
                         value={scheduleMeetLink}
                         onChange={e => setScheduleMeetLink(e.target.value)}
                         required
@@ -1776,14 +1741,29 @@ export default function PublishedDriveBoard({
                   </div>
 
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label">Interviewer / Panel Name</label>
-                    <input 
-                      type="text" 
-                      className="form-input" 
-                      placeholder="e.g. Technical Interview Panel 1"
+                    <label className="form-label">Interviewer / Panel Member *</label>
+                    <select 
+                      className="form-select"
                       value={schedulePanelist}
                       onChange={e => setSchedulePanelist(e.target.value)}
-                    />
+                    >
+                      {hrStaffList.map(u => {
+                        const roleLabel = u.role === 'MAIN_HR' 
+                          ? 'HR Manager' 
+                          : u.role === 'HR_INTERN' 
+                            ? 'HR Intern' 
+                            : u.role === 'ADMIN' 
+                              ? 'Admin' 
+                              : 'HR Staff';
+                        const displayVal = `${u.name} (${u.title || roleLabel})`;
+                        return (
+                          <option key={u.id} value={displayVal}>
+                            {u.name} — {u.title || roleLabel}
+                          </option>
+                        );
+                      })}
+                      <option value="Combined TA HR Panel">Combined TA HR Panel</option>
+                    </select>
                   </div>
                 </div>
               </div>

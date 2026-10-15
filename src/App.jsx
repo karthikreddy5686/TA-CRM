@@ -1627,6 +1627,7 @@ export default function App() {
               onBatchUpdateStudents={handleBatchUpdateStudents}
               addToast={addToast}
               currentUser={currentUser}
+              users={users}
             />
           )}
 
