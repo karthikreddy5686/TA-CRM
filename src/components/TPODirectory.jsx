@@ -20,10 +20,8 @@ import {
   RefreshCw,
   Upload,
   Sparkles,
-  AlertCircle,
-  GitFork
+  AlertCircle
 } from 'lucide-react';
-import LeadPipeline from './LeadPipeline';
 
 const getStatusBadgeStyle = (status) => {
   switch (status) {
@@ -54,8 +52,7 @@ export default function TPODirectory({
   onUpdateTpo,
   onDeleteTpo,
   onUpdateTpoStatus,
-  onScheduleFollowUp,
-  onNavigateToPipeline
+  onScheduleFollowUp
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
@@ -483,27 +480,6 @@ export default function TPODirectory({
             )}
           </button>
 
-          <button 
-            type="button"
-            onClick={() => {
-              const el = document.getElementById('pipeline-outreach-section');
-              if (el) el.scrollIntoView({ behavior: 'smooth' });
-              if (onNavigateToPipeline) onNavigateToPipeline();
-            }}
-            className="btn-navy-outline btn-black-sm" 
-            style={{ 
-              fontWeight: 700, 
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '6px 12px',
-              fontSize: '0.85rem'
-            }}
-            title="Jump to Lead Pipeline"
-          >
-            <GitFork size={15} color="#154360" /> Lead Pipeline
-          </button>
-
           <button onClick={() => setIsAddModalOpen(true)} className="btn-mustard btn-black-sm" style={{ fontWeight: 800 }}>
             <Plus size={15} color="#154360" /> Add TPO
           </button>
@@ -897,20 +873,6 @@ export default function TPODirectory({
             ))
           )}
         </div>
-      </div>
-
-      {/* Lead Pipeline Section Placed Directly Below TPO Directory */}
-      <div id="pipeline-outreach-section" style={{ marginTop: '20px' }}>
-        <LeadPipeline 
-          tpos={tpos}
-          colleges={colleges}
-          users={users}
-          currentRole={currentRole}
-          onStartCall={onStartCall}
-          onUpdateTpoStatus={onUpdateTpoStatus}
-          onScheduleFollowUp={onScheduleFollowUp}
-          onAddTpo={onAddTpo}
-        />
       </div>
 
       {/* Edit TPO Modal */}

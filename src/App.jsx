@@ -1721,7 +1721,6 @@ export default function App() {
               onDeleteTpo={handleDeleteTpo}
               onUpdateTpoStatus={handleUpdateTpoStatus}
               onScheduleFollowUp={handleScheduleFollowUpFromTpo}
-              onNavigateToPipeline={() => setActiveTab('pipeline')}
             />
           )}
 
