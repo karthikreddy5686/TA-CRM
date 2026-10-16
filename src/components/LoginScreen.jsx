@@ -265,7 +265,7 @@ export default function LoginScreen({ onLogin, users = [] }) {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '24px 16px',
-      fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+      fontFamily: "'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
       boxSizing: 'border-box'
     }}>
       <div style={{
@@ -292,7 +292,7 @@ export default function LoginScreen({ onLogin, users = [] }) {
             margin: '0 auto 14px',
             fontWeight: 800,
             fontSize: '1.3rem',
-            fontFamily: 'Space Grotesk, sans-serif',
+            fontFamily: "'Public Sans', sans-serif",
             boxShadow: '0 4px 6px -1px rgba(21, 67, 96, 0.25)'
           }}>
             TA

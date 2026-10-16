@@ -681,7 +681,7 @@ export default function PublishedDriveBoard({
             {/* Mustard Yellow Total Counter Badge */}
             <div style={{ background: '#FFDB58', border: '1px solid #fae27a', borderRadius: 'var(--radius-sm)', padding: '0 10px', height: '32px', display: 'inline-flex', alignItems: 'center', boxShadow: '0 1px 3px rgba(255, 219, 88, 0.3)' }}>
               <span style={{ fontSize: 'var(--font-10)', lineHeight: 'var(--lh-10)', fontWeight: 800, color: '#154360', marginRight: '6px' }}>TOTAL:</span>
-              <span style={{ fontSize: 'var(--font-base)', fontWeight: 800, color: '#154360', fontFamily: 'Space Grotesk, sans-serif' }}>
+              <span style={{ fontSize: 'var(--font-base)', fontWeight: 800, color: '#154360', fontFamily: "'Public Sans', sans-serif" }}>
                 {driveStudents.length}
               </span>
             </div>
@@ -689,7 +689,7 @@ export default function PublishedDriveBoard({
             {/* Navy Blue In-Interviews Counter Badge */}
             <div style={{ background: '#154360', border: '1px solid #0e2e42', borderRadius: 'var(--radius-sm)', padding: '0 10px', height: '32px', display: 'inline-flex', alignItems: 'center', boxShadow: '0 1px 3px rgba(21, 67, 96, 0.3)' }}>
               <span style={{ fontSize: 'var(--font-10)', lineHeight: 'var(--lh-10)', fontWeight: 700, color: '#ffffff', marginRight: '6px' }}>IN INTERVIEWS:</span>
-              <span style={{ fontSize: 'var(--font-base)', fontWeight: 800, color: '#FFDB58', fontFamily: 'Space Grotesk, sans-serif' }}>
+              <span style={{ fontSize: 'var(--font-base)', fontWeight: 800, color: '#FFDB58', fontFamily: "'Public Sans', sans-serif" }}>
                 {driveStudents.filter(s => s.stage === 'TECH_INTERVIEW' || s.stage === 'HR_INTERVIEW').length}
               </span>
             </div>

@@ -60,6 +60,22 @@
   ],
   "drives": [
     {
+      "id": "drv-1792147967632",
+      "title": "Spring 2026 Recruitment Drive",
+      "mode": "Online",
+      "collegeId": "col-1792147967632",
+      "collegeName": "Indian Institute of Technology, Bombay",
+      "jobRole": "CGA",
+      "ctc": "8.5 LPA",
+      "criteria": "",
+      "driveDate": "61025-02-02",
+      "status": "CONFIRMED",
+      "registeredStudents": 0,
+      "shortlistedStudents": 0,
+      "createdById": "user-main-hr",
+      "createdAt": "2026-10-16T10:52:47.632Z"
+    },
+    {
       "id": "drv-1",
       "title": "Graduate Software Engineer 2026",
       "collegeId": "col-1",
@@ -415,5 +431,5 @@
       "notes": "Verify test environment & send calendar invite for round 2 technical interview."
     }
   ],
-  "updatedAt": "2026-10-16T10:19:12.771Z"
+  "updatedAt": "2026-10-16T10:53:00.143Z"
 }

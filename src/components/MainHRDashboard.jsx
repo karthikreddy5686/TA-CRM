@@ -268,7 +268,7 @@ export default function MainHRDashboard({
                   </td>
 
                   <td>
-                    <div style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700, fontSize: 'var(--font-sm)' }}>
+                    <div style={{ fontFamily: "'Public Sans', sans-serif", fontWeight: 700, fontSize: 'var(--font-sm)' }}>
                       {formatDuration(intern.totalSeconds)}
                     </div>
                   </td>
@@ -363,7 +363,7 @@ export default function MainHRDashboard({
               }}>
                 <div>
                   <div style={{ fontSize: 'var(--font-10)', color: '#71717a', fontWeight: 600 }}>Talk Time</div>
-                  <div style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 800, fontSize: 'var(--font-sm)', color: '#154360' }}>
+                  <div style={{ fontFamily: "'Public Sans', sans-serif", fontWeight: 800, fontSize: 'var(--font-sm)', color: '#154360' }}>
                     {formatDuration(intern.totalSeconds)}
                   </div>
                 </div>
@@ -477,7 +477,7 @@ export default function MainHRDashboard({
 
                     <td>
                       <span style={{ 
-                        fontFamily: 'Space Grotesk, sans-serif', 
+                        fontFamily: "'Public Sans', sans-serif", 
                         fontWeight: 700, 
                         color: '#154360',
                         background: '#ebf5fb',
@@ -553,7 +553,7 @@ export default function MainHRDashboard({
                     {call.callType === 'VIDEO' ? 'Video Meet' : 'Audio Call'}
                   </span>
                   <span style={{ 
-                    fontFamily: 'Space Grotesk, sans-serif', 
+                    fontFamily: "'Public Sans', sans-serif", 
                     fontWeight: 700, 
                     background: '#ffffff', 
                     border: '1px solid #e2e8f0', 
