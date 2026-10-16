@@ -23,6 +23,24 @@ import {
   AlertCircle
 } from 'lucide-react';
 
+const getStatusBadgeStyle = (status) => {
+  switch (status) {
+    case 'DRIVE_CONFIRMED':
+      return { background: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0' };
+    case 'DETAILS_SENT':
+      return { background: '#eff6ff', color: '#1e40af', border: '1px solid #bfdbfe' };
+    case 'FOLLOW_UP_NEEDED':
+    case 'CALL_AGAIN':
+      return { background: '#fffbeb', color: '#92400e', border: '1px solid #fde68a' };
+    case 'NOT_ANSWERED':
+      return { background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' };
+    case 'NOT_INTERESTED':
+      return { background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' };
+    default:
+      return { background: '#ffffff', color: '#09090b', border: '1px solid #cbd5e1' };
+  }
+};
+
 export default function TPODirectory({ 
   tpos, 
   colleges, 
@@ -250,7 +268,7 @@ export default function TPODirectory({
         designation: designation || 'Training & Placement Officer',
         city: city || 'Campus City',
         tier: cleanTier,
-        status: ['DRIVE_CONFIRMED', 'PITCHED', 'CONTACTED', 'NEW_LEAD'].includes((status || '').toUpperCase().replace(/\s+/g, '_'))
+        status: ['NOT_ANSWERED', 'NOT_INTERESTED', 'DRIVE_CONFIRMED', 'DETAILS_SENT', 'FOLLOW_UP_NEEDED', 'CALL_AGAIN', 'PITCHED', 'CONTACTED', 'NEW_LEAD'].includes((status || '').toUpperCase().replace(/\s+/g, '_'))
           ? (status || '').toUpperCase().replace(/\s+/g, '_')
           : 'NEW_LEAD',
         assignedInternId: defaultStaff.id,
@@ -358,15 +376,24 @@ export default function TPODirectory({
     setTimeout(() => setCopiedSample(false), 2000);
   };
 
-  // Filtered TPOs
-  const filteredTpos = tpos.filter(tpo => {
-    const matchesSearch = 
-      tpo.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tpo.collegeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tpo.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tpo.phone.includes(searchTerm);
+  // TPO Outreach Section Counts
+  const countAll = (tpos || []).length;
+  const countNotAnswered = (tpos || []).filter(t => t.status === 'NOT_ANSWERED').length;
+  const countNotInterested = (tpos || []).filter(t => t.status === 'NOT_INTERESTED').length;
+  const countDriveConfirmed = (tpos || []).filter(t => t.status === 'DRIVE_CONFIRMED').length;
+  const countDetailsSent = (tpos || []).filter(t => t.status === 'DETAILS_SENT').length;
+  const countCallAgain = (tpos || []).filter(t => t.status === 'FOLLOW_UP_NEEDED' || t.status === 'CALL_AGAIN').length;
 
-    const matchesStatus = statusFilter === 'ALL' || tpo.status === statusFilter;
+  // Filtered TPOs
+  const filteredTpos = (tpos || []).filter(tpo => {
+    const matchesSearch = 
+      (tpo.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (tpo.collegeName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (tpo.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (tpo.phone || '').includes(searchTerm);
+
+    const matchesStatus = statusFilter === 'ALL' || 
+      (statusFilter === 'FOLLOW_UP_NEEDED' ? (tpo.status === 'FOLLOW_UP_NEEDED' || tpo.status === 'CALL_AGAIN') : tpo.status === statusFilter);
     const matchesIntern = internFilter === 'ALL' || tpo.assignedInternId === internFilter;
 
     return matchesSearch && matchesStatus && matchesIntern;
@@ -459,6 +486,128 @@ export default function TPODirectory({
         </div>
       </div>
 
+      {/* TPO Outreach Sections / KPI Cards */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', 
+        gap: '8px', 
+        marginBottom: '16px' 
+      }}>
+        <div 
+          onClick={() => setStatusFilter('ALL')}
+          style={{ 
+            background: statusFilter === 'ALL' ? '#ebf5fb' : '#ffffff', 
+            border: statusFilter === 'ALL' ? '2px solid #154360' : '1px solid #e2e8f0', 
+            borderRadius: '8px', 
+            padding: '8px 12px',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#154360', textTransform: 'uppercase' }}>
+            All Colleges
+          </div>
+          <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#154360', marginTop: '1px' }}>
+            {countAll}
+          </div>
+        </div>
+
+        <div 
+          onClick={() => setStatusFilter('NOT_ANSWERED')}
+          style={{ 
+            background: statusFilter === 'NOT_ANSWERED' ? '#f1f5f9' : '#ffffff', 
+            border: statusFilter === 'NOT_ANSWERED' ? '2px solid #475569' : '1px solid #e2e8f0', 
+            borderRadius: '8px', 
+            padding: '8px 12px',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase' }}>
+            1. Not Answered
+          </div>
+          <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#475569', marginTop: '1px' }}>
+            {countNotAnswered}
+          </div>
+        </div>
+
+        <div 
+          onClick={() => setStatusFilter('NOT_INTERESTED')}
+          style={{ 
+            background: statusFilter === 'NOT_INTERESTED' ? '#fef2f2' : '#ffffff', 
+            border: statusFilter === 'NOT_INTERESTED' ? '2px solid #dc2626' : '1px solid #e2e8f0', 
+            borderRadius: '8px', 
+            padding: '8px 12px',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#dc2626', textTransform: 'uppercase' }}>
+            2. Not Interested
+          </div>
+          <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#dc2626', marginTop: '1px' }}>
+            {countNotInterested}
+          </div>
+        </div>
+
+        <div 
+          onClick={() => setStatusFilter('DRIVE_CONFIRMED')}
+          style={{ 
+            background: statusFilter === 'DRIVE_CONFIRMED' ? '#ecfdf5' : '#ffffff', 
+            border: statusFilter === 'DRIVE_CONFIRMED' ? '2px solid #059669' : '1px solid #e2e8f0', 
+            borderRadius: '8px', 
+            padding: '8px 12px',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#059669', textTransform: 'uppercase' }}>
+            3. Drive Confirmed
+          </div>
+          <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#059669', marginTop: '1px' }}>
+            {countDriveConfirmed}
+          </div>
+        </div>
+
+        <div 
+          onClick={() => setStatusFilter('DETAILS_SENT')}
+          style={{ 
+            background: statusFilter === 'DETAILS_SENT' ? '#eff6ff' : '#ffffff', 
+            border: statusFilter === 'DETAILS_SENT' ? '2px solid #2563eb' : '1px solid #e2e8f0', 
+            borderRadius: '8px', 
+            padding: '8px 12px',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#2563eb', textTransform: 'uppercase' }}>
+            4. Details Sent
+          </div>
+          <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#2563eb', marginTop: '1px' }}>
+            {countDetailsSent}
+          </div>
+        </div>
+
+        <div 
+          onClick={() => setStatusFilter('FOLLOW_UP_NEEDED')}
+          style={{ 
+            background: statusFilter === 'FOLLOW_UP_NEEDED' ? '#fffbeb' : '#ffffff', 
+            border: statusFilter === 'FOLLOW_UP_NEEDED' ? '2px solid #d97706' : '1px solid #e2e8f0', 
+            borderRadius: '8px', 
+            padding: '8px 12px',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#d97706', textTransform: 'uppercase' }}>
+            5. Call Again / Follow Up
+          </div>
+          <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#d97706', marginTop: '1px' }}>
+            {countCallAgain}
+          </div>
+        </div>
+      </div>
+
       {/* Filter and Search Bar */}
       <div className="content-card" style={{ marginBottom: '16px', padding: '14px 20px' }}>
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -479,12 +628,14 @@ export default function TPODirectory({
               className="form-select"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              style={{ minWidth: '140px', fontSize: '0.825rem', padding: '6px 10px' }}
+              style={{ minWidth: '150px', fontSize: '0.825rem', padding: '6px 10px', fontWeight: 600 }}
             >
-              <option value="ALL">All Status</option>
-              <option value="DRIVE_CONFIRMED">Drive Confirmed</option>
-              <option value="PITCHED">Pitched</option>
-              <option value="CONTACTED">Contacted</option>
+              <option value="ALL">All Status ({countAll})</option>
+              <option value="NOT_ANSWERED">1) Not Answered ({countNotAnswered})</option>
+              <option value="NOT_INTERESTED">2) Not Interested ({countNotInterested})</option>
+              <option value="DRIVE_CONFIRMED">3) Drive Confirmed ({countDriveConfirmed})</option>
+              <option value="DETAILS_SENT">4) Details Sent ({countDetailsSent})</option>
+              <option value="FOLLOW_UP_NEEDED">5) Call Again / Follow Up Needed ({countCallAgain})</option>
               <option value="NEW_LEAD">New Lead</option>
             </select>
 
@@ -562,24 +713,25 @@ export default function TPODirectory({
 
                     <td>
                       <select 
-                        value={tpo.status}
+                        value={tpo.status || 'NEW_LEAD'}
                         onChange={(e) => onUpdateTpoStatus(tpo.id, e.target.value)}
                         style={{
                           fontSize: '0.75rem',
-                          fontWeight: 600,
+                          fontWeight: 700,
                           padding: '3px 8px',
                           borderRadius: '12px',
-                          border: '1px solid #cbd5e1',
-                          background: tpo.status === 'DRIVE_CONFIRMED' ? '#ecfdf5' : '#ffffff',
-                          color: tpo.status === 'DRIVE_CONFIRMED' ? '#065f46' : '#09090b',
-                          cursor: 'pointer'
+                          cursor: 'pointer',
+                          ...getStatusBadgeStyle(tpo.status)
                         }}
                       >
+                        <option value="NOT_ANSWERED">1) Not Answered</option>
+                        <option value="NOT_INTERESTED">2) Not Interested</option>
+                        <option value="DRIVE_CONFIRMED">3) Drive Confirmed</option>
+                        <option value="DETAILS_SENT">4) Details Sent</option>
+                        <option value="FOLLOW_UP_NEEDED">5) Call Again / Follow Up</option>
                         <option value="NEW_LEAD">New Lead</option>
-                        <option value="CONTACTED">Contacted</option>
-                        <option value="PITCHED">Pitched / Warm</option>
-                        <option value="DRIVE_CONFIRMED">Drive Confirmed</option>
-                        <option value="NOT_INTERESTED">Not Interested</option>
+                        {tpo.status === 'CONTACTED' && <option value="CONTACTED">Contacted</option>}
+                        {tpo.status === 'PITCHED' && <option value="PITCHED">Pitched</option>}
                       </select>
                     </td>
 
@@ -621,28 +773,6 @@ export default function TPODirectory({
                         >
                           <Edit3 size={14} />
                         </button>
-
-                        <button 
-                          onClick={() => onScheduleFollowUp(tpo)}
-                          className="btn-icon"
-                          style={{ width: '30px', height: '30px' }}
-                          title="Schedule Follow-Up Date"
-                          aria-label="Schedule Follow-Up Date"
-                        >
-                          <Calendar size={14} />
-                        </button>
-
-                        {onDeleteTpo && (
-                          <button 
-                            onClick={() => onDeleteTpo(tpo.id)}
-                            className="btn-icon"
-                            style={{ width: '30px', height: '30px', color: '#ef4444' }}
-                            title="Delete TPO contact"
-                            aria-label="Delete TPO contact"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        )}
                       </div>
                     </td>
                   </tr>
@@ -681,23 +811,25 @@ export default function TPODirectory({
                     </div>
                   </div>
                   <select 
-                    value={tpo.status}
+                    value={tpo.status || 'NEW_LEAD'}
                     onChange={(e) => onUpdateTpoStatus(tpo.id, e.target.value)}
                     style={{
                       fontSize: '0.7rem',
                       fontWeight: 700,
                       padding: '2px 6px',
                       borderRadius: '6px',
-                      border: '1px solid #cbd5e1',
-                      background: tpo.status === 'DRIVE_CONFIRMED' ? '#ecfdf5' : '#ffffff',
-                      color: tpo.status === 'DRIVE_CONFIRMED' ? '#065f46' : '#09090b'
+                      cursor: 'pointer',
+                      ...getStatusBadgeStyle(tpo.status)
                     }}
                   >
+                    <option value="NOT_ANSWERED">1) Not Answered</option>
+                    <option value="NOT_INTERESTED">2) Not Interested</option>
+                    <option value="DRIVE_CONFIRMED">3) Confirmed</option>
+                    <option value="DETAILS_SENT">4) Details Sent</option>
+                    <option value="FOLLOW_UP_NEEDED">5) Call Again</option>
                     <option value="NEW_LEAD">New Lead</option>
-                    <option value="CONTACTED">Contacted</option>
-                    <option value="PITCHED">Pitched</option>
-                    <option value="DRIVE_CONFIRMED">Confirmed</option>
-                    <option value="NOT_INTERESTED">Declined</option>
+                    {tpo.status === 'CONTACTED' && <option value="CONTACTED">Contacted</option>}
+                    {tpo.status === 'PITCHED' && <option value="PITCHED">Pitched</option>}
                   </select>
                 </div>
 
@@ -736,28 +868,6 @@ export default function TPODirectory({
                   >
                     <Edit3 size={13} />
                   </button>
-
-                  <button 
-                    onClick={() => onScheduleFollowUp(tpo)}
-                    className="btn-icon"
-                    style={{ width: '28px', height: '28px' }}
-                    title="Follow-Up"
-                    aria-label="Schedule Follow-Up"
-                  >
-                    <Calendar size={13} />
-                  </button>
-
-                  {onDeleteTpo && (
-                    <button 
-                      onClick={() => onDeleteTpo(tpo.id)}
-                      className="btn-icon"
-                      style={{ width: '28px', height: '28px', color: '#ef4444' }}
-                      title="Delete TPO"
-                      aria-label="Delete TPO"
-                    >
-                      <Trash2 size={13} />
-                    </button>
-                  )}
                 </div>
               </div>
             ))
@@ -872,12 +982,16 @@ export default function TPODirectory({
                       className="form-select"
                       value={editForm.status}
                       onChange={(e) => setEditForm(prev => ({ ...prev, status: e.target.value }))}
+                      style={{ fontWeight: 600 }}
                     >
+                      <option value="NOT_ANSWERED">1) Not Answered</option>
+                      <option value="NOT_INTERESTED">2) Not Interested</option>
+                      <option value="DRIVE_CONFIRMED">3) Drive Confirmed</option>
+                      <option value="DETAILS_SENT">4) Details Sent</option>
+                      <option value="FOLLOW_UP_NEEDED">5) Call Again / Follow Up Needed</option>
                       <option value="NEW_LEAD">New Lead</option>
                       <option value="CONTACTED">Contacted</option>
-                      <option value="PITCHED">Pitched / Warm</option>
-                      <option value="DRIVE_CONFIRMED">Drive Confirmed</option>
-                      <option value="NOT_INTERESTED">Not Interested / Declined</option>
+                      <option value="PITCHED">Pitched</option>
                     </select>
                   </div>
 

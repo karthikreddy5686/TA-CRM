@@ -1471,11 +1471,13 @@ export default function AdminDashboard({
                           }}
                           style={{ fontSize: '0.75rem', padding: '4px 8px', fontWeight: 700 }}
                         >
+                          <option value="NOT_ANSWERED">1) Not Answered</option>
+                          <option value="NOT_INTERESTED">2) Not Interested</option>
+                          <option value="DRIVE_CONFIRMED">3) Drive Confirmed</option>
+                          <option value="DETAILS_SENT">4) Details Sent</option>
+                          <option value="FOLLOW_UP_NEEDED">5) Call Again / Follow Up</option>
                           <option value="LEAD">Lead</option>
                           <option value="CONTACTED">Contacted</option>
-                          <option value="DRIVE_CONFIRMED">Drive Confirmed</option>
-                          <option value="FOLLOW_UP">Follow Up</option>
-                          <option value="NOT_INTERESTED">Not Interested</option>
                         </select>
                       </td>
                       <td style={{ padding: '10px 14px', textAlign: 'right' }}>
@@ -2208,11 +2210,13 @@ export default function AdminDashboard({
                       value={tpoFormData.status}
                       onChange={e => setTpoFormData(prev => ({ ...prev, status: e.target.value }))}
                     >
+                      <option value="NOT_ANSWERED">1) Not Answered</option>
+                      <option value="NOT_INTERESTED">2) Not Interested</option>
+                      <option value="DRIVE_CONFIRMED">3) Drive Confirmed</option>
+                      <option value="DETAILS_SENT">4) Details Sent</option>
+                      <option value="FOLLOW_UP_NEEDED">5) Call Again / Follow Up</option>
                       <option value="LEAD">Lead</option>
                       <option value="CONTACTED">Contacted</option>
-                      <option value="DRIVE_CONFIRMED">Drive Confirmed</option>
-                      <option value="FOLLOW_UP">Follow Up</option>
-                      <option value="NOT_INTERESTED">Not Interested</option>
                     </select>
                   </div>
                 </div>

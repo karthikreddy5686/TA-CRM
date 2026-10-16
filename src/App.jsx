@@ -1051,13 +1051,18 @@ export default function App() {
 
     // 3. Update TPO status if applicable
     if (dispositionData.recipientType === 'TPO') {
-      let nextStatus = 'CONTACTED';
-      if (disposition === 'DRIVE_CONFIRMED') nextStatus = 'DRIVE_CONFIRMED';
-      else if (disposition === 'PITCHED') nextStatus = 'PITCHED';
+      let nextStatus = disposition;
+      if (disposition === 'FOLLOW_UP_NEEDED' || disposition === 'CALL_AGAIN') nextStatus = 'FOLLOW_UP_NEEDED';
+      else if (disposition === 'NOT_ANSWERED') nextStatus = 'NOT_ANSWERED';
       else if (disposition === 'NOT_INTERESTED') nextStatus = 'NOT_INTERESTED';
+      else if (disposition === 'DRIVE_CONFIRMED') nextStatus = 'DRIVE_CONFIRMED';
+      else if (disposition === 'DETAILS_SENT') nextStatus = 'DETAILS_SENT';
 
       setTpos(prev => prev.map(t => {
-        if (t.name.includes(dispositionData.recipientName) || dispositionData.recipientName.includes(t.name)) {
+        const matchesEntityId = dispositionData.relatedEntityId && t.id === dispositionData.relatedEntityId;
+        const matchesName = t.name && (t.name.includes(dispositionData.recipientName) || dispositionData.recipientName.includes(t.name));
+        const matchesCollege = t.collegeName && dispositionData.recipientName.includes(t.collegeName);
+        if (matchesEntityId || matchesName || matchesCollege) {
           return { ...t, status: nextStatus, lastContacted: new Date().toISOString().split('T')[0] };
         }
         return t;

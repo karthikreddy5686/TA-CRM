@@ -10,6 +10,7 @@ export default function CallDispositionModal({
 }) {
   const [disposition, setDisposition] = useState(() => {
     if (sessionData?.callType === 'VIDEO') return 'SCREENING_PASSED';
+    if (sessionData?.recipientType === 'TPO') return 'NOT_ANSWERED';
     return 'FOLLOW_UP_NEEDED';
   });
   const [candidateStage, setCandidateStage] = useState(() => {
@@ -30,6 +31,8 @@ export default function CallDispositionModal({
     if (sessionData?.callType === 'VIDEO') {
       setDisposition('SCREENING_PASSED');
       setCandidateStage('TECH_INTERVIEW');
+    } else if (sessionData?.recipientType === 'TPO') {
+      setDisposition('NOT_ANSWERED');
     }
   }, [sessionData]);
 
@@ -138,16 +141,35 @@ export default function CallDispositionModal({
               <select 
                 className="form-select"
                 value={disposition}
-                onChange={(e) => setDisposition(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setDisposition(val);
+                  if (val === 'FOLLOW_UP_NEEDED') {
+                    setNeedFollowUp(true);
+                  }
+                }}
                 required
+                style={{ fontWeight: 600 }}
               >
-                <option value="SCREENING_PASSED">Candidate Interview Passed (Recommend Next Step)</option>
-                <option value="SCREENING_FAILED">Candidate Rejected / Not Eligible</option>
-                <option value="DRIVE_CONFIRMED">Drive Confirmed (TPO agreed on date & terms)</option>
-                <option value="PITCHED">Pitched / Positive Interest (Awaiting approval)</option>
-                <option value="FOLLOW_UP_NEEDED">Follow-up Required (Call again later)</option>
-                <option value="NO_ANSWER">No Answer / Line Busy</option>
-                <option value="NOT_INTERESTED">Not Interested / Declined</option>
+                {sessionData.recipientType === 'TPO' ? (
+                  <>
+                    <option value="NOT_ANSWERED">1) Not Answered</option>
+                    <option value="NOT_INTERESTED">2) Not Interested</option>
+                    <option value="DRIVE_CONFIRMED">3) Drive Confirmed</option>
+                    <option value="DETAILS_SENT">4) Details Sent</option>
+                    <option value="FOLLOW_UP_NEEDED">5) Call Again / Follow Up Needed</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="SCREENING_PASSED">Candidate Interview Passed (Recommend Next Step)</option>
+                    <option value="SCREENING_FAILED">Candidate Rejected / Not Eligible</option>
+                    <option value="DRIVE_CONFIRMED">Drive Confirmed (TPO agreed on date & terms)</option>
+                    <option value="DETAILS_SENT">Details Sent</option>
+                    <option value="FOLLOW_UP_NEEDED">Follow-up Required (Call again later)</option>
+                    <option value="NOT_ANSWERED">Not Answered / Line Busy</option>
+                    <option value="NOT_INTERESTED">Not Interested / Declined</option>
+                  </>
+                )}
               </select>
             </div>
 

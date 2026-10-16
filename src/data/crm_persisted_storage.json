@@ -1,6 +1,19 @@
 {
   "users": [
     {
+      "id": "intern-1791972714546",
+      "name": "muni",
+      "email": "lokisg19@gmail.com",
+      "password": "123456",
+      "role": "HR_INTERN",
+      "title": "Recruitment Intern",
+      "avatar": "IN",
+      "status": "online",
+      "dailyTargetHours": 3.5,
+      "dailyTargetLeads": 20,
+      "username": "lokisg19"
+    },
+    {
       "id": "hr-test1",
       "name": "Test User",
       "email": "test@example.com",
@@ -402,5 +415,5 @@
       "notes": "Verify test environment & send calendar invite for round 2 technical interview."
     }
   ],
-  "updatedAt": "2026-10-16T10:08:23.452Z"
+  "updatedAt": "2026-10-16T10:19:12.771Z"
 }
