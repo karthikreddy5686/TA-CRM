@@ -453,12 +453,16 @@ function crmServerStoragePlugin() {
           const isSendGrid = Boolean((pass && pass.startsWith('SG.')) || smtpConfig.service === 'sendgrid' || process.env.SENDGRID_API_KEY)
           const sendgridKey = (pass && pass.startsWith('SG.')) ? pass : (smtpConfig.pass || process.env.SENDGRID_API_KEY)
 
-          const isRealEmailReady = Boolean(isResend || isSendGrid || (pass && user))
+          const cleanPass = pass.replace(/\s+/g, '')
+          const isRealEmailReady = Boolean(isResend || isSendGrid || (cleanPass && user))
 
-          if (!isResend && !isSendGrid && pass && user) {
+          if (!isResend && !isSendGrid && cleanPass && user) {
             transporter = nodemailer.createTransport({
-              service: smtpConfig.service || 'gmail',
-              auth: { user, pass }
+              service: 'gmail',
+              auth: { 
+                user: user, 
+                pass: cleanPass 
+              }
             })
           }
 

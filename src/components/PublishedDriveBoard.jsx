@@ -115,7 +115,7 @@ export default function PublishedDriveBoard({
   const [copiedMeetLink, setCopiedMeetLink] = useState(false);
 
   // Email SMTP state for real Google Meet interview invite dispatch
-  const [emailProvider, setEmailProvider] = useState('resend');
+  const [emailProvider, setEmailProvider] = useState('gmail');
   const [smtpSenderEmail, setSmtpSenderEmail] = useState('karthikreddy5686@gmail.com');
   const [smtpAppPassword, setSmtpAppPassword] = useState('');
   const [isSendingLiveEmails, setIsSendingLiveEmails] = useState(false);
@@ -2429,23 +2429,23 @@ export default function PublishedDriveBoard({
                 ) : (
                   <div>
                     <div style={{ fontSize: '0.75rem', color: '#78350f', lineHeight: 1.4 }}>
-                      Interview invitations generated with Google Meet link for <strong>{dispatchConfirmationData.totalCount} candidates</strong>. Enter your Resend / SendGrid API Key (or Gmail App Password) to deliver live emails to students:
+                      Interview invitations generated with Google Meet links for <strong>{dispatchConfirmationData.totalCount} candidates</strong>. Enter your Gmail address and 16-character Google App Password below to deliver live emails directly to students:
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr 1fr auto', gap: '8px', marginTop: '8px', alignItems: 'center' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr auto', gap: '8px', marginTop: '8px', alignItems: 'center' }}>
                       <select
                         className="form-select"
                         value={emailProvider}
                         onChange={e => setEmailProvider(e.target.value)}
                         style={{ fontSize: '0.74rem', padding: '5px 6px' }}
                       >
+                        <option value="gmail">Gmail SMTP</option>
                         <option value="resend">Resend API</option>
                         <option value="sendgrid">SendGrid API</option>
-                        <option value="gmail">Gmail SMTP</option>
                       </select>
                       <input 
                         type="email"
                         className="form-input"
-                        placeholder={emailProvider === 'resend' ? 'Sender Email (e.g. hr@company.com)' : 'Sender Email / User'}
+                        placeholder="Sender Gmail (e.g. karthikreddy5686@gmail.com)"
                         value={smtpSenderEmail}
                         onChange={e => setSmtpSenderEmail(e.target.value)}
                         style={{ fontSize: '0.74rem', padding: '5px 8px' }}
@@ -2453,7 +2453,7 @@ export default function PublishedDriveBoard({
                       <input 
                         type="password"
                         className="form-input"
-                        placeholder={emailProvider === 'resend' ? 'Resend Key (re_...)' : emailProvider === 'sendgrid' ? 'SendGrid Key (SG...)' : '16-char App Password'}
+                        placeholder="16-digit Google App Password"
                         value={smtpAppPassword}
                         onChange={e => setSmtpAppPassword(e.target.value)}
                         style={{ fontSize: '0.74rem', padding: '5px 8px' }}
@@ -2467,6 +2467,9 @@ export default function PublishedDriveBoard({
                       >
                         {isSendingLiveEmails ? 'Sending...' : 'Save & Send Now'}
                       </button>
+                    </div>
+                    <div style={{ fontSize: '0.68rem', color: '#92400e', marginTop: '5px' }}>
+                      💡 Don't have an App Password? Generate one in 30 seconds at: <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noreferrer" style={{ color: '#0369a1', textDecoration: 'underline' }}>Google Account &gt; Security &gt; App Passwords</a>
                     </div>
                   </div>
                 )}
