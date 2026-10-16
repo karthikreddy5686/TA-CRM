@@ -4,6 +4,7 @@ import fs from 'fs'
 import path from 'path'
 import os from 'os'
 import { fileURLToPath } from 'url'
+import nodemailer from 'nodemailer'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DB_FILE = path.resolve(__dirname, 'src/data/crm_persisted_storage.json')
@@ -371,6 +372,206 @@ function crmServerStoragePlugin() {
         port: 5174,
         networkUrl: `http://${ip}:5174/`,
       }))
+      return
+    }
+
+    // 7. GET & POST SMTP Email Configuration
+    if (cleanUrl === '/api/smtp-config') {
+      if (req.method === 'GET') {
+        const db = readDb()
+        const config = db.smtpSettings || {}
+        res.setHeader('Content-Type', 'application/json')
+        res.end(JSON.stringify({
+          senderEmail: config.senderEmail || config.user || 'karthikreddy5686@gmail.com',
+          senderName: config.senderName || 'Talent Acquisition Team',
+          service: config.service || 'gmail',
+          configured: Boolean(config.pass && (config.user || config.senderEmail)),
+        }))
+        return
+      }
+      if (req.method === 'POST') {
+        let body = ''
+        req.on('data', chunk => { body += chunk })
+        req.on('end', () => {
+          try {
+            const incoming = JSON.parse(body || '{}')
+            const db = readDb()
+            const emailUser = (incoming.senderEmail || incoming.user || '').trim()
+            const emailPass = (incoming.pass || '').trim()
+            db.smtpSettings = {
+              senderEmail: emailUser,
+              user: emailUser,
+              pass: emailPass,
+              senderName: (incoming.senderName || 'Talent Acquisition Team').trim(),
+              service: incoming.service || 'gmail',
+              configured: Boolean(emailUser && emailPass),
+              updatedAt: new Date().toISOString()
+            }
+            writeDb(db)
+            console.log(`[SMTP] Updated email credentials for ${emailUser}`)
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ success: true, message: 'Email settings saved successfully', configured: db.smtpSettings.configured }))
+          } catch (e) {
+            res.statusCode = 500
+            res.end(JSON.stringify({ error: e.message }))
+          }
+        })
+        return
+      }
+    }
+
+    // 8. Dispatch Google Meet Interview Invites to Students
+    if (cleanUrl === '/api/send-interview-invites' && req.method === 'POST') {
+      let body = ''
+      req.on('data', chunk => { body += chunk })
+      req.on('end', async () => {
+        try {
+          const { 
+            driveTitle, 
+            collegeName, 
+            jobRole, 
+            interviewDate, 
+            meetLink, 
+            interviewer, 
+            scheduledList 
+          } = JSON.parse(body || '{}')
+
+          if (!Array.isArray(scheduledList) || scheduledList.length === 0) {
+            res.statusCode = 400
+            res.end(JSON.stringify({ error: 'No candidates provided in scheduledList' }))
+            return
+          }
+
+          const db = readDb()
+          const smtpConfig = db.smtpSettings || {}
+          const user = (smtpConfig.user || smtpConfig.senderEmail || process.env.SMTP_USER || 'karthikreddy5686@gmail.com').trim()
+          const pass = (smtpConfig.pass || process.env.SMTP_PASS || '').trim()
+
+          let transporter = null
+          const isRealEmailReady = Boolean(pass && user)
+
+          if (isRealEmailReady) {
+            transporter = nodemailer.createTransport({
+              service: smtpConfig.service || 'gmail',
+              auth: { user, pass }
+            })
+          }
+
+          const results = []
+          for (const item of scheduledList) {
+            const student = item.student || {}
+            const recipientEmail = student.email
+            const recipientName = student.name || 'Candidate'
+            const slotString = item.slotString || `${item.startFormatted} - ${item.endFormatted}` || 'Assigned Time Slot'
+
+            if (!recipientEmail || !recipientEmail.includes('@')) {
+              results.push({ email: recipientEmail, name: recipientName, status: 'SKIPPED', reason: 'No valid email address' })
+              continue
+            }
+
+            const htmlContent = `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
+                <div style="background: #154360; color: #ffffff; padding: 22px 24px; text-align: center; border-bottom: 4px solid #FFDB58;">
+                  <span style="background: #FFDB58; color: #154360; font-weight: 800; font-size: 11px; padding: 3px 10px; border-radius: 12px; text-transform: uppercase;">Campus Recruitment</span>
+                  <h2 style="margin: 8px 0 0; font-size: 20px; font-weight: 800; color: #ffffff;">Google Meet Interview Invitation</h2>
+                  <div style="font-size: 13px; color: #e2e8f0; margin-top: 4px;">${driveTitle || 'Campus Placement Drive'} • ${collegeName || ''}</div>
+                </div>
+
+                <div style="padding: 24px; color: #334155; line-height: 1.5;">
+                  <p style="font-size: 15px; margin-top: 0;">Dear <strong>${recipientName}</strong> (${student.rollNumber || 'Candidate'}),</p>
+                  <p style="font-size: 14px;">We are pleased to invite you for your Campus Placement Interview for <strong>${jobRole || 'Engineering & Operations'}</strong>.</p>
+
+                  <div style="background: #f0fdf4; border: 2px dashed #16a34a; border-radius: 10px; padding: 18px; margin: 20px 0; text-align: center;">
+                    <div style="font-size: 11px; font-weight: 700; color: #166534; text-transform: uppercase; letter-spacing: 0.5px;">Your Allotted Interview Slot</div>
+                    <div style="font-size: 24px; font-weight: 800; color: #15803d; margin: 6px 0;">⏰ ${slotString}</div>
+                    <div style="font-size: 13px; font-weight: 600; color: #14532d;">📅 Date: ${interviewDate}</div>
+                  </div>
+
+                  <div style="text-align: center; margin: 24px 0 16px;">
+                    <a href="${meetLink}" target="_blank" style="display: inline-block; background: #154360; color: #ffffff !important; text-decoration: none; font-weight: 800; font-size: 15px; padding: 14px 28px; border-radius: 8px; box-shadow: 0 4px 8px rgba(21, 67, 96, 0.25);">
+                      🎥 Join Google Meet Interview Room
+                    </a>
+                    <div style="font-size: 11px; color: #64748b; margin-top: 8px;">
+                      Direct Link: <a href="${meetLink}" style="color: #0284c7;">${meetLink}</a>
+                    </div>
+                  </div>
+
+                  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; margin-top: 20px; font-size: 12px; color: #475569;">
+                    <div style="font-weight: 700; color: #154360; margin-bottom: 4px;">📋 Important Candidate Guidelines:</div>
+                    <ul style="margin: 0; padding-left: 18px;">
+                      <li>Interviewer / Panel: <strong>${interviewer || 'Talent Acquisition Team'}</strong></li>
+                      <li>Join the Google Meet at least <strong>5 minutes before</strong> your designated slot.</li>
+                      <li>Keep your camera turned ON and microphone muted until requested.</li>
+                      <li>Have your resume and project documentation handy.</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 14px 20px; text-align: center; font-size: 11px; color: #94a3b8;">
+                  Sent via TalentConnect TA CRM • Talent Acquisition Operations
+                </div>
+              </div>
+            `
+
+            if (transporter) {
+              try {
+                await transporter.sendMail({
+                  from: `"${smtpConfig.senderName || 'Talent Acquisition Team'}" <${user}>`,
+                  to: recipientEmail,
+                  subject: `Interview Invitation: ${driveTitle || 'Campus Drive'} - ${recipientName} (${slotString})`,
+                  html: htmlContent
+                })
+                console.log(`[EMAIL DISPATCH] Sent interview link to ${recipientEmail}`)
+                results.push({ email: recipientEmail, name: recipientName, status: 'SENT' })
+              } catch (sendErr) {
+                console.error(`[EMAIL ERROR] Failed sending to ${recipientEmail}:`, sendErr.message)
+                results.push({ email: recipientEmail, name: recipientName, status: 'FAILED', error: sendErr.message })
+              }
+            } else {
+              // SMTP not configured yet - record as queued
+              console.log(`[EMAIL QUEUED] (No SMTP credentials configured): ${recipientEmail} (${slotString})`)
+              results.push({ 
+                email: recipientEmail, 
+                name: recipientName, 
+                status: 'QUEUED_NO_SMTP', 
+                message: 'Invite ready; provide Gmail App Password to dispatch live'
+              })
+            }
+          }
+
+          // Record in DB email logs
+          const emailLogs = Array.isArray(db.emailDispatchLogs) ? db.emailDispatchLogs : []
+          db.emailDispatchLogs = [
+            {
+              id: `email-dispatch-${Date.now()}`,
+              timestamp: new Date().toISOString(),
+              driveTitle,
+              interviewDate,
+              meetLink,
+              totalRecipients: scheduledList.length,
+              results
+            },
+            ...emailLogs
+          ].slice(0, 100)
+          writeDb(db)
+
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({
+            success: true,
+            isRealEmailReady,
+            senderEmail: user,
+            total: scheduledList.length,
+            sentCount: results.filter(r => r.status === 'SENT').length,
+            queuedCount: results.filter(r => r.status === 'QUEUED_NO_SMTP').length,
+            failedCount: results.filter(r => r.status === 'FAILED').length,
+            results
+          }))
+        } catch (err) {
+          console.error('[API send-interview-invites]', err)
+          res.statusCode = 500
+          res.end(JSON.stringify({ error: err.message }))
+        }
+      })
       return
     }
 

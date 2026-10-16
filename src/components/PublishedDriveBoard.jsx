@@ -114,6 +114,20 @@ export default function PublishedDriveBoard({
   const [copiedScheduleText, setCopiedScheduleText] = useState(false);
   const [copiedMeetLink, setCopiedMeetLink] = useState(false);
 
+  // Email SMTP state for real Google Meet interview invite dispatch
+  const [smtpSenderEmail, setSmtpSenderEmail] = useState('karthikreddy5686@gmail.com');
+  const [smtpAppPassword, setSmtpAppPassword] = useState('');
+  const [isSendingLiveEmails, setIsSendingLiveEmails] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/smtp-config')
+      .then(res => res.json())
+      .then(data => {
+        if (data.senderEmail) setSmtpSenderEmail(data.senderEmail);
+      })
+      .catch(() => {});
+  }, []);
+
   // List of active real HR Employees and Interns for Interviewer dropdown (purging dummy profiles)
   const hrStaffList = useMemo(() => {
     if (!Array.isArray(users)) return [];
@@ -194,22 +208,12 @@ export default function PublishedDriveBoard({
   const slotDuration = parseInt(scheduleSlotMinutes, 10) || 10;
   const maxDailyCapacity = slotDuration > 0 ? Math.floor(netWorkingMinutes / slotDuration) : 0;
 
-  // Initialize studentsToScheduleCount when drive candidates change
-  useEffect(() => {
-    if (allDriveCandidates.length > 0) {
-      const defaultCount = Math.min(allDriveCandidates.length, maxDailyCapacity > 0 ? maxDailyCapacity : allDriveCandidates.length);
-      setStudentsToScheduleCount(defaultCount);
-    } else {
-      setStudentsToScheduleCount(0);
-    }
-  }, [allDriveCandidates.length, maxDailyCapacity]);
-
-  // Filter candidates eligible for scheduling based on count chosen by HR
+  // Directly calculate and autofill candidates based on daily capacity from timings
   const candidatesEligibleForSchedule = useMemo(() => {
-    const count = parseInt(studentsToScheduleCount, 10);
-    const limit = (isNaN(count) || count <= 0) ? allDriveCandidates.length : count;
+    if (allDriveCandidates.length === 0) return [];
+    const limit = maxDailyCapacity > 0 ? maxDailyCapacity : allDriveCandidates.length;
     return allDriveCandidates.slice(0, limit);
-  }, [allDriveCandidates, studentsToScheduleCount]);
+  }, [allDriveCandidates, maxDailyCapacity]);
 
   // Synchronize selected IDs when candidate list changes
   useEffect(() => {
@@ -347,6 +351,29 @@ export default function PublishedDriveBoard({
       localStorage.setItem('tacrm_blast_logs', JSON.stringify([newLog, ...existingLogs]));
     } catch (e) {}
 
+    // Dispatch emails to all candidates with Google Meet links
+    let emailStatus = null;
+    try {
+      const emailRes = await fetch('/api/send-interview-invites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          driveTitle: targetDrive?.title || 'Campus Placement Drive',
+          collegeName: targetDrive?.collegeName || 'Campus',
+          jobRole: targetDrive?.jobRole || 'Engineering Associate',
+          interviewDate: scheduleDate,
+          meetLink: cleanMeet,
+          interviewer: schedulePanelist,
+          scheduledList: calculatedTimeSlots
+        })
+      });
+      if (emailRes.ok) {
+        emailStatus = await emailRes.json();
+      }
+    } catch (e) {
+      console.warn('Email dispatch error:', e);
+    }
+
     // Open success dispatch confirmation modal
     setDispatchConfirmationData({
       driveTitle: targetDrive?.title || 'Campus Placement Drive',
@@ -357,12 +384,17 @@ export default function PublishedDriveBoard({
       lastSlot: calculatedTimeSlots[calculatedTimeSlots.length - 1].endFormatted,
       totalCount: updatedStudents.length,
       meetLink: cleanMeet,
-      scheduledList: calculatedTimeSlots
+      scheduledList: calculatedTimeSlots,
+      emailStatus
     });
 
     setIsDispatching(false);
     if (addToast) {
-      addToast(`🎉 Dispatched interview slots & Google Meet links to ${updatedStudents.length} candidates!`, 'success');
+      if (emailStatus?.sentCount > 0) {
+        addToast(`🎉 Dispatched interview slots & emailed Google Meet links to ${emailStatus.sentCount} candidate inboxes!`, 'success');
+      } else {
+        addToast(`🎉 Dispatched interview slots & Google Meet links for ${updatedStudents.length} candidates!`, 'success');
+      }
     }
   };
 
@@ -406,6 +438,57 @@ export default function PublishedDriveBoard({
     }
     text += `\nPlease join 5 minutes before your time slot. All the best!`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  // Save SMTP settings and re-dispatch emails live
+  const handleSaveSmtpAndResend = async () => {
+    if (!smtpAppPassword.trim()) {
+      alert('Please enter your 16-character Google App Password.');
+      return;
+    }
+    setIsSendingLiveEmails(true);
+    try {
+      // 1. Save SMTP settings
+      await fetch('/api/smtp-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          senderEmail: smtpSenderEmail.trim() || 'karthikreddy5686@gmail.com',
+          user: smtpSenderEmail.trim() || 'karthikreddy5686@gmail.com',
+          pass: smtpAppPassword.trim(),
+          service: 'gmail'
+        })
+      });
+
+      // 2. Resend interview invites
+      if (dispatchConfirmationData?.scheduledList) {
+        const res = await fetch('/api/send-interview-invites', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            driveTitle: dispatchConfirmationData.driveTitle,
+            collegeName: dispatchConfirmationData.collegeName,
+            jobRole: dispatchConfirmationData.jobRole,
+            interviewDate: dispatchConfirmationData.scheduledDate,
+            meetLink: dispatchConfirmationData.meetLink,
+            interviewer: schedulePanelist,
+            scheduledList: dispatchConfirmationData.scheduledList
+          })
+        });
+        const result = await res.json();
+        setDispatchConfirmationData(prev => ({ ...prev, emailStatus: result }));
+        if (result.sentCount > 0 && addToast) {
+          addToast(`🎉 Successfully emailed interview link to ${result.sentCount} students!`, 'success');
+        } else if (result.failedCount > 0 && addToast) {
+          addToast(`⚠️ Email send issue: Please verify Google App Password`, 'error');
+        }
+      }
+    } catch (err) {
+      console.error('Error saving SMTP & resending:', err);
+      if (addToast) addToast('Error dispatching emails: ' + err.message, 'error');
+    } finally {
+      setIsSendingLiveEmails(false);
+    }
   };
 
   const filteredStudents = driveStudents.filter(s => {
@@ -1713,11 +1796,11 @@ export default function PublishedDriveBoard({
               </button>
             </div>
 
-            {/* Modal Body */}
-            <div style={{ padding: '20px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {/* Parameters Grid */}
-              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '16px' }}>
-                <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#154360', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {/* Modal Body: Unified Clean Form Layout */}
+            <div style={{ padding: '18px 22px', overflowY: 'auto', flex: 1, background: '#ffffff', display: 'flex', flexDirection: 'column' }}>
+              {/* 1. Interview Day Window & Duration Parameters */}
+              <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '14px', marginBottom: '14px' }}>
+                <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#154360', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <Clock size={15} color="#154360" /> 1. Interview Day Window & Duration Parameters
                 </div>
 
@@ -1772,7 +1855,7 @@ export default function PublishedDriveBoard({
                   </div>
                 </div>
 
-                <div style={{ marginTop: '12px' }}>
+                <div style={{ marginTop: '10px' }}>
                   <div className="form-group" style={{ marginBottom: 0 }}>
                     <label className="form-label">Filter Candidates by Added Drive *</label>
                     <select 
@@ -1804,19 +1887,14 @@ export default function PublishedDriveBoard({
               </div>
 
               {/* 2. Scheduled Breaks Parameters (2 Tea Breaks + 1 Lunch Break) */}
-              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
-                  <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#154360', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Coffee size={15} color="#154360" /> 2. Scheduled Breaks (2 Tea Breaks + 1 Lunch Break)
-                  </div>
-                  <span style={{ fontSize: '0.72rem', background: '#FFDB58', color: '#154360', fontWeight: 700, padding: '2px 8px', borderRadius: '4px' }}>
-                    Total Break Time: {totalBreakMinutes} Mins (1h 15m)
-                  </span>
+              <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '14px', marginBottom: '14px' }}>
+                <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#154360', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Coffee size={15} color="#154360" /> 2. Scheduled Breaks (2 Tea Breaks + 1 Lunch Break)
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
                   {/* Tea Break 1 */}
-                  <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 12px' }}>
+                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                       <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#154360', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <Coffee size={12} color="#0284c7" /> Morning Tea Break
@@ -1828,11 +1906,11 @@ export default function PublishedDriveBoard({
                     <div className="form-group" style={{ marginBottom: 0 }}>
                       <label style={{ fontSize: '0.68rem', color: '#71717a', fontWeight: 600 }}>Start Time</label>
                       <input 
-                        type="time"
-                        className="form-input"
-                        value={teaBreak1Start}
-                        onChange={e => setTeaBreak1Start(e.target.value)}
-                        style={{ fontSize: '0.78rem', padding: '4px 8px' }}
+                        type="time" 
+                        className="form-input" 
+                        value={teaBreak1Start} 
+                        onChange={e => setTeaBreak1Start(e.target.value)} 
+                        style={{ fontSize: '0.78rem', padding: '4px 8px' }} 
                       />
                     </div>
                     <div style={{ fontSize: '0.68rem', color: '#64748b', marginTop: '4px' }}>
@@ -1841,7 +1919,7 @@ export default function PublishedDriveBoard({
                   </div>
 
                   {/* Lunch Break */}
-                  <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 12px' }}>
+                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                       <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#154360', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <Utensils size={12} color="#d97706" /> Lunch Break
@@ -1853,11 +1931,11 @@ export default function PublishedDriveBoard({
                     <div className="form-group" style={{ marginBottom: 0 }}>
                       <label style={{ fontSize: '0.68rem', color: '#71717a', fontWeight: 600 }}>Start Time</label>
                       <input 
-                        type="time"
-                        className="form-input"
-                        value={lunchBreakStart}
-                        onChange={e => setLunchBreakStart(e.target.value)}
-                        style={{ fontSize: '0.78rem', padding: '4px 8px' }}
+                        type="time" 
+                        className="form-input" 
+                        value={lunchBreakStart} 
+                        onChange={e => setLunchBreakStart(e.target.value)} 
+                        style={{ fontSize: '0.78rem', padding: '4px 8px' }} 
                       />
                     </div>
                     <div style={{ fontSize: '0.68rem', color: '#64748b', marginTop: '4px' }}>
@@ -1866,7 +1944,7 @@ export default function PublishedDriveBoard({
                   </div>
 
                   {/* Tea Break 2 */}
-                  <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 12px' }}>
+                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                       <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#154360', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <Coffee size={12} color="#0284c7" /> Afternoon Tea Break
@@ -1878,11 +1956,11 @@ export default function PublishedDriveBoard({
                     <div className="form-group" style={{ marginBottom: 0 }}>
                       <label style={{ fontSize: '0.68rem', color: '#71717a', fontWeight: 600 }}>Start Time</label>
                       <input 
-                        type="time"
-                        className="form-input"
-                        value={teaBreak2Start}
-                        onChange={e => setTeaBreak2Start(e.target.value)}
-                        style={{ fontSize: '0.78rem', padding: '4px 8px' }}
+                        type="time" 
+                        className="form-input" 
+                        value={teaBreak2Start} 
+                        onChange={e => setTeaBreak2Start(e.target.value)} 
+                        style={{ fontSize: '0.78rem', padding: '4px 8px' }} 
                       />
                     </div>
                     <div style={{ fontSize: '0.68rem', color: '#64748b', marginTop: '4px' }}>
@@ -1892,11 +1970,11 @@ export default function PublishedDriveBoard({
                 </div>
               </div>
 
-              {/* 3. Day Capacity Calculation & Number of Candidates to Interview */}
-              <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '10px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
-                <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#154360', marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px' }}>
+              {/* 3. Day Capacity Calculation & Direct Autofill based on Timings */}
+              <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '14px', marginBottom: '14px' }}>
+                <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#154360', marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Users size={15} color="#154360" /> 3. Day Capacity Calculation & Number of Candidates to Interview
+                    <Users size={15} color="#154360" /> 3. Day Capacity Calculation & Direct Auto-Allocation
                   </div>
                   <span style={{ fontSize: '0.74rem', color: '#154360', fontWeight: 700 }}>
                     Drive Pool: <strong>{allDriveCandidates.length}</strong> available
@@ -1912,7 +1990,7 @@ export default function PublishedDriveBoard({
                   border: '1px solid #e2e8f0',
                   borderRadius: '8px',
                   padding: '10px',
-                  marginBottom: '14px',
+                  marginBottom: '10px',
                   textAlign: 'center'
                 }}>
                   <div>
@@ -1947,92 +2025,47 @@ export default function PublishedDriveBoard({
                   </div>
                 </div>
 
-                {/* Candidate Selection Control */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '14px', alignItems: 'center' }}>
-                  <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span>How many students can be interviewed on this day? *</span>
-                      <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
-                        Max standard capacity: <strong>{maxDailyCapacity}</strong>
-                      </span>
-                    </label>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                      <input 
-                        type="number"
-                        min="1"
-                        max={Math.max(allDriveCandidates.length, 1)}
-                        className="form-input"
-                        style={{ width: '140px', fontWeight: 800, fontSize: '0.9rem' }}
-                        value={studentsToScheduleCount}
-                        onChange={e => {
-                          const val = parseInt(e.target.value, 10);
-                          setStudentsToScheduleCount(isNaN(val) ? 0 : val);
-                        }}
-                      />
-                      <span style={{ fontSize: '0.78rem', color: '#64748b' }}>students selected for today</span>
-                    </div>
+                {/* Direct Autofill Status Badge */}
+                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '9px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: '#154360', fontWeight: 600 }}>
+                    <CheckCircle2 size={15} color="#059669" />
+                    <span>Autofilled <strong>{calculatedTimeSlots.length}</strong> students directly based on timings and slot duration.</span>
                   </div>
-
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button
-                      type="button"
-                      onClick={() => setStudentsToScheduleCount(Math.min(allDriveCandidates.length, maxDailyCapacity))}
-                      className="btn-secondary"
-                      style={{ fontSize: '0.75rem', fontWeight: 700, padding: '6px 10px' }}
-                      title="Set to max standard capacity"
-                    >
-                      Fit Max Capacity ({Math.min(allDriveCandidates.length, maxDailyCapacity)})
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setStudentsToScheduleCount(allDriveCandidates.length)}
-                      className="btn-secondary"
-                      style={{ fontSize: '0.75rem', fontWeight: 700, padding: '6px 10px' }}
-                      title="Select all drive candidates"
-                    >
-                      All Drive ({allDriveCandidates.length})
-                    </button>
-                  </div>
+                  <span style={{ fontSize: '0.74rem', color: '#64748b' }}>
+                    Est. Conclude Time: <strong>{formatTime12h(estimatedFinishMins)}</strong>
+                  </span>
                 </div>
 
-                {/* Live Helper Status Message */}
-                <div style={{ marginTop: '10px', fontSize: '0.78rem' }}>
-                  {!isExceedingTimeLimit ? (
-                    <div style={{ color: '#047857', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
-                      <CheckCircle2 size={14} color="#10b981" />
-                      <span>
-                        Schedule comfortably fits within the <strong>{formatTime12h(endMins)}</strong> limit. Estimated finish time: <strong>{formatTime12h(estimatedFinishMins)}</strong>.
-                      </span>
-                    </div>
-                  ) : (
-                    <div style={{ color: '#b91c1c', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700 }}>
-                      <AlertTriangle size={15} color="#ef4444" />
-                      <span>
-                        Exceeds given time limit! Last interview will conclude at <strong>{formatTime12h(estimatedFinishMins)}</strong> ({overtimeMinutes} mins past {formatTime12h(endMins)}). Manager permission required below.
-                      </span>
-                    </div>
-                  )}
-                </div>
+                {/* Overtime Alert Warning */}
+                {isExceedingTimeLimit && (
+                  <div style={{ marginTop: '10px', color: '#b91c1c', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, fontSize: '0.78rem', background: '#fef2f2', border: '1px solid #fecaca', padding: '8px 12px', borderRadius: '6px' }}>
+                    <AlertTriangle size={15} color="#ef4444" />
+                    <span>
+                      Exceeds given time limit! Last interview will conclude at <strong>{formatTime12h(estimatedFinishMins)}</strong> ({overtimeMinutes} mins past {formatTime12h(endMins)}). Manager permission required below.
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* 4. Manager Permission / Approval Card (Shown when time limit exceeded) */}
               {isExceedingTimeLimit && (
                 <div style={{
                   background: '#fffbeb',
-                  border: '2px solid #f59e0b',
-                  borderRadius: '10px',
-                  padding: '14px 16px',
+                  border: '1px solid #f59e0b',
+                  borderRadius: '8px',
+                  padding: '12px 14px',
+                  marginBottom: '14px',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '10px',
-                  boxShadow: '0 2px 4px rgba(245, 158, 11, 0.1)'
+                  gap: '8px',
+                  boxShadow: '0 2px 4px rgba(245, 158, 11, 0.08)'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#92400e', fontWeight: 800, fontSize: '0.86rem' }}>
-                    <ShieldCheck size={18} color="#d97706" />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#92400e', fontWeight: 800, fontSize: '0.84rem' }}>
+                    <ShieldCheck size={17} color="#d97706" />
                     <span>Manager Permission Required (Schedule Exceeds Daily Time Limit by {overtimeMinutes} Mins)</span>
                   </div>
 
-                  <div style={{ fontSize: '0.78rem', color: '#78350f', lineHeight: 1.4 }}>
+                  <div style={{ fontSize: '0.76rem', color: '#78350f', lineHeight: 1.4 }}>
                     Total required time for <strong>{calculatedTimeSlots.length} candidate slots</strong> plus <strong>75 minutes break time</strong> extends the interview day to <strong>{formatTime12h(estimatedFinishMins)}</strong>. 
                     Because this exceeds the allocated limit of <strong>{formatTime12h(endMins)}</strong>, authorization from a TA Manager is mandatory before dispatching.
                   </div>
@@ -2040,37 +2073,37 @@ export default function PublishedDriveBoard({
                   <div style={{
                     background: '#ffffff',
                     border: '1px solid #fde68a',
-                    borderRadius: '8px',
-                    padding: '12px 14px'
+                    borderRadius: '6px',
+                    padding: '10px 12px'
                   }}>
                     {currentUser?.role === 'ADMIN' || currentUser?.role === 'MAIN_HR' ? (
-                      <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 700, color: '#154360' }}>
+                      <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 700, color: '#154360' }}>
                         <input 
-                          type="checkbox"
-                          checked={managerApprovalGranted}
-                          onChange={e => setManagerApprovalGranted(e.target.checked)}
-                          style={{ marginTop: '2px', width: '16px', height: '16px', cursor: 'pointer' }}
+                          type="checkbox" 
+                          checked={managerApprovalGranted} 
+                          onChange={e => setManagerApprovalGranted(e.target.checked)} 
+                          style={{ marginTop: '2px', width: '15px', height: '15px', cursor: 'pointer' }} 
                         />
                         <div>
                           <span>
                             I hereby grant Manager Permission as {currentUser?.role === 'ADMIN' ? 'Administrator' : 'HR Manager'} ({currentUser?.name}) to schedule overtime beyond {formatTime12h(endMins)}.
                           </span>
-                          <div style={{ fontSize: '0.7rem', color: '#71717a', fontWeight: 500, marginTop: '2px' }}>
+                          <div style={{ fontSize: '0.68rem', color: '#71717a', fontWeight: 500, marginTop: '2px' }}>
                             Authorized panel extension until {formatTime12h(estimatedFinishMins)}.
                           </div>
                         </div>
                       </label>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#154360' }}>
+                        <div style={{ fontSize: '0.74rem', fontWeight: 700, color: '#154360' }}>
                           Select TA Manager Authorizing Overtime:
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                          <select
-                            className="form-select"
-                            value={selectedManagerApprover}
-                            onChange={e => setSelectedManagerApprover(e.target.value)}
-                            style={{ fontSize: '0.78rem' }}
+                          <select 
+                            className="form-select" 
+                            value={selectedManagerApprover} 
+                            onChange={e => setSelectedManagerApprover(e.target.value)} 
+                            style={{ fontSize: '0.76rem' }} 
                           >
                             <option value="">-- Choose Authorizing Manager --</option>
                             {users.filter(u => u.role === 'ADMIN' || u.role === 'MAIN_HR').map(m => (
@@ -2080,26 +2113,26 @@ export default function PublishedDriveBoard({
                             ))}
                           </select>
                           <input 
-                            type="text"
-                            className="form-input"
-                            placeholder="Manager approval note / authorization code"
-                            value={managerApprovalNote}
-                            onChange={e => setManagerApprovalNote(e.target.value)}
-                            style={{ fontSize: '0.78rem' }}
+                            type="text" 
+                            className="form-input" 
+                            placeholder="Manager approval note / authorization code" 
+                            value={managerApprovalNote} 
+                            onChange={e => setManagerApprovalNote(e.target.value)} 
+                            style={{ fontSize: '0.76rem' }} 
                           />
                         </div>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700, color: '#92400e', marginTop: '4px' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.76rem', fontWeight: 700, color: '#92400e', marginTop: '2px' }}>
                           <input 
-                            type="checkbox"
-                            checked={managerApprovalGranted}
+                            type="checkbox" 
+                            checked={managerApprovalGranted} 
                             onChange={e => {
                               if (!selectedManagerApprover) {
                                 alert('Please select an authorizing manager first.');
                                 return;
                               }
                               setManagerApprovalGranted(e.target.checked);
-                            }}
-                            style={{ width: '15px', height: '15px', cursor: 'pointer' }}
+                            }} 
+                            style={{ width: '15px', height: '15px', cursor: 'pointer' }} 
                           />
                           <span>
                             I confirm verbal / written manager authorization has been received from {selectedManagerApprover || 'a TA Manager'}.
@@ -2111,9 +2144,9 @@ export default function PublishedDriveBoard({
                 </div>
               )}
 
-              {/* Google Meet & Panelist Section */}
-              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '16px' }}>
-                <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#154360', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              {/* 4. Google Meet Room & Interviewer */}
+              <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '14px', marginBottom: '14px' }}>
+                <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#154360', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <Video size={15} color="#154360" /> 4. Google Meet Room & Interviewer
                 </div>
 
@@ -2124,11 +2157,11 @@ export default function PublishedDriveBoard({
                       <input 
                         type="url" 
                         className="form-input" 
-                        placeholder="https://meet.google.com/xxx-yyyy-zzz"
-                        value={scheduleMeetLink}
-                        onChange={e => setScheduleMeetLink(e.target.value)}
-                        required
-                        style={{ paddingLeft: '32px' }}
+                        placeholder="https://meet.google.com/xxx-yyyy-zzz" 
+                        value={scheduleMeetLink} 
+                        onChange={e => setScheduleMeetLink(e.target.value)} 
+                        required 
+                        style={{ paddingLeft: '32px' }} 
                       />
                       <Video size={14} color="#059669" style={{ position: 'absolute', left: '10px', top: '12px' }} />
                     </div>
@@ -2137,10 +2170,10 @@ export default function PublishedDriveBoard({
                   <div className="form-group" style={{ marginBottom: 0 }}>
                     <label className="form-label">Interviewer / Panel Member *</label>
                     <select 
-                      className="form-select"
-                      value={schedulePanelist}
-                      onChange={e => setSchedulePanelist(e.target.value)}
-                      required
+                      className="form-select" 
+                      value={schedulePanelist} 
+                      onChange={e => setSchedulePanelist(e.target.value)} 
+                      required 
                     >
                       {hrStaffList.length === 0 && (
                         <option value="">-- No HR Staff Provisioned Yet (Add in Admin) --</option>
@@ -2165,7 +2198,7 @@ export default function PublishedDriveBoard({
                 </div>
               </div>
 
-              {/* Time Slot Live Preview Table */}
+              {/* 5. Live Allocated Time Slots & Breaks Schedule Table */}
               <div style={{ border: '1px solid #e2e8f0', borderRadius: '10px', overflow: 'hidden' }}>
                 <div style={{ background: '#f1f5f9', padding: '8px 14px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#154360' }}>
@@ -2359,6 +2392,72 @@ export default function PublishedDriveBoard({
                     {dispatchConfirmationData.firstSlot} - {dispatchConfirmationData.lastSlot}
                   </div>
                 </div>
+              </div>
+
+              {/* Email Delivery Status Box */}
+              <div style={{
+                background: dispatchConfirmationData.emailStatus?.sentCount > 0 ? '#f0fdf4' : '#fffbeb',
+                border: `1px solid ${dispatchConfirmationData.emailStatus?.sentCount > 0 ? '#bbf7d0' : '#fde68a'}`,
+                borderRadius: '8px',
+                padding: '12px 14px',
+                marginBottom: '14px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 800, color: dispatchConfirmationData.emailStatus?.sentCount > 0 ? '#166534' : '#92400e', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Mail size={15} color={dispatchConfirmationData.emailStatus?.sentCount > 0 ? '#16a34a' : '#d97706'} />
+                    {dispatchConfirmationData.emailStatus?.sentCount > 0 
+                      ? `Interview Links Delivered (${dispatchConfirmationData.emailStatus.sentCount} Students Emailed)`
+                      : 'Candidate Email Dispatch Status'}
+                  </div>
+                  {dispatchConfirmationData.emailStatus?.sentCount > 0 ? (
+                    <span style={{ fontSize: '0.7rem', background: '#dcfce7', color: '#15803d', fontWeight: 700, padding: '2px 6px', borderRadius: '4px' }}>
+                      DELIVERED LIVE
+                    </span>
+                  ) : (
+                    <span style={{ fontSize: '0.7rem', background: '#fef3c7', color: '#b45309', fontWeight: 700, padding: '2px 6px', borderRadius: '4px' }}>
+                      READY TO DISPATCH
+                    </span>
+                  )}
+                </div>
+
+                {dispatchConfirmationData.emailStatus?.sentCount > 0 ? (
+                  <div style={{ fontSize: '0.75rem', color: '#15803d' }}>
+                    Personalized Google Meet invitation emails with date, allocated slot, and meet link were successfully delivered to candidate inboxes.
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{ fontSize: '0.75rem', color: '#78350f', lineHeight: 1.4 }}>
+                      Interview invitations generated with Google Meet link for <strong>{dispatchConfirmationData.totalCount} candidates</strong>. To deliver real emails directly to students' inboxes via Gmail, enter your Gmail App Password below:
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '8px', alignItems: 'center' }}>
+                      <input 
+                        type="email"
+                        className="form-input"
+                        placeholder="Sender Gmail"
+                        value={smtpSenderEmail}
+                        onChange={e => setSmtpSenderEmail(e.target.value)}
+                        style={{ fontSize: '0.75rem', padding: '5px 8px', flex: 1 }}
+                      />
+                      <input 
+                        type="password"
+                        className="form-input"
+                        placeholder="16-char App Password"
+                        value={smtpAppPassword}
+                        onChange={e => setSmtpAppPassword(e.target.value)}
+                        style={{ fontSize: '0.75rem', padding: '5px 8px', width: '170px' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSaveSmtpAndResend}
+                        disabled={isSendingLiveEmails || !smtpAppPassword.trim()}
+                        className="btn-mustard"
+                        style={{ fontSize: '0.75rem', fontWeight: 800, padding: '5px 12px', whiteSpace: 'nowrap' }}
+                      >
+                        {isSendingLiveEmails ? 'Sending...' : 'Save & Send Now'}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Google Meet Info Box */}

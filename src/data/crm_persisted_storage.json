@@ -136,10 +136,10 @@
       "interviewTime": "10:00 AM - 10:10 AM",
       "interviewStartTime": "10:00 AM",
       "interviewEndTime": "10:10 AM",
-      "meetLink": "https://meet.google.com/tac-296k-x11",
-      "interviewPanel": "Geonixa Admin (HR Panel)",
+      "meetLink": "https://meet.google.com/abc-defg-hij",
+      "interviewPanel": "Suresh Kumar (Recruitment Intern)",
       "interviewStatus": "SCHEDULED",
-      "interviewDispatchedAt": "2026-10-15T12:01:16.572Z"
+      "interviewDispatchedAt": "2026-10-16T12:59:39.098Z"
     },
     {
       "id": "stu-2",
@@ -161,10 +161,10 @@
       "interviewTime": "10:10 AM - 10:20 AM",
       "interviewStartTime": "10:10 AM",
       "interviewEndTime": "10:20 AM",
-      "meetLink": "https://meet.google.com/tac-296k-x11",
-      "interviewPanel": "Geonixa Admin (HR Panel)",
+      "meetLink": "https://meet.google.com/abc-defg-hij",
+      "interviewPanel": "Suresh Kumar (Recruitment Intern)",
       "interviewStatus": "SCHEDULED",
-      "interviewDispatchedAt": "2026-10-15T12:01:16.572Z"
+      "interviewDispatchedAt": "2026-10-16T12:59:39.098Z"
     },
     {
       "id": "stu-3",
@@ -186,10 +186,10 @@
       "interviewTime": "10:20 AM - 10:30 AM",
       "interviewStartTime": "10:20 AM",
       "interviewEndTime": "10:30 AM",
-      "meetLink": "https://meet.google.com/tac-296k-x11",
-      "interviewPanel": "Geonixa Admin (HR Panel)",
+      "meetLink": "https://meet.google.com/abc-defg-hij",
+      "interviewPanel": "Suresh Kumar (Recruitment Intern)",
       "interviewStatus": "SCHEDULED",
-      "interviewDispatchedAt": "2026-10-15T12:01:16.572Z"
+      "interviewDispatchedAt": "2026-10-16T12:59:39.098Z"
     },
     {
       "id": "stu-4",
@@ -211,10 +211,10 @@
       "interviewTime": "10:30 AM - 10:40 AM",
       "interviewStartTime": "10:30 AM",
       "interviewEndTime": "10:40 AM",
-      "meetLink": "https://meet.google.com/tac-296k-x11",
-      "interviewPanel": "Geonixa Admin (HR Panel)",
+      "meetLink": "https://meet.google.com/abc-defg-hij",
+      "interviewPanel": "Suresh Kumar (Recruitment Intern)",
       "interviewStatus": "SCHEDULED",
-      "interviewDispatchedAt": "2026-10-15T12:01:16.572Z"
+      "interviewDispatchedAt": "2026-10-16T12:59:39.098Z"
     },
     {
       "id": "stu-5",
@@ -236,10 +236,10 @@
       "interviewTime": "10:40 AM - 10:50 AM",
       "interviewStartTime": "10:40 AM",
       "interviewEndTime": "10:50 AM",
-      "meetLink": "https://meet.google.com/tac-296k-x11",
-      "interviewPanel": "Geonixa Admin (HR Panel)",
+      "meetLink": "https://meet.google.com/abc-defg-hij",
+      "interviewPanel": "Suresh Kumar (Recruitment Intern)",
       "interviewStatus": "SCHEDULED",
-      "interviewDispatchedAt": "2026-10-15T12:01:16.572Z"
+      "interviewDispatchedAt": "2026-10-16T12:59:39.098Z"
     },
     {
       "id": "stu-6",
@@ -431,5 +431,47 @@
       "notes": "Verify test environment & send calendar invite for round 2 technical interview."
     }
   ],
-  "updatedAt": "2026-10-16T10:53:00.143Z"
+  "updatedAt": "2026-10-16T12:59:39.420Z",
+  "emailDispatchLogs": [
+    {
+      "id": "email-dispatch-1792155579136",
+      "timestamp": "2026-10-16T12:59:39.136Z",
+      "driveTitle": "Graduate Software Engineer 2026",
+      "interviewDate": "2026-10-24",
+      "meetLink": "https://meet.google.com/abc-defg-hij",
+      "totalRecipients": 5,
+      "results": [
+        {
+          "email": "aditya.verma@iitb.ac.in",
+          "name": "Aditya Verma",
+          "status": "QUEUED_NO_SMTP",
+          "message": "Invite ready; provide Gmail App Password to dispatch live"
+        },
+        {
+          "email": "rohan.deshmukh@iitb.ac.in",
+          "name": "Rohan Deshmukh",
+          "status": "QUEUED_NO_SMTP",
+          "message": "Invite ready; provide Gmail App Password to dispatch live"
+        },
+        {
+          "email": "ananya.sen@iitb.ac.in",
+          "name": "Ananya Sen",
+          "status": "QUEUED_NO_SMTP",
+          "message": "Invite ready; provide Gmail App Password to dispatch live"
+        },
+        {
+          "email": "karan.mehra@iitb.ac.in",
+          "name": "Karan Mehra",
+          "status": "QUEUED_NO_SMTP",
+          "message": "Invite ready; provide Gmail App Password to dispatch live"
+        },
+        {
+          "email": "sneha.patil@iitb.ac.in",
+          "name": "Sneha Patil",
+          "status": "QUEUED_NO_SMTP",
+          "message": "Invite ready; provide Gmail App Password to dispatch live"
+        }
+      ]
+    }
+  ]
 }
