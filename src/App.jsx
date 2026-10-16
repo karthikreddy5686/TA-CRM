@@ -1533,17 +1533,17 @@ export default function App() {
 
         {/* Current User Card in Sidebar with Logout */}
         <div className="sidebar-user">
-          <div className="user-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div className="user-avatar" style={currentUser.role === 'ADMIN' ? { background: '#154360', color: '#FFDB58', border: '2px solid #FFDB58' } : {}}>
+          <div className="user-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, overflow: 'hidden', flex: 1 }}>
+              <div className="user-avatar" style={{ flexShrink: 0, ...(currentUser.role === 'ADMIN' ? { background: '#154360', color: '#FFDB58', border: '2px solid #FFDB58' } : {}) }}>
                 {currentUser.role === 'ADMIN' ? 'AD' : (currentUser.avatar || 'U')}
                 <span className={`status-indicator-dot ${currentUser.status === 'on-call' ? 'on-call' : 'online'}`} />
               </div>
-              <div className="user-details user-card-info">
-                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#09090b', lineHeight: 1.2 }}>
+              <div className="user-details user-card-info" style={{ minWidth: 0, overflow: 'hidden', flex: 1 }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#09090b', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {currentUser.role === 'ADMIN' ? 'Geonixa Admin' : (currentUser.name === 'Main HR Manager' || currentUser.name === 'Main HR' ? 'HR Manager' : currentUser.name)}
                 </div>
-                <div style={{ fontSize: '0.68rem', color: '#71717a' }}>
+                <div style={{ fontSize: '0.68rem', color: '#71717a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {currentUser.role === 'ADMIN' ? 'Super Admin' : currentUser.role === 'MAIN_HR' ? 'HR Manager' : 'HR Intern'}
                 </div>
               </div>
@@ -1552,7 +1552,7 @@ export default function App() {
             <button 
               onClick={() => setIsLogoutModalOpen(true)} 
               className="btn-icon" 
-              style={{ width: '26px', height: '26px' }}
+              style={{ width: '26px', height: '26px', flexShrink: 0 }}
               title="Sign Out"
             >
               <LogOut size={12} color="#71717a" />

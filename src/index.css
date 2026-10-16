@@ -124,7 +124,7 @@
   --container-max-4xl: 896px;  /* Integrations & Settings: max-w-4xl (896px / 56rem) */
   --dialog-max-md: 448px;     /* Modals / Dialogs: sm:max-w-md (448px / 28rem) */
   --sheet-max-xl: 576px;      /* Slide-out Side Sheet: sm:max-w-xl (576px / 36rem) */
-  --sidebar-w-64: 256px;      /* Sidebar Navigation Width: w-64 (256px / 16rem) */
+  --sidebar-w-64: 180px;      /* Sidebar Navigation Width: compact 180px (optimized) */
 }
 
 /* Base Styles */
@@ -391,11 +391,11 @@ input, select, textarea, button {
 }
 
 .sidebar-brand {
-  padding: 12px 14px;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   height: 48px;
   flex-shrink: 0;
 }
@@ -417,11 +417,12 @@ input, select, textarea, button {
 }
 
 .brand-title {
-  font-size: var(--font-base); /* 16px */
+  font-size: 0.95rem; /* ~15px */
   line-height: var(--lh-sm);   /* 20px */
   font-weight: 800;
   color: #154360;
   letter-spacing: -0.02em;
+  white-space: nowrap;
 }
 
 .brand-subtitle {
@@ -430,10 +431,11 @@ input, select, textarea, button {
   color: var(--text-muted);
   font-weight: 500;
   letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 .sidebar-nav {
-  padding: 8px 8px;
+  padding: 8px 6px;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -449,14 +451,15 @@ input, select, textarea, button {
   color: var(--text-dim);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  padding: 8px 8px 3px;
+  padding: 8px 6px 3px;
+  white-space: nowrap;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 10px;
+  padding: 6px 8px;
   border-radius: var(--radius-sm);
   font-size: var(--font-sm); /* 14px */
   line-height: var(--lh-sm);  /* 20px */
@@ -509,7 +512,7 @@ input, select, textarea, button {
 }
 
 .sidebar-user {
-  padding: 12px 14px;
+  padding: 10px 10px;
   border-top: 1px solid var(--border-subtle);
   background: var(--bg-card-subtle);
   flex-shrink: 0;
@@ -518,7 +521,13 @@ input, select, textarea, button {
 .user-card {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  min-width: 0;
+}
+
+.user-card-info {
+  min-width: 0;
+  overflow: hidden;
 }
 
 .user-avatar {
