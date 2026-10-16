@@ -18,7 +18,11 @@ import {
   Download,
   Search,
   Share2,
-  Check
+  Check,
+  Globe,
+  MapPin,
+  AlertCircle,
+  ArrowLeft
 } from 'lucide-react';
 
 // 4 simple, natural hiring stages that anyone can understand immediately
@@ -70,12 +74,17 @@ export default function DriveManagement({
 
   // New Drive Form state (All blank defaults for manual entry)
   const [driveTitle, setDriveTitle] = useState('');
+  const [driveMode, setDriveMode] = useState('Offline'); // 'Offline' | 'Online'
   const [driveCollegeName, setDriveCollegeName] = useState('');
   const [driveCollegeId, setDriveCollegeId] = useState('');
-  const [driveJobRole, setDriveJobRole] = useState('');
+  const [driveJobRole, setDriveJobRole] = useState('CGA'); // CGA as primary default
   const [driveCtc, setDriveCtc] = useState('');
   const [driveCriteria, setDriveCriteria] = useState('');
   const [driveDate, setDriveDate] = useState('');
+
+  // Confirmation Review Popup State
+  const [isConfirmDriveOpen, setIsConfirmDriveOpen] = useState(false);
+  const [pendingDriveData, setPendingDriveData] = useState(null);
 
   // Bulk Ingestion state (All blank defaults for manual entry)
   const [targetDriveForUpload, setTargetDriveForUpload] = useState(drives[0]?.id || '');
@@ -175,32 +184,80 @@ export default function DriveManagement({
     return newDrive;
   };
 
-  // 1. Create Drive Submit
+  // Handle CTC input change
+  const handleCtcChange = (e) => {
+    setDriveCtc(e.target.value);
+  };
+
+  // Handle CTC input blur - auto append LPA by default after entering amount
+  const handleCtcBlur = () => {
+    if (!driveCtc.trim()) return;
+    const clean = driveCtc.trim().replace(/\s*lpa$/i, '').trim();
+    if (clean) {
+      setDriveCtc(`${clean} LPA`);
+    }
+  };
+
+  // 1. Create Drive Submit -> validates and opens review confirmation popup
   const handleCreateDriveSubmit = (e) => {
     e.preventDefault();
-    if (!driveTitle.trim() || !driveCollegeName.trim()) return;
+    const matchedTpo = tpos.find(t => t.collegeId === driveCollegeId || t.id === driveCollegeId);
+    const resolvedCollege = driveCollegeName.trim() || (matchedTpo ? matchedTpo.collegeName : '');
+    
+    if (!driveTitle.trim() || !resolvedCollege) {
+      alert('Please fill in both the Drive Title and College / University Name.');
+      return;
+    }
 
-    const matchedTpo = tpos.find(t => t.collegeId === driveCollegeId);
-    const resolvedCollege = driveCollegeName.trim() || (matchedTpo ? matchedTpo.collegeName : 'Engineering College');
+    // Format CTC with default LPA suffix
+    let formattedCtc = driveCtc.trim();
+    if (formattedCtc) {
+      const cleanCtc = formattedCtc.replace(/\s*lpa$/i, '').trim();
+      formattedCtc = `${cleanCtc} LPA`;
+      setDriveCtc(formattedCtc);
+    } else {
+      formattedCtc = 'Competitive LPA';
+    }
 
-    onCreateDrive({
+    const payload = {
       id: `drv-${Date.now()}`,
       title: driveTitle.trim(),
-      collegeId: matchedTpo ? matchedTpo.collegeId : `col-${Date.now()}`,
+      mode: driveMode || 'Offline', // 'Offline' | 'Online'
+      collegeId: matchedTpo ? (matchedTpo.collegeId || matchedTpo.id) : `col-${Date.now()}`,
       collegeName: resolvedCollege,
-      jobRole: driveJobRole.trim() || 'Software Engineer',
-      ctc: driveCtc.trim() || 'Competitive',
+      jobRole: driveJobRole.trim() || 'CGA',
+      ctc: formattedCtc,
       criteria: driveCriteria.trim(),
       driveDate: driveDate || new Date().toISOString().split('T')[0],
       status: 'CONFIRMED',
       registeredStudents: 0,
       shortlistedStudents: 0,
       createdById: 'user-main-hr',
-    });
+      createdAt: new Date().toISOString()
+    };
+
+    setPendingDriveData(payload);
+    setIsConfirmDriveOpen(true);
+  };
+
+  // Final confirmation to publish drive
+  const handlePublishConfirmedDrive = () => {
+    if (!pendingDriveData) return;
+
+    if (onCreateDrive) {
+      onCreateDrive(pendingDriveData);
+    }
+
+    setIsConfirmDriveOpen(false);
     setIsCreateDriveOpen(false);
+    setPendingDriveData(null);
+
+    // Reset Form
     setDriveTitle('');
+    setDriveMode('Offline');
     setDriveCollegeName('');
-    setDriveJobRole('');
+    setDriveCollegeId('');
+    setDriveJobRole('CGA');
     setDriveCtc('');
     setDriveCriteria('');
     setDriveDate('');
@@ -1039,6 +1096,7 @@ export default function DriveManagement({
               <thead>
                 <tr>
                   <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>Drive Name</th>
+                  <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>Mode</th>
                   <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>College</th>
                   <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>Role</th>
                   <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>CTC</th>
@@ -1051,7 +1109,7 @@ export default function DriveManagement({
               <tbody>
                 {drives.length === 0 ? (
                   <tr>
-                    <td colSpan={8} style={{ textAlign: 'center', padding: '28px', color: '#71717a', fontSize: '0.78rem' }}>
+                    <td colSpan={9} style={{ textAlign: 'center', padding: '28px', color: '#71717a', fontSize: '0.78rem' }}>
                       No drives scheduled yet. Click "New Drive" to add your first campus drive.
                     </td>
                   </tr>
@@ -1064,6 +1122,24 @@ export default function DriveManagement({
                           <div style={{ fontWeight: 700, color: '#154360', fontSize: '0.8rem' }}>
                             {drive.title}
                           </div>
+                        </td>
+
+                        <td style={{ padding: '6px 8px' }}>
+                          <span style={{
+                            fontSize: '0.68rem',
+                            fontWeight: 700,
+                            padding: '2px 7px',
+                            borderRadius: '4px',
+                            background: drive.mode === 'Online' ? '#e0f2fe' : '#f1f5f9',
+                            color: drive.mode === 'Online' ? '#0369a1' : '#334155',
+                            border: drive.mode === 'Online' ? '1px solid #bae6fd' : '1px solid #cbd5e1',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '3px'
+                          }}>
+                            {drive.mode === 'Online' ? <Globe size={11} color="#0369a1" /> : <MapPin size={11} color="#334155" />}
+                            {drive.mode || 'Offline'}
+                          </span>
                         </td>
 
                         <td style={{ fontSize: '0.75rem', fontWeight: 600, padding: '6px 8px' }}>
@@ -1161,8 +1237,23 @@ export default function DriveManagement({
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div>
-                        <div style={{ fontWeight: 700, fontSize: '0.825rem', color: '#154360' }}>
-                          {drive.title}
+                        <div style={{ fontWeight: 700, fontSize: '0.825rem', color: '#154360', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span>{drive.title}</span>
+                          <span style={{
+                            fontSize: '0.62rem',
+                            fontWeight: 700,
+                            padding: '1px 5px',
+                            borderRadius: '3px',
+                            background: drive.mode === 'Online' ? '#e0f2fe' : '#f1f5f9',
+                            color: drive.mode === 'Online' ? '#0369a1' : '#475569',
+                            border: drive.mode === 'Online' ? '1px solid #bae6fd' : '1px solid #cbd5e1',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '2px'
+                          }}>
+                            {drive.mode === 'Online' ? <Globe size={9} /> : <MapPin size={9} />}
+                            {drive.mode || 'Offline'}
+                          </span>
                         </div>
                         <div style={{ fontSize: '0.68rem', color: '#71717a' }}>
                           {drive.collegeName} • {drive.jobRole}
@@ -1230,8 +1321,8 @@ export default function DriveManagement({
 
       {/* 1. Add Campus Drive Modal */}
       {isCreateDriveOpen && (
-        <div className="modal-overlay">
-          <div className="modal-card">
+        <div className="modal-overlay" style={{ zIndex: 9999 }}>
+          <div className="modal-card" style={{ maxWidth: '560px', width: '92%' }}>
             <div className="modal-header">
               <div>
                 <span className="badge badge-black" style={{ marginBottom: '6px', fontSize: '0.7rem' }}>
@@ -1246,7 +1337,8 @@ export default function DriveManagement({
             </div>
 
             <form onSubmit={handleCreateDriveSubmit}>
-              <div className="modal-body">
+              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                {/* 1. Drive Title */}
                 <div className="form-group">
                   <label className="form-label">Drive Title *</label>
                   <input 
@@ -1259,6 +1351,64 @@ export default function DriveManagement({
                   />
                 </div>
 
+                {/* 2. Drive Mode: Offline or Online below the title */}
+                <div className="form-group" style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ fontWeight: 700, color: '#154360' }}>Drive Mode (Offline / Online) *</span>
+                    <span style={{ fontSize: '0.68rem', color: '#64748b' }}>Select drive format</span>
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setDriveMode('Offline')}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        padding: '9px 12px',
+                        borderRadius: '6px',
+                        border: driveMode === 'Offline' ? '2px solid #154360' : '1px solid #cbd5e1',
+                        background: driveMode === 'Offline' ? '#154360' : '#ffffff',
+                        color: driveMode === 'Offline' ? '#ffffff' : '#475569',
+                        fontWeight: 700,
+                        fontSize: '0.82rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      <MapPin size={15} color={driveMode === 'Offline' ? '#FFDB58' : '#64748b'} />
+                      <span>Offline (On-Campus)</span>
+                      {driveMode === 'Offline' && <Check size={14} color="#FFDB58" />}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setDriveMode('Online')}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        padding: '9px 12px',
+                        borderRadius: '6px',
+                        border: driveMode === 'Online' ? '2px solid #154360' : '1px solid #cbd5e1',
+                        background: driveMode === 'Online' ? '#154360' : '#ffffff',
+                        color: driveMode === 'Online' ? '#ffffff' : '#475569',
+                        fontWeight: 700,
+                        fontSize: '0.82rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      <Globe size={15} color={driveMode === 'Online' ? '#FFDB58' : '#64748b'} />
+                      <span>Online (Virtual)</span>
+                      {driveMode === 'Online' && <Check size={14} color="#FFDB58" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* 3. College / University Name */}
                 <div className="form-group">
                   <label className="form-label">College / University Name *</label>
                   {tpos.length > 0 ? (
@@ -1266,11 +1416,20 @@ export default function DriveManagement({
                       <select 
                         className="form-select"
                         value={driveCollegeId}
-                        onChange={(e) => setDriveCollegeId(e.target.value)}
+                        onChange={(e) => {
+                          const selId = e.target.value;
+                          setDriveCollegeId(selId);
+                          const matched = tpos.find(t => t.collegeId === selId || t.id === selId);
+                          if (matched) {
+                            setDriveCollegeName(matched.collegeName);
+                          }
+                        }}
                       >
                         <option value="">-- Choose from existing TPOs or type below --</option>
                         {tpos.map(t => (
-                          <option key={t.collegeId} value={t.collegeId}>{t.collegeName}</option>
+                          <option key={t.collegeId || t.id} value={t.collegeId || t.id}>
+                            {t.collegeName} ({t.name})
+                          </option>
                         ))}
                       </select>
                       <input 
@@ -1293,32 +1452,127 @@ export default function DriveManagement({
                   )}
                 </div>
 
+                {/* 4. Job Role (CGA primary, plus Digital Marketing, HR Operations, IT) & Package (in LPA) */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  {/* Job Role */}
                   <div className="form-group">
-                    <label className="form-label">Job Role *</label>
-                    <input 
-                      type="text"
-                      className="form-input"
-                      placeholder="e.g. Associate Software Engineer"
-                      value={driveJobRole}
-                      onChange={(e) => setDriveJobRole(e.target.value)}
-                      required
-                    />
+                    <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>Job Title / Role *</span>
+                      <span style={{ fontSize: '0.65rem', color: '#154360', fontWeight: 700, background: '#FFDB58', padding: '1px 5px', borderRadius: '3px' }}>
+                        CGA Primary
+                      </span>
+                    </label>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <input 
+                        type="text"
+                        className="form-input"
+                        placeholder="e.g. CGA"
+                        value={driveJobRole}
+                        onChange={(e) => setDriveJobRole(e.target.value)}
+                        required
+                      />
+                      
+                      {/* Quick-selection role pills */}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                        {[
+                          { role: 'CGA', label: '⭐ CGA (Primary)', isPrimary: true },
+                          { role: 'Digital Marketing', label: 'Digital Marketing' },
+                          { role: 'HR Operations', label: 'HR Operations' },
+                          { role: 'IT', label: 'IT' }
+                        ].map(item => (
+                          <button
+                            key={item.role}
+                            type="button"
+                            onClick={() => setDriveJobRole(item.role)}
+                            style={{
+                              fontSize: '0.68rem',
+                              padding: '2px 7px',
+                              borderRadius: '12px',
+                              border: driveJobRole === item.role ? '1.5px solid #154360' : '1px solid #cbd5e1',
+                              background: driveJobRole === item.role 
+                                ? (item.isPrimary ? '#FFDB58' : '#154360') 
+                                : '#f1f5f9',
+                              color: driveJobRole === item.role 
+                                ? (item.isPrimary ? '#154360' : '#ffffff') 
+                                : '#475569',
+                              fontWeight: driveJobRole === item.role ? 700 : 500,
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            {item.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
 
+                  {/* Package (CTC) with default LPA */}
                   <div className="form-group">
-                    <label className="form-label">Package (CTC) *</label>
-                    <input 
-                      type="text"
-                      className="form-input"
-                      placeholder="e.g. 12.0 LPA"
-                      value={driveCtc}
-                      onChange={(e) => setDriveCtc(e.target.value)}
-                      required
-                    />
+                    <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>Package (CTC) *</span>
+                      <span style={{ fontSize: '0.65rem', color: '#154360', fontWeight: 700 }}>
+                        Default in LPA
+                      </span>
+                    </label>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <div style={{ position: 'relative' }}>
+                        <input 
+                          type="text"
+                          className="form-input"
+                          placeholder="e.g. 6.0"
+                          value={driveCtc}
+                          onChange={handleCtcChange}
+                          onBlur={handleCtcBlur}
+                          style={{ paddingRight: '48px' }}
+                          required
+                        />
+                        <span style={{
+                          position: 'absolute',
+                          right: '8px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          fontSize: '0.72rem',
+                          fontWeight: 700,
+                          color: '#154360',
+                          background: '#FFDB58',
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          pointerEvents: 'none'
+                        }}>
+                          LPA
+                        </span>
+                      </div>
+
+                      {/* Quick amount chips */}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                        {['3.6', '4.5', '6.0', '8.0', '12.0'].map(amt => (
+                          <button
+                            key={amt}
+                            type="button"
+                            onClick={() => setDriveCtc(`${amt} LPA`)}
+                            style={{
+                              fontSize: '0.68rem',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              border: driveCtc.startsWith(amt) ? '1px solid #154360' : '1px solid #e2e8f0',
+                              background: driveCtc.startsWith(amt) ? '#154360' : '#ffffff',
+                              color: driveCtc.startsWith(amt) ? '#ffffff' : '#475569',
+                              fontWeight: driveCtc.startsWith(amt) ? 700 : 500,
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {amt} LPA
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
+                {/* 5. Drive Date */}
                 <div className="form-group">
                   <label className="form-label">Drive Date</label>
                   <input 
@@ -1339,6 +1593,165 @@ export default function DriveManagement({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Review Popup before publishing drive */}
+      {isConfirmDriveOpen && pendingDriveData && (
+        <div className="modal-overlay" style={{ zIndex: 10000 }}>
+          <div className="modal-card" style={{ maxWidth: '520px', width: '92%', borderTop: '4px solid #154360' }}>
+            <div className="modal-header">
+              <div>
+                <span className="badge badge-black" style={{ marginBottom: '6px', fontSize: '0.7rem' }}>
+                  CONFIRMATION REQUIRED
+                </span>
+                <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <CheckCircle2 size={18} color="#154360" /> Confirm Campus Drive Details
+                </h3>
+                <p className="card-subtitle">
+                  Please review the entered details carefully before publishing this campus recruitment drive.
+                </p>
+              </div>
+              <button onClick={() => setIsConfirmDriveOpen(false)} className="btn-icon">
+                <X size={15} />
+              </button>
+            </div>
+
+            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div style={{
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: '10px',
+                overflow: 'hidden'
+              }}>
+                {/* Drive Title Banner */}
+                <div style={{
+                  background: '#154360',
+                  color: '#ffffff',
+                  padding: '12px 16px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <div>
+                    <div style={{ fontSize: '0.7rem', color: '#FFDB58', fontWeight: 600, textTransform: 'uppercase' }}>
+                      Drive Title
+                    </div>
+                    <div style={{ fontSize: '1rem', fontWeight: 700 }}>
+                      {pendingDriveData.title}
+                    </div>
+                  </div>
+                  <span style={{
+                    background: pendingDriveData.mode === 'Online' ? '#0284c7' : '#059669',
+                    color: '#ffffff',
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    padding: '4px 10px',
+                    borderRadius: '20px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    {pendingDriveData.mode === 'Online' ? <Globe size={12} /> : <MapPin size={12} />}
+                    {pendingDriveData.mode || 'Offline'}
+                  </span>
+                </div>
+
+                {/* Details Summary */}
+                <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
+                    <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 500 }}>College / University:</span>
+                    <span style={{ fontSize: '0.82rem', color: '#1e293b', fontWeight: 700 }}>{pendingDriveData.collegeName}</span>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
+                    <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 500 }}>Job Title / Role:</span>
+                    <span style={{ fontSize: '0.82rem', color: '#154360', fontWeight: 700, background: '#eff6ff', padding: '2px 8px', borderRadius: '4px' }}>
+                      {pendingDriveData.jobRole}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
+                    <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 500 }}>Package (CTC):</span>
+                    <span style={{ 
+                      fontSize: '0.85rem', 
+                      color: '#154360', 
+                      fontWeight: 800, 
+                      background: '#FFDB58', 
+                      padding: '2px 8px', 
+                      borderRadius: '4px',
+                      border: '1px solid #fae27a',
+                      fontFamily: 'monospace'
+                    }}>
+                      {pendingDriveData.ctc}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
+                    <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 500 }}>Drive Mode:</span>
+                    <span style={{ fontSize: '0.82rem', color: '#1e293b', fontWeight: 600 }}>
+                      {pendingDriveData.mode === 'Online' ? '🌐 Online (Virtual Drive)' : '🏢 Offline (On-Campus)'}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
+                    <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 500 }}>Drive Date:</span>
+                    <span style={{ fontSize: '0.82rem', color: '#1e293b', fontWeight: 600 }}>
+                      {pendingDriveData.driveDate || 'Upcoming'}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 500 }}>Initial Status:</span>
+                    <span className="badge badge-green" style={{ fontSize: '0.7rem' }}>CONFIRMED</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{
+                background: '#fefce8',
+                border: '1px solid #fef08a',
+                borderRadius: '8px',
+                padding: '10px 12px',
+                fontSize: '0.75rem',
+                color: '#854d0e',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <AlertCircle size={16} color="#854d0e" style={{ flexShrink: 0 }} />
+                <span>
+                  Ready to publish. Clicking <strong>"Confirm & Publish Drive"</strong> will post this recruitment drive to the CRM and make it active.
+                </span>
+              </div>
+            </div>
+
+            <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <button 
+                type="button" 
+                onClick={() => setIsConfirmDriveOpen(false)} 
+                className="btn-secondary"
+                style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                <ArrowLeft size={14} /> Back to Edit
+              </button>
+              <button 
+                type="button" 
+                onClick={handlePublishConfirmedDrive} 
+                className="btn-black"
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '6px',
+                  background: '#154360',
+                  color: '#ffffff',
+                  boxShadow: '0 2px 6px rgba(21, 67, 96, 0.35)'
+                }}
+              >
+                <CheckCircle2 size={15} color="#FFDB58" /> Confirm & Publish Drive
+              </button>
+            </div>
           </div>
         </div>
       )}

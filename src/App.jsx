@@ -1240,7 +1240,19 @@ export default function App() {
     addToast(`Updated details for ${updatedTpo.name} (${updatedTpo.collegeName})`, 'success');
   };
   const handleUpdateTpoStatus = (tpoId, newStatus) => setTpos(prev => prev.map(t => t.id === tpoId ? { ...t, status: newStatus } : t));
-  const handleCreateDrive = (newDrive) => setDrives(prev => [newDrive, ...prev]);
+  const handleCreateDrive = (newDrive) => {
+    setDrives(prev => {
+      const next = [newDrive, ...prev];
+      try { localStorage.setItem('tacrm_drives', JSON.stringify(next)); } catch (e) {}
+      fetch('/api/storage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ drives: next })
+      }).catch(() => {});
+      return next;
+    });
+    addToast(`Campus drive published: ${newDrive.title} (${newDrive.mode || 'Offline'})`, 'success');
+  };
   const handleUpdateDrive = (updatedDrive) => setDrives(prev => prev.map(d => d.id === updatedDrive.id ? updatedDrive : d));
   const handleAddStudentsBatch = (newStudents) => {
     if (!newStudents || !newStudents.length) return;
