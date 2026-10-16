@@ -1419,38 +1419,18 @@ export default function DriveManagement({
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   {/* Job Role */}
                   <div className="form-group">
-                    <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span>Job Title / Role *</span>
-                      <span style={{ fontSize: '0.65rem', color: '#154360', fontWeight: 700, background: '#FFDB58', padding: '1px 5px', borderRadius: '3px' }}>
-                        CGA Primary
-                      </span>
-                    </label>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      <select 
-                        className="form-select"
-                        value={['CGA', 'Digital Marketing', 'HR Operations', 'IT'].includes(driveJobRole) ? driveJobRole : ''}
-                        onChange={(e) => {
-                          if (e.target.value) {
-                            setDriveJobRole(e.target.value);
-                          }
-                        }}
-                      >
-                        <option value="">-- Choose Job Role or type below --</option>
-                        <option value="CGA">CGA (Primary)</option>
-                        <option value="Digital Marketing">Digital Marketing</option>
-                        <option value="HR Operations">HR Operations</option>
-                        <option value="IT">IT</option>
-                      </select>
-                      <input 
-                        type="text"
-                        className="form-input"
-                        placeholder="Or enter a new job role / title..."
-                        value={driveJobRole}
-                        onChange={(e) => setDriveJobRole(e.target.value)}
-                        required
-                      />
-                    </div>
+                    <label className="form-label">Job Title / Role *</label>
+                    <select 
+                      className="form-select"
+                      value={driveJobRole || 'CGA'}
+                      onChange={(e) => setDriveJobRole(e.target.value)}
+                      required
+                    >
+                      <option value="CGA">CGA</option>
+                      <option value="Digital Marketing">Digital Marketing</option>
+                      <option value="HR Operations">HR Operations</option>
+                      <option value="IT">IT</option>
+                    </select>
                   </div>
 
                   {/* Package (CTC) with default LPA */}
