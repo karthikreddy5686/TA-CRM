@@ -1337,7 +1337,7 @@ export default function DriveManagement({
             </div>
 
             <form onSubmit={handleCreateDriveSubmit}>
-              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {/* 1. Drive Title */}
                 <div className="form-group">
                   <label className="form-label">Drive Title *</label>
@@ -1351,60 +1351,32 @@ export default function DriveManagement({
                   />
                 </div>
 
-                {/* 2. Drive Mode: Offline or Online below the title */}
-                <div className="form-group" style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                  <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <span style={{ fontWeight: 700, color: '#154360' }}>Drive Mode (Offline / Online) *</span>
-                    <span style={{ fontSize: '0.68rem', color: '#64748b' }}>Select drive format</span>
-                  </label>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                    <button
-                      type="button"
-                      onClick={() => setDriveMode('Offline')}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '8px',
-                        padding: '9px 12px',
-                        borderRadius: '6px',
-                        border: driveMode === 'Offline' ? '2px solid #154360' : '1px solid #cbd5e1',
-                        background: driveMode === 'Offline' ? '#154360' : '#ffffff',
-                        color: driveMode === 'Offline' ? '#ffffff' : '#475569',
-                        fontWeight: 700,
-                        fontSize: '0.82rem',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease'
+                {/* 2. Drive Mode: Choose Offline or Online like college section */}
+                <div className="form-group">
+                  <label className="form-label">Drive Mode *</label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <select 
+                      className="form-select"
+                      value={['Offline', 'Online'].includes(driveMode) ? driveMode : ''}
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          setDriveMode(e.target.value);
+                        }
                       }}
+                      required
                     >
-                      <MapPin size={15} color={driveMode === 'Offline' ? '#FFDB58' : '#64748b'} />
-                      <span>Offline (On-Campus)</span>
-                      {driveMode === 'Offline' && <Check size={14} color="#FFDB58" />}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setDriveMode('Online')}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '8px',
-                        padding: '9px 12px',
-                        borderRadius: '6px',
-                        border: driveMode === 'Online' ? '2px solid #154360' : '1px solid #cbd5e1',
-                        background: driveMode === 'Online' ? '#154360' : '#ffffff',
-                        color: driveMode === 'Online' ? '#ffffff' : '#475569',
-                        fontWeight: 700,
-                        fontSize: '0.82rem',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease'
-                      }}
-                    >
-                      <Globe size={15} color={driveMode === 'Online' ? '#FFDB58' : '#64748b'} />
-                      <span>Online (Virtual)</span>
-                      {driveMode === 'Online' && <Check size={14} color="#FFDB58" />}
-                    </button>
+                      <option value="">-- Choose Drive Mode or type below --</option>
+                      <option value="Offline">Offline (On-Campus)</option>
+                      <option value="Online">Online (Virtual Drive)</option>
+                    </select>
+                    <input 
+                      type="text"
+                      className="form-input"
+                      placeholder="Or enter drive mode (e.g. Offline, Online)..."
+                      value={driveMode}
+                      onChange={(e) => setDriveMode(e.target.value)}
+                      required
+                    />
                   </div>
                 </div>
 
@@ -1452,7 +1424,7 @@ export default function DriveManagement({
                   )}
                 </div>
 
-                {/* 4. Job Role (CGA primary, plus Digital Marketing, HR Operations, IT) & Package (in LPA) */}
+                {/* 4. Job Role (Choose CGA, Digital Marketing, HR Operations, IT or type below) & Package (in LPA) */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   {/* Job Role */}
                   <div className="form-group">
@@ -1464,47 +1436,29 @@ export default function DriveManagement({
                     </label>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <select 
+                        className="form-select"
+                        value={['CGA', 'Digital Marketing', 'HR Operations', 'IT'].includes(driveJobRole) ? driveJobRole : ''}
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            setDriveJobRole(e.target.value);
+                          }
+                        }}
+                      >
+                        <option value="">-- Choose Job Role or type below --</option>
+                        <option value="CGA">⭐ CGA (Primary)</option>
+                        <option value="Digital Marketing">Digital Marketing</option>
+                        <option value="HR Operations">HR Operations</option>
+                        <option value="IT">IT</option>
+                      </select>
                       <input 
                         type="text"
                         className="form-input"
-                        placeholder="e.g. CGA"
+                        placeholder="Or enter a new job role / title..."
                         value={driveJobRole}
                         onChange={(e) => setDriveJobRole(e.target.value)}
                         required
                       />
-                      
-                      {/* Quick-selection role pills */}
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                        {[
-                          { role: 'CGA', label: '⭐ CGA (Primary)', isPrimary: true },
-                          { role: 'Digital Marketing', label: 'Digital Marketing' },
-                          { role: 'HR Operations', label: 'HR Operations' },
-                          { role: 'IT', label: 'IT' }
-                        ].map(item => (
-                          <button
-                            key={item.role}
-                            type="button"
-                            onClick={() => setDriveJobRole(item.role)}
-                            style={{
-                              fontSize: '0.68rem',
-                              padding: '2px 7px',
-                              borderRadius: '12px',
-                              border: driveJobRole === item.role ? '1.5px solid #154360' : '1px solid #cbd5e1',
-                              background: driveJobRole === item.role 
-                                ? (item.isPrimary ? '#FFDB58' : '#154360') 
-                                : '#f1f5f9',
-                              color: driveJobRole === item.role 
-                                ? (item.isPrimary ? '#154360' : '#ffffff') 
-                                : '#475569',
-                              fontWeight: driveJobRole === item.role ? 700 : 500,
-                              cursor: 'pointer',
-                              transition: 'all 0.15s ease'
-                            }}
-                          >
-                            {item.label}
-                          </button>
-                        ))}
-                      </div>
                     </div>
                   </div>
 
