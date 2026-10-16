@@ -1708,9 +1708,9 @@ export default function App() {
               onCreateDrive={handleCreateDrive}
               onAddStudentsBatch={handleAddStudentsBatch}
               onUpdateCandidateStage={handleUpdateCandidateStage}
-              onDeleteStudent={handleDeleteStudent}
-              onDeleteDrive={handleDeleteDrive}
-              onClearAllDrives={handleClearAllDrives}
+              onDeleteStudent={currentUser?.role === 'ADMIN' ? handleDeleteStudent : null}
+              onDeleteDrive={currentUser?.role === 'ADMIN' ? handleDeleteDrive : null}
+              onClearAllDrives={currentUser?.role === 'ADMIN' ? handleClearAllDrives : null}
               onLoadDemoData={handleLoadDemoData}
               defaultTab="drives"
               hrPhoneNumber={hrPhoneNumber}

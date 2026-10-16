@@ -1074,7 +1074,7 @@ export default function DriveManagement({
               <p className="card-subtitle">Scheduled campus visits and hiring details</p>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {drives.length > 0 && onClearAllDrives && (
+              {currentRole === 'ADMIN' && drives.length > 0 && onClearAllDrives && (
                 <button 
                   type="button" 
                   onClick={onClearAllDrives} 
@@ -1099,17 +1099,19 @@ export default function DriveManagement({
                   <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>Mode</th>
                   <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>College</th>
                   <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>Role</th>
-                  <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>CTC</th>
+                  <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff', whiteSpace: 'nowrap', minWidth: '90px' }}>CTC</th>
                   <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>Date</th>
                   <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>Status</th>
                   <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>Candidates</th>
-                  <th style={{ width: '30px', padding: '6px 4px', background: '#154360', color: '#ffffff' }}></th>
+                  {currentRole === 'ADMIN' && (
+                    <th style={{ width: '30px', padding: '6px 4px', background: '#154360', color: '#ffffff' }}></th>
+                  )}
                 </tr>
               </thead>
               <tbody>
                 {drives.length === 0 ? (
                   <tr>
-                    <td colSpan={9} style={{ textAlign: 'center', padding: '28px', color: '#71717a', fontSize: '0.78rem' }}>
+                    <td colSpan={currentRole === 'ADMIN' ? 9 : 8} style={{ textAlign: 'center', padding: '28px', color: '#71717a', fontSize: '0.78rem' }}>
                       No drives scheduled yet. Click "New Drive" to add your first campus drive.
                     </td>
                   </tr>
@@ -1150,16 +1152,18 @@ export default function DriveManagement({
                           {drive.jobRole}
                         </td>
 
-                        <td style={{ padding: '6px 8px' }}>
+                        <td style={{ padding: '6px 8px', whiteSpace: 'nowrap' }}>
                           <span style={{ 
                             fontWeight: 700, 
                             color: '#154360', 
                             background: '#FFDB58', 
                             border: '1px solid #fae27a', 
                             borderRadius: '4px', 
-                            padding: '2px 6px', 
+                            padding: '3px 8px', 
                             fontFamily: 'monospace', 
-                            fontSize: '0.75rem' 
+                            fontSize: '0.75rem',
+                            whiteSpace: 'nowrap',
+                            display: 'inline-block'
                           }}>
                             {drive.ctc}
                           </span>
@@ -1193,18 +1197,20 @@ export default function DriveManagement({
                           </button>
                         </td>
 
-                        <td style={{ padding: '6px 4px' }}>
-                          {onDeleteDrive && (
-                            <button 
-                              onClick={() => onDeleteDrive(drive.id)}
-                              className="btn-icon"
-                              style={{ width: '22px', height: '22px', color: '#ef4444' }}
-                              title="Delete campus drive"
-                            >
-                              <Trash2 size={11} />
-                            </button>
-                          )}
-                        </td>
+                        {currentRole === 'ADMIN' && (
+                          <td style={{ padding: '6px 4px' }}>
+                            {onDeleteDrive && (
+                              <button 
+                                onClick={() => onDeleteDrive(drive.id)}
+                                className="btn-icon"
+                                style={{ width: '22px', height: '22px', color: '#ef4444' }}
+                                title="Delete campus drive"
+                              >
+                                <Trash2 size={11} />
+                              </button>
+                            )}
+                          </td>
+                        )}
                       </tr>
                     );
                   })
@@ -1300,7 +1306,7 @@ export default function DriveManagement({
                       </button>
                     </div>
 
-                    {onDeleteDrive && (
+                    {currentRole === 'ADMIN' && onDeleteDrive && (
                       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                         <button
                           onClick={() => onDeleteDrive(drive.id)}
@@ -1351,33 +1357,18 @@ export default function DriveManagement({
                   />
                 </div>
 
-                {/* 2. Drive Mode: Choose Offline or Online like college section */}
+                {/* 2. Drive Mode */}
                 <div className="form-group">
                   <label className="form-label">Drive Mode *</label>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <select 
-                      className="form-select"
-                      value={['Offline', 'Online'].includes(driveMode) ? driveMode : ''}
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          setDriveMode(e.target.value);
-                        }
-                      }}
-                      required
-                    >
-                      <option value="">-- Choose Drive Mode or type below --</option>
-                      <option value="Offline">Offline (On-Campus)</option>
-                      <option value="Online">Online (Virtual Drive)</option>
-                    </select>
-                    <input 
-                      type="text"
-                      className="form-input"
-                      placeholder="Or enter drive mode (e.g. Offline, Online)..."
-                      value={driveMode}
-                      onChange={(e) => setDriveMode(e.target.value)}
-                      required
-                    />
-                  </div>
+                  <select 
+                    className="form-select"
+                    value={driveMode || 'Offline'}
+                    onChange={(e) => setDriveMode(e.target.value)}
+                    required
+                  >
+                    <option value="Offline">Offline (On-Campus)</option>
+                    <option value="Online">Online (Virtual Drive)</option>
+                  </select>
                 </div>
 
                 {/* 3. College / University Name */}
@@ -1446,7 +1437,7 @@ export default function DriveManagement({
                         }}
                       >
                         <option value="">-- Choose Job Role or type below --</option>
-                        <option value="CGA">⭐ CGA (Primary)</option>
+                        <option value="CGA">CGA (Primary)</option>
                         <option value="Digital Marketing">Digital Marketing</option>
                         <option value="HR Operations">HR Operations</option>
                         <option value="IT">IT</option>
@@ -1471,57 +1462,32 @@ export default function DriveManagement({
                       </span>
                     </label>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      <div style={{ position: 'relative' }}>
-                        <input 
-                          type="text"
-                          className="form-input"
-                          placeholder="e.g. 6.0"
-                          value={driveCtc}
-                          onChange={handleCtcChange}
-                          onBlur={handleCtcBlur}
-                          style={{ paddingRight: '48px' }}
-                          required
-                        />
-                        <span style={{
-                          position: 'absolute',
-                          right: '8px',
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          fontSize: '0.72rem',
-                          fontWeight: 700,
-                          color: '#154360',
-                          background: '#FFDB58',
-                          padding: '2px 6px',
-                          borderRadius: '4px',
-                          pointerEvents: 'none'
-                        }}>
-                          LPA
-                        </span>
-                      </div>
-
-                      {/* Quick amount chips */}
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                        {['3.6', '4.5', '6.0', '8.0', '12.0'].map(amt => (
-                          <button
-                            key={amt}
-                            type="button"
-                            onClick={() => setDriveCtc(`${amt} LPA`)}
-                            style={{
-                              fontSize: '0.68rem',
-                              padding: '2px 6px',
-                              borderRadius: '4px',
-                              border: driveCtc.startsWith(amt) ? '1px solid #154360' : '1px solid #e2e8f0',
-                              background: driveCtc.startsWith(amt) ? '#154360' : '#ffffff',
-                              color: driveCtc.startsWith(amt) ? '#ffffff' : '#475569',
-                              fontWeight: driveCtc.startsWith(amt) ? 700 : 500,
-                              cursor: 'pointer'
-                            }}
-                          >
-                            {amt} LPA
-                          </button>
-                        ))}
-                      </div>
+                    <div style={{ position: 'relative' }}>
+                      <input 
+                        type="text"
+                        className="form-input"
+                        placeholder="e.g. 6.0"
+                        value={driveCtc}
+                        onChange={handleCtcChange}
+                        onBlur={handleCtcBlur}
+                        style={{ paddingRight: '48px' }}
+                        required
+                      />
+                      <span style={{
+                        position: 'absolute',
+                        right: '8px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        fontSize: '0.72rem',
+                        fontWeight: 700,
+                        color: '#154360',
+                        background: '#FFDB58',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        pointerEvents: 'none'
+                      }}>
+                        LPA
+                      </span>
                     </div>
                   </div>
                 </div>
