@@ -1,19 +1,6 @@
 {
   "users": [
     {
-      "id": "intern-kavya",
-      "name": "Kavya Nair",
-      "role": "HR_INTERN",
-      "title": "Campus Talent Associate",
-      "email": "kavya.nair@talentconnect.io",
-      "password": "intern",
-      "avatar": "KN",
-      "status": "online",
-      "dailyTargetHours": 3.5,
-      "dailyTargetLeads": 20,
-      "username": "kavya.nair"
-    },
-    {
       "id": "hr-ananya",
       "name": "Ananya Sharma",
       "role": "MAIN_HR",
@@ -27,14 +14,38 @@
       "username": "ananya.sharma"
     },
     {
+      "id": "intern-kavya",
+      "name": "Kavya Nair",
+      "role": "HR_INTERN",
+      "title": "Campus Talent Associate",
+      "email": "kavya.nair@talentconnect.io",
+      "password": "intern",
+      "avatar": "KN",
+      "status": "online",
+      "dailyTargetHours": 3.5,
+      "dailyTargetLeads": 20,
+      "username": "kavya.nair"
+    },
+    {
+      "id": "hr-test1",
+      "name": "Test User",
+      "email": "test@example.com",
+      "password": "pass123",
+      "role": "MAIN_HR",
+      "username": "test"
+    },
+    {
       "id": "hr-karthik",
       "name": "karthik",
       "role": "MAIN_HR",
-      "title": "HR Manager",
-      "email": "karthik",
-      "password": "admin",
+      "title": "Talent Acquisition Manager",
+      "email": "karthikreddy5686@gmail.com",
+      "username": "karthikreddy5686",
+      "password": "123456",
       "avatar": "HR",
-      "status": "online"
+      "status": "online",
+      "dailyTargetHours": 4,
+      "dailyTargetLeads": 25
     },
     {
       "id": "user-admin",
@@ -102,8 +113,8 @@
       "branch": "Computer Science",
       "cgpa": 9.24,
       "stage": "TECH_INTERVIEW",
-      "internId": "intern-kavya",
-      "internName": "Kavya Nair",
+      "internId": "hr-karthik",
+      "internName": "karthik",
       "notes": "Cleared technical round with top score in Distributed Systems.",
       "interviewDate": "2026-10-24",
       "interviewTime": "10:00 AM - 10:10 AM",
@@ -127,8 +138,8 @@
       "branch": "Electrical Engineering",
       "cgpa": 8.87,
       "stage": "TECH_INTERVIEW",
-      "internId": "intern-kavya",
-      "internName": "Kavya Nair",
+      "internId": "hr-karthik",
+      "internName": "karthik",
       "notes": "Video interview scheduled for tomorrow 2:00 PM.",
       "interviewDate": "2026-10-24",
       "interviewTime": "10:10 AM - 10:20 AM",
@@ -152,8 +163,8 @@
       "branch": "Computer Science",
       "cgpa": 9.45,
       "stage": "TECH_INTERVIEW",
-      "internId": "intern-kavya",
-      "internName": "Kavya Nair",
+      "internId": "hr-karthik",
+      "internName": "karthik",
       "notes": "Excellent LeetCode profile. High probability hire.",
       "interviewDate": "2026-10-24",
       "interviewTime": "10:20 AM - 10:30 AM",
@@ -177,8 +188,8 @@
       "branch": "Mechanical Engineering",
       "cgpa": 8.12,
       "stage": "TECH_INTERVIEW",
-      "internId": "intern-kavya",
-      "internName": "Kavya Nair",
+      "internId": "hr-karthik",
+      "internName": "karthik",
       "notes": "Aptitude test link sent.",
       "interviewDate": "2026-10-24",
       "interviewTime": "10:30 AM - 10:40 AM",
@@ -202,8 +213,8 @@
       "branch": "Engineering Physics",
       "cgpa": 8.4,
       "stage": "TECH_INTERVIEW",
-      "internId": "intern-kavya",
-      "internName": "Kavya Nair",
+      "internId": "hr-karthik",
+      "internName": "karthik",
       "notes": "Registered via campus portal.",
       "interviewDate": "2026-10-24",
       "interviewTime": "10:40 AM - 10:50 AM",
@@ -227,8 +238,8 @@
       "branch": "Computer Science",
       "cgpa": 9.1,
       "stage": "OFFERED",
-      "internId": "intern-kavya",
-      "internName": "Kavya Nair",
+      "internId": "hr-karthik",
+      "internName": "karthik",
       "notes": "Candidate accepted preliminary offer letter."
     },
     {
@@ -244,8 +255,8 @@
       "branch": "Electronics & Instrumentation",
       "cgpa": 8.65,
       "stage": "TECH_INTERVIEW",
-      "internId": "intern-kavya",
-      "internName": "Kavya Nair",
+      "internId": "hr-karthik",
+      "internName": "karthik",
       "notes": "Completed technical coding round."
     },
     {
@@ -261,8 +272,8 @@
       "branch": "Computer Science",
       "cgpa": 8.8,
       "stage": "ONLINE_ASSESSMENT",
-      "internId": "intern-kavya",
-      "internName": "Kavya Nair",
+      "internId": "hr-karthik",
+      "internName": "karthik",
       "notes": "Invited to HackerRank online challenge."
     },
     {
@@ -278,8 +289,8 @@
       "branch": "Mathematics & Computing",
       "cgpa": 8.52,
       "stage": "APPLIED",
-      "internId": "intern-kavya",
-      "internName": "Kavya Nair",
+      "internId": "hr-karthik",
+      "internName": "karthik",
       "notes": "Applied through Google Form intake."
     },
     {
@@ -295,8 +306,8 @@
       "branch": "Information Technology",
       "cgpa": 8.75,
       "stage": "TECH_INTERVIEW",
-      "internId": "intern-kavya",
-      "internName": "Kavya Nair",
+      "internId": "hr-karthik",
+      "internName": "karthik",
       "notes": "AWS Certified Cloud Practitioner."
     }
   ],
@@ -310,8 +321,8 @@
       "phone": "+91 98201 44521",
       "email": "rajesh.kulkarni@iitb.ac.in",
       "status": "DRIVE_CONFIRMED",
-      "assignedInternId": "intern-kavya",
-      "assignedInternName": "Kavya Nair",
+      "assignedInternId": "hr-karthik",
+      "assignedInternName": "karthik",
       "notes": "Slots confirmed for Autumn campus drive. Requested 4-member tech panel.",
       "lastContacted": "2026-10-15",
       "city": "Mumbai",
@@ -326,8 +337,8 @@
       "phone": "+91 97112 88934",
       "email": "ssharma@pilani.bits-pilani.ac.in",
       "status": "PITCHED",
-      "assignedInternId": "intern-kavya",
-      "assignedInternName": "Kavya Nair",
+      "assignedInternId": "hr-karthik",
+      "assignedInternName": "karthik",
       "notes": "Interested in AI & Data Analyst roles. Awaiting pre-placement presentation deck.",
       "lastContacted": "2026-10-15",
       "city": "Pilani",
@@ -342,8 +353,8 @@
       "phone": "+91 94432 11980",
       "email": "placement@nitt.edu",
       "status": "CONTACTED",
-      "assignedInternId": "intern-kavya",
-      "assignedInternName": "Kavya Nair",
+      "assignedInternId": "hr-karthik",
+      "assignedInternName": "karthik",
       "notes": "Introductory call completed. Schedule follow-up callback next week.",
       "lastContacted": "2026-10-15",
       "city": "Tiruchirappalli",
@@ -358,8 +369,8 @@
       "phone": "+91 98402 77412",
       "email": "priya.raman@vit.ac.in",
       "status": "NEW_LEAD",
-      "assignedInternId": "intern-kavya",
-      "assignedInternName": "Kavya Nair",
+      "assignedInternId": "hr-karthik",
+      "assignedInternName": "karthik",
       "notes": "Campus drive batch of 2026. High intake capacity for Core Engineering & IT.",
       "lastContacted": "2026-10-15",
       "city": "Vellore",
@@ -369,8 +380,8 @@
   "followUps": [
     {
       "id": "fup-1",
-      "internId": "intern-kavya",
-      "internName": "Kavya Nair",
+      "internId": "hr-karthik",
+      "internName": "karthik",
       "entityType": "TPO",
       "entityId": "tpo-1",
       "entityTitle": "Dr. Rajesh Kulkarni (Head of Placements, IIT Bombay)",
@@ -381,8 +392,8 @@
     },
     {
       "id": "fup-2",
-      "internId": "intern-kavya",
-      "internName": "Kavya Nair",
+      "internId": "hr-karthik",
+      "internName": "karthik",
       "entityType": "TPO",
       "entityId": "tpo-2",
       "entityTitle": "Prof. Sunita Sharma (TPO Director, BITS Pilani)",
@@ -393,8 +404,8 @@
     },
     {
       "id": "fup-3",
-      "internId": "intern-kavya",
-      "internName": "Kavya Nair",
+      "internId": "hr-karthik",
+      "internName": "karthik",
       "entityType": "CANDIDATE",
       "entityId": "stu-2",
       "entityTitle": "Rohan Deshmukh (Candidate Lead, IIT Bombay)",
@@ -404,5 +415,5 @@
       "notes": "Verify test environment & send calendar invite for round 2 technical interview."
     }
   ],
-  "updatedAt": "2026-10-15T13:17:42.383Z"
+  "updatedAt": "2026-10-15T13:44:55.880Z"
 }

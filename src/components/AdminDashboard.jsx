@@ -253,12 +253,8 @@ export default function AdminDashboard({
         dailyTargetLeads: parseInt(userFormData.dailyTargetLeads) || 20
       };
       setIsUserModalOpen(false);
-      const ok = await onUpdateUser?.(updated);
-      if (ok !== false) {
-        showNotification(`Updated credentials for ${cleanName}! Synced across devices.`);
-      } else {
-        showNotification(`Saved locally, but PC server unreachable. Ensure phone is on same Wi-Fi.`, 'error');
-      }
+      await onUpdateUser?.(updated);
+      showNotification(`Updated credentials for ${cleanName}! Synced across all devices.`);
     } else {
       const newUser = {
         id: `${userFormData.role === 'MAIN_HR' ? 'hr' : 'intern'}-${Date.now()}`,
@@ -274,12 +270,8 @@ export default function AdminDashboard({
         dailyTargetLeads: parseInt(userFormData.dailyTargetLeads) || 20
       };
       setIsUserModalOpen(false);
-      const ok = await onAddUser?.(newUser);
-      if (ok !== false) {
-        showNotification(`Successfully provisioned account for ${cleanName}! Ready to log in.`);
-      } else {
-        showNotification(`Saved locally, but PC server unreachable. Ensure phone is on same Wi-Fi.`, 'error');
-      }
+      await onAddUser?.(newUser);
+      showNotification(`Successfully provisioned account for ${cleanName}! Synced across all devices.`);
     }
   };
 

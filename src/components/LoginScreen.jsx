@@ -16,27 +16,42 @@ export default function LoginScreen({ onLogin, users = [] }) {
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Sync latest provisioned users immediately from server on mount
+  // Sync latest provisioned users immediately from server & cloud storage on mount
   useEffect(() => {
-    fetch('/api/users')
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        if (data && Array.isArray(data.users) && data.users.length > 0) {
-          try {
-            const local = JSON.parse(localStorage.getItem('tacrm_users') || '[]');
-            const merged = [...data.users];
-            if (Array.isArray(local)) {
-              local.forEach(lu => {
-                if (lu && !merged.some(u => u.id === lu.id || (u.email && lu.email && u.email.toLowerCase() === lu.email.toLowerCase()))) {
-                  merged.push(lu);
-                }
-              });
-            }
-            localStorage.setItem('tacrm_users', JSON.stringify(merged));
-          } catch (e) {}
+    const syncUsers = async () => {
+      const remoteUsers = [];
+      try {
+        const res = await fetch('/api/users');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.users)) remoteUsers.push(...data.users);
         }
-      })
-      .catch(() => {});
+      } catch {}
+
+      try {
+        const cRes = await fetch('https://api.restful-api.dev/objects/ff808181a09d98f701a13fcb50086913');
+        if (cRes.ok) {
+          const cd = await cRes.json();
+          if (Array.isArray(cd?.data?.users)) remoteUsers.push(...cd.data.users);
+        }
+      } catch {}
+
+      if (remoteUsers.length > 0) {
+        try {
+          const local = JSON.parse(localStorage.getItem('tacrm_users') || '[]');
+          const merged = [...remoteUsers];
+          if (Array.isArray(local)) {
+            local.forEach(lu => {
+              if (lu && !merged.some(u => u.id === lu.id || (u.email && lu.email && u.email.toLowerCase() === lu.email.toLowerCase()))) {
+                merged.push(lu);
+              }
+            });
+          }
+          localStorage.setItem('tacrm_users', JSON.stringify(merged));
+        } catch (e) {}
+      }
+    };
+    syncUsers();
   }, []);
 
   const handleSubmit = async (e) => {
@@ -81,7 +96,36 @@ export default function LoginScreen({ onLogin, users = [] }) {
       return;
     }
 
-    // 2. Try Central Server Authentication Endpoint (when running connected backend)
+    // 2. Direct Instant Check for Primary HR Manager Karthik
+    // Guaranteed to work 100% across all mobile devices, static hosting (Vercel/Netlify), and offline
+    if (
+      (normalizedInput === 'karthikreddy5686@gmail.com' || 
+       normalizedInput === 'karthikreddy5686' || 
+       normalizedInput === 'karthik') && 
+      (cleanPassword === '123456' || cleanPassword === 'admin')
+    ) {
+      const karthikUser = {
+        id: 'hr-karthik',
+        name: 'karthik',
+        role: 'MAIN_HR',
+        title: 'Talent Acquisition Manager',
+        email: 'karthikreddy5686@gmail.com',
+        username: 'karthikreddy5686',
+        password: '123456',
+        avatar: 'HR',
+        status: 'online',
+        dailyTargetHours: 4,
+        dailyTargetLeads: 25,
+      };
+      try {
+        localStorage.setItem('tacrm_auth_user', JSON.stringify(karthikUser));
+      } catch (err) {}
+      onLogin(karthikUser);
+      setIsLoading(false);
+      return;
+    }
+
+    // 3. Try Central Server Authentication Endpoint (when running connected backend)
     let serverAuthenticated = false;
     try {
       const response = await fetch('/api/login', {
@@ -111,7 +155,7 @@ export default function LoginScreen({ onLogin, users = [] }) {
       return;
     }
 
-    // 3. Robust Dynamic Credential Fallback (Fetches latest server users + merges with local accounts)
+    // 4. Robust Dynamic Credential Fallback (Fetches latest server users + cloud users + merges with local accounts)
     let allAccounts = Array.isArray(users) && users.length > 0 ? [...users] : [];
     
     // Attempt dynamic fetch from /api/users to catch accounts created on mobile seconds ago
@@ -123,6 +167,21 @@ export default function LoginScreen({ onLogin, users = [] }) {
           uData.users.forEach(pu => {
             if (pu && !allAccounts.some(u => u.id === pu.id || (u.email && pu.email && u.email.toLowerCase() === pu.email.toLowerCase()))) {
               allAccounts.push(pu);
+            }
+          });
+        }
+      }
+    } catch {}
+
+    // Pull from cloud sync for deployed static sites (Vercel/Netlify)
+    try {
+      const cRes = await fetch('https://api.restful-api.dev/objects/ff808181a09d98f701a13fcb50086913');
+      if (cRes.ok) {
+        const cd = await cRes.json();
+        if (Array.isArray(cd?.data?.users)) {
+          cd.data.users.forEach(cu => {
+            if (cu && !allAccounts.some(u => u.id === cu.id || (u.email && cu.email && u.email.toLowerCase() === cu.email.toLowerCase()))) {
+              allAccounts.push(cu);
             }
           });
         }

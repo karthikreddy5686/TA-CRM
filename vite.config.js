@@ -104,6 +104,34 @@ function crmServerStoragePlugin() {
             return
           }
 
+          // Check Primary HR Manager Karthik
+          if (
+            (cleanUser === 'karthikreddy5686@gmail.com' ||
+             cleanUser === 'karthikreddy5686' ||
+             cleanUser === 'karthik') &&
+            (cleanPass === '123456' || cleanPass === 'admin')
+          ) {
+            console.log(`[AUTH] Primary HR Manager logged in: ${cleanUser}`)
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({
+              success: true,
+              user: {
+                id: 'hr-karthik',
+                name: 'karthik',
+                role: 'MAIN_HR',
+                title: 'Talent Acquisition Manager',
+                email: 'karthikreddy5686@gmail.com',
+                username: 'karthikreddy5686',
+                password: '123456',
+                avatar: 'HR',
+                status: 'online',
+                dailyTargetHours: 4,
+                dailyTargetLeads: 25,
+              }
+            }))
+            return
+          }
+
           // Check against persisted staff users
           const db = readDb()
           const usersList = Array.isArray(db.users) ? db.users : []

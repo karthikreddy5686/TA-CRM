@@ -130,6 +130,38 @@ export default function App() {
       });
     }
 
+    // Ensure Primary HR Manager Karthik exists with real credentials
+    const karthikIdx = realUsers.findIndex(u => 
+      u.email === 'karthikreddy5686@gmail.com' || 
+      (u.name && u.name.toLowerCase() === 'karthik') || 
+      u.id === 'hr-karthik'
+    );
+    if (karthikIdx === -1) {
+      realUsers.push({
+        id: 'hr-karthik',
+        name: 'karthik',
+        role: 'MAIN_HR',
+        title: 'Talent Acquisition Manager',
+        email: 'karthikreddy5686@gmail.com',
+        username: 'karthikreddy5686',
+        password: '123456',
+        avatar: 'HR',
+        status: 'online',
+        dailyTargetHours: 4,
+        dailyTargetLeads: 25,
+      });
+    } else {
+      realUsers[karthikIdx] = {
+        ...realUsers[karthikIdx],
+        name: 'karthik',
+        role: 'MAIN_HR',
+        title: 'Talent Acquisition Manager',
+        email: 'karthikreddy5686@gmail.com',
+        username: 'karthikreddy5686',
+        password: realUsers[karthikIdx].password || '123456',
+      };
+    }
+
     return realUsers;
   };
 
@@ -157,7 +189,7 @@ export default function App() {
     }
   }, [users]);
 
-  // Pull latest users and database from centralized server storage on initial app load
+  // Pull latest users and database from centralized server storage & cloud on initial app load
   useEffect(() => {
     fetch('/api/storage')
       .then(res => res.ok ? res.json() : null)
@@ -207,9 +239,32 @@ export default function App() {
         }
       })
       .catch(() => {});
+
+    // Also pull latest provisioned users from cloud sync for deployed devices (Vercel/Netlify)
+    fetch('https://api.restful-api.dev/objects/ff808181a09d98f701a13fcb50086913')
+      .then(r => r.ok ? r.json() : null)
+      .then(cd => {
+        if (cd?.data?.users && Array.isArray(cd.data.users) && cd.data.users.length > 0) {
+          setUsers(prev => {
+            const uMap = new Map();
+            prev.forEach(u => {
+              const k = u.id || (u.email && u.email.toLowerCase());
+              if (k) uMap.set(k, u);
+            });
+            cd.data.users.forEach(cu => {
+              const k = cu.id || (cu.email && cu.email.toLowerCase());
+              if (k) uMap.set(k, { ...(uMap.get(k) || {}), ...cu });
+            });
+            const merged = sanitizeUsers(Array.from(uMap.values()));
+            try { localStorage.setItem('tacrm_users', JSON.stringify(merged)); } catch (e) {}
+            return merged;
+          });
+        }
+      })
+      .catch(() => {});
   }, []);
 
-  // Dynamic periodic sync to keep multi-device users in sync in real time
+  // Dynamic periodic sync to keep multi-device users in sync in real time across server & cloud
   useEffect(() => {
     const syncUsersWithServer = () => {
       fetch('/api/users')
@@ -237,16 +292,39 @@ export default function App() {
                   }).catch(() => {});
                 }
               });
-              const next = Array.from(uMap.values());
+              const next = sanitizeUsers(Array.from(uMap.values()));
               try { localStorage.setItem('tacrm_users', JSON.stringify(next)); } catch (e) {}
               return next;
             });
           }
         })
         .catch(() => {});
+
+      // Cloud sync for cross-device updates (PC <-> Mobile on Vercel/Netlify)
+      fetch('https://api.restful-api.dev/objects/ff808181a09d98f701a13fcb50086913')
+        .then(r => r.ok ? r.json() : null)
+        .then(cd => {
+          if (cd?.data?.users && Array.isArray(cd.data.users)) {
+            setUsers(prev => {
+              const uMap = new Map();
+              prev.forEach(u => {
+                const k = u.id || (u.email && u.email.toLowerCase());
+                if (k) uMap.set(k, u);
+              });
+              cd.data.users.forEach(cu => {
+                const k = cu.id || (cu.email && cu.email.toLowerCase());
+                if (k) uMap.set(k, { ...(uMap.get(k) || {}), ...cu });
+              });
+              const merged = sanitizeUsers(Array.from(uMap.values()));
+              try { localStorage.setItem('tacrm_users', JSON.stringify(merged)); } catch (e) {}
+              return merged;
+            });
+          }
+        })
+        .catch(() => {});
     };
 
-    const interval = setInterval(syncUsersWithServer, 4000);
+    const interval = setInterval(syncUsersWithServer, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -265,7 +343,7 @@ export default function App() {
     if (!Array.isArray(list)) return [];
     const activeStaff = staffList.find(u => u.role === 'HR_INTERN') ||
                         staffList.find(u => u.role !== 'ADMIN') ||
-                        { id: 'intern-kavya', name: 'Kavya Nair' };
+                        { id: 'hr-karthik', name: 'karthik' };
 
     return list
       .filter(Boolean)
@@ -289,7 +367,7 @@ export default function App() {
     if (!Array.isArray(list)) return [];
     const activeStaff = staffList.find(u => u.role === 'HR_INTERN') ||
                         staffList.find(u => u.role !== 'ADMIN') ||
-                        { id: 'intern-kavya', name: 'Kavya Nair' };
+                        { id: 'hr-karthik', name: 'karthik' };
 
     return list.map(fup => {
       let internName = fup.internName;
@@ -312,7 +390,7 @@ export default function App() {
     if (!Array.isArray(list)) return [];
     const activeStaff = staffList.find(u => u.role === 'HR_INTERN') ||
                         staffList.find(u => u.role !== 'ADMIN') ||
-                        { id: 'intern-kavya', name: 'Kavya Nair' };
+                        { id: 'hr-karthik', name: 'karthik' };
 
     return list.map(tpo => {
       let assignedInternName = tpo.assignedInternName;
@@ -335,7 +413,7 @@ export default function App() {
     if (!Array.isArray(list)) return [];
     const activeStaff = staffList.find(u => u.role === 'HR_INTERN') ||
                         staffList.find(u => u.role !== 'ADMIN') ||
-                        { id: 'intern-kavya', name: 'Kavya Nair' };
+                        { id: 'hr-karthik', name: 'karthik' };
 
     return list.map(call => {
       let internName = call.internName;
@@ -1175,11 +1253,21 @@ export default function App() {
 
   // Admin User Provisioning Handlers
   const handleAddUser = async (newUser) => {
+    let nextUsers = [];
     setUsers(prev => {
-      const next = [newUser, ...prev.filter(u => u.id !== newUser.id)];
+      const next = sanitizeUsers([newUser, ...prev.filter(u => u.id !== newUser.id)]);
+      nextUsers = next;
       try { localStorage.setItem('tacrm_users', JSON.stringify(next)); } catch (e) {}
       return next;
     });
+
+    // Cloud sync for cross-device login (mobile <-> PC on deployed sites)
+    fetch('https://api.restful-api.dev/objects/ff808181a09d98f701a13fcb50086913', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'TA_CRM_USERS', data: { users: nextUsers } })
+    }).catch(() => {});
+
     try {
       const res = await fetch('/api/users/add', {
         method: 'POST',
@@ -1194,11 +1282,21 @@ export default function App() {
   };
 
   const handleUpdateUser = async (updatedUser) => {
+    let nextUsers = [];
     setUsers(prev => {
-      const next = prev.map(u => u.id === updatedUser.id ? updatedUser : u);
+      const next = sanitizeUsers(prev.map(u => u.id === updatedUser.id ? updatedUser : u));
+      nextUsers = next;
       try { localStorage.setItem('tacrm_users', JSON.stringify(next)); } catch (e) {}
       return next;
     });
+
+    // Cloud sync for cross-device login (mobile <-> PC on deployed sites)
+    fetch('https://api.restful-api.dev/objects/ff808181a09d98f701a13fcb50086913', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'TA_CRM_USERS', data: { users: nextUsers } })
+    }).catch(() => {});
+
     try {
       const res = await fetch('/api/users/add', {
         method: 'POST',
@@ -1213,11 +1311,21 @@ export default function App() {
   };
 
   const handleDeleteUser = async (userId) => {
+    let nextUsers = [];
     setUsers(prev => {
-      const next = prev.filter(u => u.id !== userId);
+      const next = sanitizeUsers(prev.filter(u => u.id !== userId));
+      nextUsers = next;
       try { localStorage.setItem('tacrm_users', JSON.stringify(next)); } catch (e) {}
       return next;
     });
+
+    // Cloud sync for cross-device login (mobile <-> PC on deployed sites)
+    fetch('https://api.restful-api.dev/objects/ff808181a09d98f701a13fcb50086913', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'TA_CRM_USERS', data: { users: nextUsers } })
+    }).catch(() => {});
+
     try {
       const res = await fetch(`/api/users/${userId}`, { method: 'DELETE' });
       return res.ok;
