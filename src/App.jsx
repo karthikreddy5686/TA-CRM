@@ -28,7 +28,8 @@ import {
   ChevronDown,
   Menu,
   ShieldCheck,
-  Key
+  Key,
+  GitFork
 } from 'lucide-react';
 
 import { 
@@ -44,6 +45,7 @@ import AdminDashboard from './components/AdminDashboard';
 import MainHRDashboard from './components/MainHRDashboard';
 import InternDashboard from './components/InternDashboard';
 import TPODirectory from './components/TPODirectory';
+import LeadPipeline from './components/LeadPipeline';
 import DriveManagement from './components/DriveManagement';
 import FollowUpTracker from './components/FollowUpTracker';
 import CallModal from './components/CallModal';
@@ -1239,7 +1241,19 @@ export default function App() {
     });
     addToast(`Updated details for ${updatedTpo.name} (${updatedTpo.collegeName})`, 'success');
   };
-  const handleUpdateTpoStatus = (tpoId, newStatus) => setTpos(prev => prev.map(t => t.id === tpoId ? { ...t, status: newStatus } : t));
+  const handleUpdateTpoStatus = (tpoId, newStatus) => {
+    setTpos(prev => {
+      const next = prev.map(t => t.id === tpoId ? { ...t, status: newStatus, lastContacted: new Date().toISOString().split('T')[0] } : t);
+      try { localStorage.setItem('tacrm_tpos', JSON.stringify(next)); } catch (e) {}
+      fetch('/api/storage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tpos: next })
+      }).catch(() => {});
+      return next;
+    });
+    addToast(`Updated lead stage to ${newStatus.replace(/_/g, ' ')}`, 'success');
+  };
   const handleCreateDrive = (newDrive) => {
     setDrives(prev => {
       const next = [newDrive, ...prev];
@@ -1394,6 +1408,7 @@ export default function App() {
     { id: 'drives', name: 'Drives', category: 'Main', icon: <Calendar size={15} /> },
     { id: 'liveBoard', name: 'Students', category: 'Main', icon: <Users size={15} /> },
     { id: 'tpos', name: 'College TPOs', category: 'Outreach & Calls', icon: <Building2 size={15} /> },
+    { id: 'pipeline', name: 'Lead Pipeline', category: 'Outreach & Calls', icon: <GitFork size={15} /> },
     { id: 'followups', name: 'Follow-Ups', category: 'Outreach & Calls', icon: <Clock size={15} /> },
     { id: 'calls', name: 'Call Logs', category: 'Outreach & Calls', icon: <PhoneCall size={15} /> },
   ];
@@ -1519,6 +1534,18 @@ export default function App() {
             <Building2 size={17} />
             <span className="nav-label">College TPOs</span>
             {activeTab === 'tpos' && (
+              <span style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', background: '#FFDB58' }} />
+            )}
+          </button>
+
+          <button 
+            onClick={() => { setActiveTab('pipeline'); setIsMobileSidebarOpen(false); }}
+            className={`nav-item ${activeTab === 'pipeline' ? 'active' : ''}`}
+            title="Lead Pipeline"
+          >
+            <GitFork size={17} />
+            <span className="nav-label">Pipeline</span>
+            {activeTab === 'pipeline' && (
               <span style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', background: '#FFDB58' }} />
             )}
           </button>
@@ -1694,6 +1721,20 @@ export default function App() {
               onDeleteTpo={handleDeleteTpo}
               onUpdateTpoStatus={handleUpdateTpoStatus}
               onScheduleFollowUp={handleScheduleFollowUpFromTpo}
+              onNavigateToPipeline={() => setActiveTab('pipeline')}
+            />
+          )}
+
+          {activeTab === 'pipeline' && (
+            <LeadPipeline 
+              tpos={tpos}
+              colleges={colleges}
+              users={users}
+              currentRole={currentUser.role}
+              onStartCall={handleStartCall}
+              onUpdateTpoStatus={handleUpdateTpoStatus}
+              onScheduleFollowUp={handleScheduleFollowUpFromTpo}
+              onAddTpo={handleAddTpo}
             />
           )}
 
