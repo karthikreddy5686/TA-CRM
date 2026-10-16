@@ -27,7 +27,11 @@ import {
   Sparkles,
   Mail,
   MessageSquare,
-  Play
+  Play,
+  Coffee,
+  Utensils,
+  AlertTriangle,
+  ShieldCheck
 } from 'lucide-react';
 
 export default function PublishedDriveBoard({
@@ -82,10 +86,27 @@ export default function PublishedDriveBoard({
   const [scheduleDriveId, setScheduleDriveId] = useState(() => selectedDriveId || activeDrive?.id || drives[0]?.id || 'ALL');
   const [scheduleDate, setScheduleDate] = useState(() => activeDrive?.driveDate || new Date().toISOString().split('T')[0]);
   const [scheduleStartTime, setScheduleStartTime] = useState('10:00');
+  const [scheduleEndTime, setScheduleEndTime] = useState('17:30');
   const [scheduleSlotMinutes, setScheduleSlotMinutes] = useState(10);
   const [scheduleBufferMinutes, setScheduleBufferMinutes] = useState(0);
+
+  // 3 Scheduled Breaks (2 Tea Breaks [15m each] + 1 Lunch Break [45m])
+  const [teaBreak1Start, setTeaBreak1Start] = useState('11:15');
+  const [teaBreak1Duration, setTeaBreak1Duration] = useState(15);
+  const [lunchBreakStart, setLunchBreakStart] = useState('13:00');
+  const [lunchBreakDuration, setLunchBreakDuration] = useState(45);
+  const [teaBreak2Start, setTeaBreak2Start] = useState('15:45');
+  const [teaBreak2Duration, setTeaBreak2Duration] = useState(15);
+
+  // Selected count of students to interview on this day
+  const [studentsToScheduleCount, setStudentsToScheduleCount] = useState(0);
+
+  // Manager Approval State (required if schedule exceeds daily limit)
+  const [managerApprovalGranted, setManagerApprovalGranted] = useState(false);
+  const [selectedManagerApprover, setSelectedManagerApprover] = useState('');
+  const [managerApprovalNote, setManagerApprovalNote] = useState('');
+
   const [scheduleMeetLink, setScheduleMeetLink] = useState('');
-  const [scheduleLimit, setScheduleLimit] = useState(25);
   const [selectedCandidateIds, setSelectedCandidateIds] = useState([]);
   const [autoDispatchInvites, setAutoDispatchInvites] = useState(true);
   const [isDispatching, setIsDispatching] = useState(false);
@@ -147,47 +168,123 @@ export default function PublishedDriveBoard({
     return h * 60 + m;
   };
 
-  // Filter candidates eligible for scheduling based on selected drive and batch limit (shows added drives)
-  const candidatesEligibleForSchedule = useMemo(() => {
-    const list = scheduleDriveId === 'ALL'
+  // All candidates belonging to selected drive
+  const allDriveCandidates = useMemo(() => {
+    return scheduleDriveId === 'ALL'
       ? students
       : students.filter(s => s.driveId === scheduleDriveId);
-    const limit = parseInt(scheduleLimit, 10) || 99999;
-    return list.slice(0, limit);
-  }, [students, scheduleDriveId, scheduleLimit]);
+  }, [students, scheduleDriveId]);
+
+  // Day & Break Calculations
+  const startMins = parseTimeToMinutes(scheduleStartTime);
+  const endMins = parseTimeToMinutes(scheduleEndTime);
+  const totalWindowMinutes = Math.max(0, endMins - startMins);
+
+  const tea1StartMins = parseTimeToMinutes(teaBreak1Start);
+  const tea1EndMins = tea1StartMins + teaBreak1Duration;
+
+  const lunchStartMins = parseTimeToMinutes(lunchBreakStart);
+  const lunchEndMins = lunchStartMins + lunchBreakDuration;
+
+  const tea2StartMins = parseTimeToMinutes(teaBreak2Start);
+  const tea2EndMins = tea2StartMins + teaBreak2Duration;
+
+  const totalBreakMinutes = teaBreak1Duration + lunchBreakDuration + teaBreak2Duration; // 15 + 45 + 15 = 75
+  const netWorkingMinutes = Math.max(0, totalWindowMinutes - totalBreakMinutes);
+  const slotDuration = parseInt(scheduleSlotMinutes, 10) || 10;
+  const maxDailyCapacity = slotDuration > 0 ? Math.floor(netWorkingMinutes / slotDuration) : 0;
+
+  // Initialize studentsToScheduleCount when drive candidates change
+  useEffect(() => {
+    if (allDriveCandidates.length > 0) {
+      const defaultCount = Math.min(allDriveCandidates.length, maxDailyCapacity > 0 ? maxDailyCapacity : allDriveCandidates.length);
+      setStudentsToScheduleCount(defaultCount);
+    } else {
+      setStudentsToScheduleCount(0);
+    }
+  }, [allDriveCandidates.length, maxDailyCapacity]);
+
+  // Filter candidates eligible for scheduling based on count chosen by HR
+  const candidatesEligibleForSchedule = useMemo(() => {
+    const count = parseInt(studentsToScheduleCount, 10);
+    const limit = (isNaN(count) || count <= 0) ? allDriveCandidates.length : count;
+    return allDriveCandidates.slice(0, limit);
+  }, [allDriveCandidates, studentsToScheduleCount]);
 
   // Synchronize selected IDs when candidate list changes
   useEffect(() => {
     setSelectedCandidateIds(candidatesEligibleForSchedule.map(s => s.id));
   }, [candidatesEligibleForSchedule]);
 
-  // Automatically calculate individual time slots for all selected candidates
+  // 3 Scheduled Breaks Array (Sorted Chronologically)
+  const activeBreaks = useMemo(() => {
+    return [
+      { name: 'Morning Tea Break', type: 'TEA', startMins: tea1StartMins, endMins: tea1EndMins, duration: teaBreak1Duration },
+      { name: 'Lunch Break', type: 'LUNCH', startMins: lunchStartMins, endMins: lunchEndMins, duration: lunchBreakDuration },
+      { name: 'Afternoon Tea Break', type: 'TEA', startMins: tea2StartMins, endMins: tea2EndMins, duration: teaBreak2Duration }
+    ].sort((a, b) => a.startMins - b.startMins);
+  }, [tea1StartMins, tea1EndMins, teaBreak1Duration, lunchStartMins, lunchEndMins, lunchBreakDuration, tea2StartMins, tea2EndMins, teaBreak2Duration]);
+
+  // Automatically calculate individual time slots jumping over breaks
   const calculatedTimeSlots = useMemo(() => {
-    const startMins = parseTimeToMinutes(scheduleStartTime);
-    const duration = parseInt(scheduleSlotMinutes, 10) || 10;
-    const buffer = parseInt(scheduleBufferMinutes, 10) || 0;
-    const step = duration + buffer;
-
     const selectedStudents = candidatesEligibleForSchedule.filter(s => selectedCandidateIds.includes(s.id));
+    let currentTime = startMins;
+    const slots = [];
 
-    return selectedStudents.map((student, idx) => {
-      const slotStartMins = startMins + idx * step;
-      const slotEndMins = slotStartMins + duration;
+    for (let i = 0; i < selectedStudents.length; i++) {
+      const student = selectedStudents[i];
+      let encounteredBreak = null;
+
+      // Jump over any breaks that collide with this slot
+      let collides = true;
+      while (collides) {
+        collides = false;
+        for (const brk of activeBreaks) {
+          if (currentTime >= brk.startMins && currentTime < brk.endMins) {
+            currentTime = brk.endMins;
+            encounteredBreak = brk;
+            collides = true;
+            break;
+          }
+          if (currentTime < brk.startMins && (currentTime + slotDuration) > brk.startMins) {
+            currentTime = brk.endMins;
+            encounteredBreak = brk;
+            collides = true;
+            break;
+          }
+        }
+      }
+
+      const slotStartMins = currentTime;
+      const slotEndMins = slotStartMins + slotDuration;
+      currentTime = slotEndMins;
+
       const startFormatted = formatTime12h(slotStartMins);
       const endFormatted = formatTime12h(slotEndMins);
       const slotString = `${startFormatted} - ${endFormatted}`;
 
-      return {
+      slots.push({
         student,
-        idx: idx + 1,
+        idx: i + 1,
         slotStartMins,
         slotEndMins,
         startFormatted,
         endFormatted,
         slotString,
-      };
-    });
-  }, [candidatesEligibleForSchedule, selectedCandidateIds, scheduleStartTime, scheduleSlotMinutes, scheduleBufferMinutes]);
+        breakBefore: encounteredBreak
+      });
+    }
+
+    return slots;
+  }, [candidatesEligibleForSchedule, selectedCandidateIds, startMins, slotDuration, activeBreaks]);
+
+  // Estimated Finish Time and Overtime Check
+  const estimatedFinishMins = calculatedTimeSlots.length > 0 
+    ? calculatedTimeSlots[calculatedTimeSlots.length - 1].slotEndMins 
+    : startMins;
+
+  const isExceedingTimeLimit = estimatedFinishMins > endMins;
+  const overtimeMinutes = Math.max(0, estimatedFinishMins - endMins);
 
   // Confirm schedule & dispatch interview invites
   const handleConfirmSchedule = async () => {
@@ -198,6 +295,11 @@ export default function PublishedDriveBoard({
 
     if (!scheduleMeetLink.trim()) {
       alert('Please enter or generate a Google Meet link.');
+      return;
+    }
+
+    if (isExceedingTimeLimit && !managerApprovalGranted) {
+      alert(`The schedule exceeds the allocated daily end time of ${formatTime12h(endMins)} by ${overtimeMinutes} minutes. Manager permission is required to proceed.`);
       return;
     }
 
@@ -1616,10 +1718,10 @@ export default function PublishedDriveBoard({
               {/* Parameters Grid */}
               <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '16px' }}>
                 <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#154360', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Clock size={15} color="#154360" /> 1. Interview Date & Time Slot Parameters
+                  <Clock size={15} color="#154360" /> 1. Interview Day Window & Duration Parameters
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
                   <div className="form-group" style={{ marginBottom: 0 }}>
                     <label className="form-label">Interview Date *</label>
                     <input 
@@ -1632,12 +1734,23 @@ export default function PublishedDriveBoard({
                   </div>
 
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label">First Slot Start Time *</label>
+                    <label className="form-label">Interview Starts From *</label>
                     <input 
                       type="time" 
                       className="form-input" 
                       value={scheduleStartTime} 
                       onChange={e => setScheduleStartTime(e.target.value)}
+                      required 
+                    />
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Interview Ends At *</label>
+                    <input 
+                      type="time" 
+                      className="form-input" 
+                      value={scheduleEndTime} 
+                      onChange={e => setScheduleEndTime(e.target.value)}
                       required 
                     />
                   </div>
@@ -1659,8 +1772,7 @@ export default function PublishedDriveBoard({
                   </div>
                 </div>
 
-                {/* Scope & Batch Limit */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginTop: '14px' }}>
+                <div style={{ marginTop: '12px' }}>
                   <div className="form-group" style={{ marginBottom: 0 }}>
                     <label className="form-label">Filter Candidates by Added Drive *</label>
                     <select 
@@ -1688,29 +1800,321 @@ export default function PublishedDriveBoard({
                       )}
                     </select>
                   </div>
+                </div>
+              </div>
 
-                  <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label">Number of Candidates to Schedule *</label>
-                    <select 
-                      className="form-select"
-                      value={scheduleLimit}
-                      onChange={e => setScheduleLimit(parseInt(e.target.value, 10))}
-                    >
-                      <option value="5">First 5 Candidates</option>
-                      <option value="10">First 10 Candidates</option>
-                      <option value="25">First 25 Candidates</option>
-                      <option value="50">First 50 Candidates</option>
-                      <option value="100">First 100 Candidates</option>
-                      <option value="99999">All Candidates in Selected Drive</option>
-                    </select>
+              {/* 2. Scheduled Breaks Parameters (2 Tea Breaks + 1 Lunch Break) */}
+              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#154360', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Coffee size={15} color="#154360" /> 2. Scheduled Breaks (2 Tea Breaks + 1 Lunch Break)
+                  </div>
+                  <span style={{ fontSize: '0.72rem', background: '#FFDB58', color: '#154360', fontWeight: 700, padding: '2px 8px', borderRadius: '4px' }}>
+                    Total Break Time: {totalBreakMinutes} Mins (1h 15m)
+                  </span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                  {/* Tea Break 1 */}
+                  <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#154360', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Coffee size={12} color="#0284c7" /> Morning Tea Break
+                      </span>
+                      <span style={{ fontSize: '0.7rem', color: '#0369a1', fontWeight: 700, background: '#e0f2fe', padding: '1px 5px', borderRadius: '3px' }}>
+                        15 mins
+                      </span>
+                    </div>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label style={{ fontSize: '0.68rem', color: '#71717a', fontWeight: 600 }}>Start Time</label>
+                      <input 
+                        type="time"
+                        className="form-input"
+                        value={teaBreak1Start}
+                        onChange={e => setTeaBreak1Start(e.target.value)}
+                        style={{ fontSize: '0.78rem', padding: '4px 8px' }}
+                      />
+                    </div>
+                    <div style={{ fontSize: '0.68rem', color: '#64748b', marginTop: '4px' }}>
+                      Window: {formatTime12h(tea1StartMins)} - {formatTime12h(tea1EndMins)}
+                    </div>
+                  </div>
+
+                  {/* Lunch Break */}
+                  <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#154360', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Utensils size={12} color="#d97706" /> Lunch Break
+                      </span>
+                      <span style={{ fontSize: '0.7rem', color: '#b45309', fontWeight: 700, background: '#fef3c7', padding: '1px 5px', borderRadius: '3px' }}>
+                        45 mins
+                      </span>
+                    </div>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label style={{ fontSize: '0.68rem', color: '#71717a', fontWeight: 600 }}>Start Time</label>
+                      <input 
+                        type="time"
+                        className="form-input"
+                        value={lunchBreakStart}
+                        onChange={e => setLunchBreakStart(e.target.value)}
+                        style={{ fontSize: '0.78rem', padding: '4px 8px' }}
+                      />
+                    </div>
+                    <div style={{ fontSize: '0.68rem', color: '#64748b', marginTop: '4px' }}>
+                      Window: {formatTime12h(lunchStartMins)} - {formatTime12h(lunchEndMins)}
+                    </div>
+                  </div>
+
+                  {/* Tea Break 2 */}
+                  <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#154360', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Coffee size={12} color="#0284c7" /> Afternoon Tea Break
+                      </span>
+                      <span style={{ fontSize: '0.7rem', color: '#0369a1', fontWeight: 700, background: '#e0f2fe', padding: '1px 5px', borderRadius: '3px' }}>
+                        15 mins
+                      </span>
+                    </div>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label style={{ fontSize: '0.68rem', color: '#71717a', fontWeight: 600 }}>Start Time</label>
+                      <input 
+                        type="time"
+                        className="form-input"
+                        value={teaBreak2Start}
+                        onChange={e => setTeaBreak2Start(e.target.value)}
+                        style={{ fontSize: '0.78rem', padding: '4px 8px' }}
+                      />
+                    </div>
+                    <div style={{ fontSize: '0.68rem', color: '#64748b', marginTop: '4px' }}>
+                      Window: {formatTime12h(tea2StartMins)} - {formatTime12h(tea2EndMins)}
+                    </div>
                   </div>
                 </div>
               </div>
 
+              {/* 3. Day Capacity Calculation & Number of Candidates to Interview */}
+              <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '10px', padding: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#154360', marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Users size={15} color="#154360" /> 3. Day Capacity Calculation & Number of Candidates to Interview
+                  </div>
+                  <span style={{ fontSize: '0.74rem', color: '#154360', fontWeight: 700 }}>
+                    Drive Pool: <strong>{allDriveCandidates.length}</strong> available
+                  </span>
+                </div>
+
+                {/* Calculation breakdown strip */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(5, 1fr)',
+                  gap: '8px',
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '8px',
+                  padding: '10px',
+                  marginBottom: '14px',
+                  textAlign: 'center'
+                }}>
+                  <div>
+                    <div style={{ fontSize: '0.65rem', color: '#71717a', textTransform: 'uppercase', fontWeight: 700 }}>Day Window</div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#09090b', marginTop: '2px' }}>
+                      {Math.floor(totalWindowMinutes / 60)}h {totalWindowMinutes % 60}m
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.65rem', color: '#71717a', textTransform: 'uppercase', fontWeight: 700 }}>Total Breaks</div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#d97706', marginTop: '2px' }}>
+                      -{totalBreakMinutes} mins
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.65rem', color: '#71717a', textTransform: 'uppercase', fontWeight: 700 }}>Net Interview Time</div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#154360', marginTop: '2px' }}>
+                      {netWorkingMinutes} mins
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.65rem', color: '#71717a', textTransform: 'uppercase', fontWeight: 700 }}>Slot / Student</div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#09090b', marginTop: '2px' }}>
+                      {slotDuration} mins
+                    </div>
+                  </div>
+                  <div style={{ background: '#ecfdf5', borderRadius: '6px', border: '1px solid #a7f3d0' }}>
+                    <div style={{ fontSize: '0.65rem', color: '#065f46', textTransform: 'uppercase', fontWeight: 700 }}>Max Day Capacity</div>
+                    <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#047857', marginTop: '1px' }}>
+                      {maxDailyCapacity} Students
+                    </div>
+                  </div>
+                </div>
+
+                {/* Candidate Selection Control */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '14px', alignItems: 'center' }}>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>How many students can be interviewed on this day? *</span>
+                      <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                        Max standard capacity: <strong>{maxDailyCapacity}</strong>
+                      </span>
+                    </label>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <input 
+                        type="number"
+                        min="1"
+                        max={Math.max(allDriveCandidates.length, 1)}
+                        className="form-input"
+                        style={{ width: '140px', fontWeight: 800, fontSize: '0.9rem' }}
+                        value={studentsToScheduleCount}
+                        onChange={e => {
+                          const val = parseInt(e.target.value, 10);
+                          setStudentsToScheduleCount(isNaN(val) ? 0 : val);
+                        }}
+                      />
+                      <span style={{ fontSize: '0.78rem', color: '#64748b' }}>students selected for today</span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setStudentsToScheduleCount(Math.min(allDriveCandidates.length, maxDailyCapacity))}
+                      className="btn-secondary"
+                      style={{ fontSize: '0.75rem', fontWeight: 700, padding: '6px 10px' }}
+                      title="Set to max standard capacity"
+                    >
+                      Fit Max Capacity ({Math.min(allDriveCandidates.length, maxDailyCapacity)})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setStudentsToScheduleCount(allDriveCandidates.length)}
+                      className="btn-secondary"
+                      style={{ fontSize: '0.75rem', fontWeight: 700, padding: '6px 10px' }}
+                      title="Select all drive candidates"
+                    >
+                      All Drive ({allDriveCandidates.length})
+                    </button>
+                  </div>
+                </div>
+
+                {/* Live Helper Status Message */}
+                <div style={{ marginTop: '10px', fontSize: '0.78rem' }}>
+                  {!isExceedingTimeLimit ? (
+                    <div style={{ color: '#047857', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
+                      <CheckCircle2 size={14} color="#10b981" />
+                      <span>
+                        Schedule comfortably fits within the <strong>{formatTime12h(endMins)}</strong> limit. Estimated finish time: <strong>{formatTime12h(estimatedFinishMins)}</strong>.
+                      </span>
+                    </div>
+                  ) : (
+                    <div style={{ color: '#b91c1c', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700 }}>
+                      <AlertTriangle size={15} color="#ef4444" />
+                      <span>
+                        Exceeds given time limit! Last interview will conclude at <strong>{formatTime12h(estimatedFinishMins)}</strong> ({overtimeMinutes} mins past {formatTime12h(endMins)}). Manager permission required below.
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 4. Manager Permission / Approval Card (Shown when time limit exceeded) */}
+              {isExceedingTimeLimit && (
+                <div style={{
+                  background: '#fffbeb',
+                  border: '2px solid #f59e0b',
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                  boxShadow: '0 2px 4px rgba(245, 158, 11, 0.1)'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#92400e', fontWeight: 800, fontSize: '0.86rem' }}>
+                    <ShieldCheck size={18} color="#d97706" />
+                    <span>Manager Permission Required (Schedule Exceeds Daily Time Limit by {overtimeMinutes} Mins)</span>
+                  </div>
+
+                  <div style={{ fontSize: '0.78rem', color: '#78350f', lineHeight: 1.4 }}>
+                    Total required time for <strong>{calculatedTimeSlots.length} candidate slots</strong> plus <strong>75 minutes break time</strong> extends the interview day to <strong>{formatTime12h(estimatedFinishMins)}</strong>. 
+                    Because this exceeds the allocated limit of <strong>{formatTime12h(endMins)}</strong>, authorization from a TA Manager is mandatory before dispatching.
+                  </div>
+
+                  <div style={{
+                    background: '#ffffff',
+                    border: '1px solid #fde68a',
+                    borderRadius: '8px',
+                    padding: '12px 14px'
+                  }}>
+                    {currentUser?.role === 'ADMIN' || currentUser?.role === 'MAIN_HR' ? (
+                      <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 700, color: '#154360' }}>
+                        <input 
+                          type="checkbox"
+                          checked={managerApprovalGranted}
+                          onChange={e => setManagerApprovalGranted(e.target.checked)}
+                          style={{ marginTop: '2px', width: '16px', height: '16px', cursor: 'pointer' }}
+                        />
+                        <div>
+                          <span>
+                            I hereby grant Manager Permission as {currentUser?.role === 'ADMIN' ? 'Administrator' : 'HR Manager'} ({currentUser?.name}) to schedule overtime beyond {formatTime12h(endMins)}.
+                          </span>
+                          <div style={{ fontSize: '0.7rem', color: '#71717a', fontWeight: 500, marginTop: '2px' }}>
+                            Authorized panel extension until {formatTime12h(estimatedFinishMins)}.
+                          </div>
+                        </div>
+                      </label>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#154360' }}>
+                          Select TA Manager Authorizing Overtime:
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                          <select
+                            className="form-select"
+                            value={selectedManagerApprover}
+                            onChange={e => setSelectedManagerApprover(e.target.value)}
+                            style={{ fontSize: '0.78rem' }}
+                          >
+                            <option value="">-- Choose Authorizing Manager --</option>
+                            {users.filter(u => u.role === 'ADMIN' || u.role === 'MAIN_HR').map(m => (
+                              <option key={m.id} value={`${m.name} (${m.role === 'ADMIN' ? 'Admin' : 'HR Manager'})`}>
+                                {m.name} ({m.role === 'ADMIN' ? 'Administrator' : 'HR Manager'})
+                              </option>
+                            ))}
+                          </select>
+                          <input 
+                            type="text"
+                            className="form-input"
+                            placeholder="Manager approval note / authorization code"
+                            value={managerApprovalNote}
+                            onChange={e => setManagerApprovalNote(e.target.value)}
+                            style={{ fontSize: '0.78rem' }}
+                          />
+                        </div>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700, color: '#92400e', marginTop: '4px' }}>
+                          <input 
+                            type="checkbox"
+                            checked={managerApprovalGranted}
+                            onChange={e => {
+                              if (!selectedManagerApprover) {
+                                alert('Please select an authorizing manager first.');
+                                return;
+                              }
+                              setManagerApprovalGranted(e.target.checked);
+                            }}
+                            style={{ width: '15px', height: '15px', cursor: 'pointer' }}
+                          />
+                          <span>
+                            I confirm verbal / written manager authorization has been received from {selectedManagerApprover || 'a TA Manager'}.
+                          </span>
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Google Meet & Panelist Section */}
               <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '16px' }}>
                 <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#154360', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Video size={15} color="#154360" /> 2. Google Meet Room & Interviewer
+                  <Video size={15} color="#154360" /> 4. Google Meet Room & Interviewer
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
@@ -1765,7 +2169,7 @@ export default function PublishedDriveBoard({
               <div style={{ border: '1px solid #e2e8f0', borderRadius: '10px', overflow: 'hidden' }}>
                 <div style={{ background: '#f1f5f9', padding: '8px 14px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#154360' }}>
-                    Calculated Time Slots Preview ({calculatedTimeSlots.length} candidates)
+                    5. Live Allocated Time Slots & Breaks Schedule ({calculatedTimeSlots.length} candidates)
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button
@@ -1803,60 +2207,70 @@ export default function PublishedDriveBoard({
                         const isSelected = selectedCandidateIds.includes(student.id);
                         const slotItem = calculatedTimeSlots.find(c => c.student.id === student.id);
                         return (
-                          <tr key={student.id} style={{ borderBottom: '1px solid #f1f5f9', background: isSelected ? '#ffffff' : '#fafafa', opacity: isSelected ? 1 : 0.6 }}>
-                            <td style={{ padding: '8px 10px' }}>
-                              <input
-                                type="checkbox"
-                                checked={isSelected}
-                                onChange={e => {
-                                  if (e.target.checked) {
-                                    setSelectedCandidateIds(prev => [...prev, student.id]);
-                                  } else {
-                                    setSelectedCandidateIds(prev => prev.filter(id => id !== student.id));
-                                  }
-                                }}
-                              />
-                            </td>
-                            <td style={{ padding: '8px 10px', color: '#64748b', fontWeight: 700 }}>
-                              {slotItem ? slotItem.idx : '-'}
-                            </td>
-                            <td style={{ padding: '8px 10px', fontWeight: 700, color: '#154360' }}>
-                              {student.name}
-                            </td>
-                            <td style={{ padding: '8px 10px', color: '#64748b' }}>
-                              {student.rollNumber || 'N/A'} • {student.branch}
-                            </td>
-                            <td style={{ padding: '8px 10px', whiteSpace: 'nowrap' }}>
-                              {slotItem ? (
-                                <span style={{
-                                  background: '#eff6ff',
-                                  color: '#1d4ed8',
-                                  border: '1px solid #bfdbfe',
-                                  padding: '3px 8px',
-                                  borderRadius: '4px',
-                                  fontWeight: 800,
-                                  fontSize: '0.74rem',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '4px',
-                                  whiteSpace: 'nowrap'
-                                }}>
-                                  ⏰ {slotItem.slotString}
-                                </span>
-                              ) : (
-                                <span style={{ color: '#94a3b8', whiteSpace: 'nowrap' }}>Unassigned</span>
-                              )}
-                            </td>
-                            <td style={{ padding: '8px 10px', whiteSpace: 'nowrap' }}>
-                              {scheduleMeetLink.trim() ? (
-                                <code style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '3px 8px', borderRadius: '4px', fontSize: '0.7rem', whiteSpace: 'nowrap' }}>
-                                  {scheduleMeetLink.replace('https://', '')}
-                                </code>
-                              ) : (
-                                <span style={{ color: '#94a3b8', fontSize: '0.72rem' }}>Link required above</span>
-                              )}
-                            </td>
-                          </tr>
+                          <React.Fragment key={student.id}>
+                            {/* Break Banner row if a break occurred immediately before this slot */}
+                            {slotItem?.breakBefore && (
+                              <tr style={{ background: '#fffbeb', borderTop: '1px solid #fde68a', borderBottom: '1px solid #fde68a' }}>
+                                <td colSpan={6} style={{ padding: '6px 12px', textAlign: 'center', fontWeight: 700, fontSize: '0.72rem', color: '#92400e' }}>
+                                  {slotItem.breakBefore.type === 'TEA' ? '☕' : '🍱'} {slotItem.breakBefore.name} ({slotItem.breakBefore.duration} Mins): {formatTime12h(slotItem.breakBefore.startMins)} – {formatTime12h(slotItem.breakBefore.endMins)}
+                                </td>
+                              </tr>
+                            )}
+                            <tr style={{ borderBottom: '1px solid #f1f5f9', background: isSelected ? '#ffffff' : '#fafafa', opacity: isSelected ? 1 : 0.6 }}>
+                              <td style={{ padding: '8px 10px' }}>
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={e => {
+                                    if (e.target.checked) {
+                                      setSelectedCandidateIds(prev => [...prev, student.id]);
+                                    } else {
+                                      setSelectedCandidateIds(prev => prev.filter(id => id !== student.id));
+                                    }
+                                  }}
+                                />
+                              </td>
+                              <td style={{ padding: '8px 10px', color: '#64748b', fontWeight: 700 }}>
+                                {slotItem ? slotItem.idx : '-'}
+                              </td>
+                              <td style={{ padding: '8px 10px', fontWeight: 700, color: '#154360' }}>
+                                {student.name}
+                              </td>
+                              <td style={{ padding: '8px 10px', color: '#64748b' }}>
+                                {student.rollNumber || 'N/A'} • {student.branch}
+                              </td>
+                              <td style={{ padding: '8px 10px', whiteSpace: 'nowrap' }}>
+                                {slotItem ? (
+                                  <span style={{
+                                    background: '#eff6ff',
+                                    color: '#1d4ed8',
+                                    border: '1px solid #bfdbfe',
+                                    padding: '3px 8px',
+                                    borderRadius: '4px',
+                                    fontWeight: 800,
+                                    fontSize: '0.74rem',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    whiteSpace: 'nowrap'
+                                  }}>
+                                    ⏰ {slotItem.slotString}
+                                  </span>
+                                ) : (
+                                  <span style={{ color: '#94a3b8', whiteSpace: 'nowrap' }}>Unassigned</span>
+                                )}
+                              </td>
+                              <td style={{ padding: '8px 10px', whiteSpace: 'nowrap' }}>
+                                {scheduleMeetLink.trim() ? (
+                                  <code style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '3px 8px', borderRadius: '4px', fontSize: '0.7rem', whiteSpace: 'nowrap' }}>
+                                    {scheduleMeetLink.replace('https://', '')}
+                                  </code>
+                                ) : (
+                                  <span style={{ color: '#94a3b8', fontSize: '0.72rem' }}>Link required above</span>
+                                )}
+                              </td>
+                            </tr>
+                          </React.Fragment>
                         );
                       })}
                     </tbody>
@@ -1879,7 +2293,7 @@ export default function PublishedDriveBoard({
               <button 
                 type="button" 
                 onClick={handleConfirmSchedule}
-                disabled={isDispatching || !calculatedTimeSlots.length}
+                disabled={isDispatching || !calculatedTimeSlots.length || (isExceedingTimeLimit && !managerApprovalGranted)}
                 className="btn-mustard"
                 style={{
                   fontWeight: 800,
@@ -1887,11 +2301,19 @@ export default function PublishedDriveBoard({
                   padding: '8px 18px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px'
+                  gap: '6px',
+                  opacity: (isExceedingTimeLimit && !managerApprovalGranted) ? 0.6 : 1,
+                  cursor: (isExceedingTimeLimit && !managerApprovalGranted) ? 'not-allowed' : 'pointer'
                 }}
               >
-                <Send size={15} color="#154360" />
-                {isDispatching ? 'Dispatching Invites...' : `Confirm & Dispatch Schedule (${calculatedTimeSlots.length} Students)`}
+                {isExceedingTimeLimit && !managerApprovalGranted ? (
+                  <>🔒 Manager Approval Required to Dispatch</>
+                ) : (
+                  <>
+                    <Send size={15} color="#154360" />
+                    {isDispatching ? 'Dispatching Invites...' : `Confirm & Dispatch Schedule (${calculatedTimeSlots.length} Students)`}
+                  </>
+                )}
               </button>
             </div>
           </div>
