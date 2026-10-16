@@ -115,6 +115,7 @@ export default function PublishedDriveBoard({
   const [copiedMeetLink, setCopiedMeetLink] = useState(false);
 
   // Email SMTP state for real Google Meet interview invite dispatch
+  const [emailProvider, setEmailProvider] = useState('resend');
   const [smtpSenderEmail, setSmtpSenderEmail] = useState('karthikreddy5686@gmail.com');
   const [smtpAppPassword, setSmtpAppPassword] = useState('');
   const [isSendingLiveEmails, setIsSendingLiveEmails] = useState(false);
@@ -124,6 +125,7 @@ export default function PublishedDriveBoard({
       .then(res => res.json())
       .then(data => {
         if (data.senderEmail) setSmtpSenderEmail(data.senderEmail);
+        if (data.service) setEmailProvider(data.service);
       })
       .catch(() => {});
   }, []);
@@ -456,7 +458,7 @@ export default function PublishedDriveBoard({
           senderEmail: smtpSenderEmail.trim() || 'karthikreddy5686@gmail.com',
           user: smtpSenderEmail.trim() || 'karthikreddy5686@gmail.com',
           pass: smtpAppPassword.trim(),
-          service: 'gmail'
+          service: emailProvider || (smtpAppPassword.startsWith('re_') ? 'resend' : smtpAppPassword.startsWith('SG.') ? 'sendgrid' : 'gmail')
         })
       });
 
@@ -2427,31 +2429,41 @@ export default function PublishedDriveBoard({
                 ) : (
                   <div>
                     <div style={{ fontSize: '0.75rem', color: '#78350f', lineHeight: 1.4 }}>
-                      Interview invitations generated with Google Meet link for <strong>{dispatchConfirmationData.totalCount} candidates</strong>. To deliver real emails directly to students' inboxes via Gmail, enter your Gmail App Password below:
+                      Interview invitations generated with Google Meet link for <strong>{dispatchConfirmationData.totalCount} candidates</strong>. Enter your Resend / SendGrid API Key (or Gmail App Password) to deliver live emails to students:
                     </div>
-                    <div style={{ display: 'flex', gap: '8px', marginTop: '8px', alignItems: 'center' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr 1fr auto', gap: '8px', marginTop: '8px', alignItems: 'center' }}>
+                      <select
+                        className="form-select"
+                        value={emailProvider}
+                        onChange={e => setEmailProvider(e.target.value)}
+                        style={{ fontSize: '0.74rem', padding: '5px 6px' }}
+                      >
+                        <option value="resend">Resend API</option>
+                        <option value="sendgrid">SendGrid API</option>
+                        <option value="gmail">Gmail SMTP</option>
+                      </select>
                       <input 
                         type="email"
                         className="form-input"
-                        placeholder="Sender Gmail"
+                        placeholder={emailProvider === 'resend' ? 'Sender Email (e.g. hr@company.com)' : 'Sender Email / User'}
                         value={smtpSenderEmail}
                         onChange={e => setSmtpSenderEmail(e.target.value)}
-                        style={{ fontSize: '0.75rem', padding: '5px 8px', flex: 1 }}
+                        style={{ fontSize: '0.74rem', padding: '5px 8px' }}
                       />
                       <input 
                         type="password"
                         className="form-input"
-                        placeholder="16-char App Password"
+                        placeholder={emailProvider === 'resend' ? 'Resend Key (re_...)' : emailProvider === 'sendgrid' ? 'SendGrid Key (SG...)' : '16-char App Password'}
                         value={smtpAppPassword}
                         onChange={e => setSmtpAppPassword(e.target.value)}
-                        style={{ fontSize: '0.75rem', padding: '5px 8px', width: '170px' }}
+                        style={{ fontSize: '0.74rem', padding: '5px 8px' }}
                       />
                       <button
                         type="button"
                         onClick={handleSaveSmtpAndResend}
                         disabled={isSendingLiveEmails || !smtpAppPassword.trim()}
                         className="btn-mustard"
-                        style={{ fontSize: '0.75rem', fontWeight: 800, padding: '5px 12px', whiteSpace: 'nowrap' }}
+                        style={{ fontSize: '0.74rem', fontWeight: 800, padding: '5px 12px', whiteSpace: 'nowrap' }}
                       >
                         {isSendingLiveEmails ? 'Sending...' : 'Save & Send Now'}
                       </button>

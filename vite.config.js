@@ -448,9 +448,14 @@ function crmServerStoragePlugin() {
           const pass = (smtpConfig.pass || process.env.SMTP_PASS || '').trim()
 
           let transporter = null
-          const isRealEmailReady = Boolean(pass && user)
+          const isResend = Boolean((pass && pass.startsWith('re_')) || smtpConfig.service === 'resend' || process.env.RESEND_API_KEY)
+          const resendKey = (pass && pass.startsWith('re_')) ? pass : (smtpConfig.pass || process.env.RESEND_API_KEY)
+          const isSendGrid = Boolean((pass && pass.startsWith('SG.')) || smtpConfig.service === 'sendgrid' || process.env.SENDGRID_API_KEY)
+          const sendgridKey = (pass && pass.startsWith('SG.')) ? pass : (smtpConfig.pass || process.env.SENDGRID_API_KEY)
 
-          if (isRealEmailReady) {
+          const isRealEmailReady = Boolean(isResend || isSendGrid || (pass && user))
+
+          if (!isResend && !isSendGrid && pass && user) {
             transporter = nodemailer.createTransport({
               service: smtpConfig.service || 'gmail',
               auth: { user, pass }
@@ -513,7 +518,64 @@ function crmServerStoragePlugin() {
               </div>
             `
 
-            if (transporter) {
+            if (isResend) {
+              try {
+                const resendFrom = (smtpConfig.senderEmail && smtpConfig.senderEmail.includes('@') && !smtpConfig.senderEmail.endsWith('@gmail.com'))
+                  ? `"${smtpConfig.senderName || 'Talent Acquisition Team'}" <${smtpConfig.senderEmail}>`
+                  : 'Talent Acquisition <onboarding@resend.dev>'
+                const resendRes = await fetch('https://api.resend.com/emails', {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${resendKey}`,
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                    from: resendFrom,
+                    to: recipientEmail,
+                    subject: `Interview Invitation: ${driveTitle || 'Campus Drive'} - ${recipientName} (${slotString})`,
+                    html: htmlContent
+                  })
+                })
+                const resData = await resendRes.json()
+                if (resendRes.ok) {
+                  console.log(`[RESEND EMAIL] Sent to ${recipientEmail} (ID: ${resData.id})`)
+                  results.push({ email: recipientEmail, name: recipientName, status: 'SENT', id: resData.id })
+                } else {
+                  console.error(`[RESEND ERROR] Failed sending to ${recipientEmail}:`, resData)
+                  results.push({ email: recipientEmail, name: recipientName, status: 'FAILED', error: resData.message || 'Resend error' })
+                }
+              } catch (sendErr) {
+                console.error(`[RESEND ERROR] Exception:`, sendErr.message)
+                results.push({ email: recipientEmail, name: recipientName, status: 'FAILED', error: sendErr.message })
+              }
+            } else if (isSendGrid) {
+              try {
+                const sgRes = await fetch('https://api.sendgrid.com/v3/mail/send', {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${sendgridKey}`,
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                    personalizations: [{ to: [{ email: recipientEmail, name: recipientName }] }],
+                    from: { email: user, name: smtpConfig.senderName || 'Talent Acquisition Team' },
+                    subject: `Interview Invitation: ${driveTitle || 'Campus Drive'} - ${recipientName} (${slotString})`,
+                    content: [{ type: 'text/html', value: htmlContent }]
+                  })
+                })
+                if (sgRes.ok || sgRes.status === 202) {
+                  console.log(`[SENDGRID EMAIL] Sent to ${recipientEmail}`)
+                  results.push({ email: recipientEmail, name: recipientName, status: 'SENT' })
+                } else {
+                  const sgErr = await sgRes.text()
+                  console.error(`[SENDGRID ERROR] Failed sending to ${recipientEmail}:`, sgErr)
+                  results.push({ email: recipientEmail, name: recipientName, status: 'FAILED', error: sgErr })
+                }
+              } catch (sendErr) {
+                console.error(`[SENDGRID ERROR] Exception:`, sendErr.message)
+                results.push({ email: recipientEmail, name: recipientName, status: 'FAILED', error: sendErr.message })
+              }
+            } else if (transporter) {
               try {
                 await transporter.sendMail({
                   from: `"${smtpConfig.senderName || 'Talent Acquisition Team'}" <${user}>`,
@@ -529,12 +591,12 @@ function crmServerStoragePlugin() {
               }
             } else {
               // SMTP not configured yet - record as queued
-              console.log(`[EMAIL QUEUED] (No SMTP credentials configured): ${recipientEmail} (${slotString})`)
+              console.log(`[EMAIL QUEUED] (No API Key or SMTP configured): ${recipientEmail} (${slotString})`)
               results.push({ 
                 email: recipientEmail, 
                 name: recipientName, 
                 status: 'QUEUED_NO_SMTP', 
-                message: 'Invite ready; provide Gmail App Password to dispatch live'
+                message: 'Invite ready; provide Resend/SendGrid API Key or Gmail App Password'
               })
             }
           }
