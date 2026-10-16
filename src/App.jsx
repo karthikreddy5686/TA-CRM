@@ -61,9 +61,21 @@ import {
   GlobalActionSheetModal
 } from './components/GlobalModals';
 
+import { parseUrlTokens, cleanUrlTokens, persistUserToDevice, persistBulkUsersToDevice } from './utils/staffSync';
+import { fetchSupabaseUsers, upsertSupabaseUser, deleteSupabaseUser, isSupabaseConfigured } from './services/supabaseSync';
+
 export default function App() {
-  // Authentication State - persists login session, stays logged out if logged out
+  // Authentication State - persists login session, supports 1-click mobile invite token
   const [currentUser, setCurrentUser] = useState(() => {
+    // 1. Check if URL contains 1-click mobile login token (?auth=...)
+    const tokenResult = parseUrlTokens();
+    if (tokenResult?.type === 'AUTH_USER' && tokenResult.user) {
+      persistUserToDevice(tokenResult.user);
+      try { localStorage.setItem('tacrm_auth_user', JSON.stringify(tokenResult.user)); } catch (e) {}
+      cleanUrlTokens();
+      return tokenResult.user;
+    }
+
     const savedUser = localStorage.getItem('tacrm_auth_user');
     if (!savedUser) return null;
     try {
@@ -167,6 +179,13 @@ export default function App() {
 
   // User State with Local Storage persistence & automatic purging of dummy accounts
   const [users, setUsers] = useState(() => {
+    // Process bulk sync token if present in URL (?sync=...)
+    const tokenResult = parseUrlTokens();
+    if (tokenResult?.type === 'SYNC_USERS' && Array.isArray(tokenResult.users)) {
+      persistBulkUsersToDevice(tokenResult.users);
+      cleanUrlTokens();
+    }
+
     const saved = localStorage.getItem('tacrm_users');
     if (saved) {
       try {
@@ -240,18 +259,17 @@ export default function App() {
       })
       .catch(() => {});
 
-    // Also pull latest provisioned users from cloud sync for deployed devices (Vercel/Netlify)
-    fetch('https://api.restful-api.dev/objects/ff808181a09d98f701a13fcb50086913')
-      .then(r => r.ok ? r.json() : null)
-      .then(cd => {
-        if (cd?.data?.users && Array.isArray(cd.data.users) && cd.data.users.length > 0) {
+    // Also pull latest provisioned users from Supabase cloud database if configured
+    if (isSupabaseConfigured()) {
+      fetchSupabaseUsers().then(cloudUsers => {
+        if (Array.isArray(cloudUsers) && cloudUsers.length > 0) {
           setUsers(prev => {
             const uMap = new Map();
             prev.forEach(u => {
               const k = u.id || (u.email && u.email.toLowerCase());
               if (k) uMap.set(k, u);
             });
-            cd.data.users.forEach(cu => {
+            cloudUsers.forEach(cu => {
               const k = cu.id || (cu.email && cu.email.toLowerCase());
               if (k) uMap.set(k, { ...(uMap.get(k) || {}), ...cu });
             });
@@ -260,13 +278,36 @@ export default function App() {
             return merged;
           });
         }
-      })
-      .catch(() => {});
+      }).catch(() => {});
+    }
   }, []);
 
-  // Dynamic periodic sync to keep multi-device users in sync in real time across server & cloud
+  // Multi-device sync: Gentle sync when returning to the tab or on 60s interval
   useEffect(() => {
-    const syncUsersWithServer = () => {
+    const refreshUsers = () => {
+      // 1. Supabase Cloud Sync
+      if (isSupabaseConfigured()) {
+        fetchSupabaseUsers().then(cloudUsers => {
+          if (Array.isArray(cloudUsers) && cloudUsers.length > 0) {
+            setUsers(prev => {
+              const uMap = new Map();
+              prev.forEach(u => {
+                const k = u.id || (u.email && u.email.toLowerCase());
+                if (k) uMap.set(k, u);
+              });
+              cloudUsers.forEach(cu => {
+                const k = cu.id || (cu.email && cu.email.toLowerCase());
+                if (k) uMap.set(k, { ...(uMap.get(k) || {}), ...cu });
+              });
+              const merged = sanitizeUsers(Array.from(uMap.values()));
+              try { localStorage.setItem('tacrm_users', JSON.stringify(merged)); } catch (e) {}
+              return merged;
+            });
+          }
+        }).catch(() => {});
+      }
+
+      // 2. Local Vite Backend (when running dev server)
       fetch('/api/users')
         .then(res => res.ok ? res.json() : null)
         .then(data => {
@@ -278,18 +319,10 @@ export default function App() {
                   uMap.set(u.id || u.email.toLowerCase(), u);
                 }
               });
-              // Merge local users that server might not have yet (e.g. created on mobile offline)
-              let hasNewLocal = false;
               prev.forEach(u => {
                 const k = u.id || (u.email && u.email.toLowerCase());
                 if (k && !uMap.has(k)) {
                   uMap.set(k, u);
-                  hasNewLocal = true;
-                  fetch('/api/users/add', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user: u })
-                  }).catch(() => {});
                 }
               });
               const next = sanitizeUsers(Array.from(uMap.values()));
@@ -299,33 +332,14 @@ export default function App() {
           }
         })
         .catch(() => {});
-
-      // Cloud sync for cross-device updates (PC <-> Mobile on Vercel/Netlify)
-      fetch('https://api.restful-api.dev/objects/ff808181a09d98f701a13fcb50086913')
-        .then(r => r.ok ? r.json() : null)
-        .then(cd => {
-          if (cd?.data?.users && Array.isArray(cd.data.users)) {
-            setUsers(prev => {
-              const uMap = new Map();
-              prev.forEach(u => {
-                const k = u.id || (u.email && u.email.toLowerCase());
-                if (k) uMap.set(k, u);
-              });
-              cd.data.users.forEach(cu => {
-                const k = cu.id || (cu.email && cu.email.toLowerCase());
-                if (k) uMap.set(k, { ...(uMap.get(k) || {}), ...cu });
-              });
-              const merged = sanitizeUsers(Array.from(uMap.values()));
-              try { localStorage.setItem('tacrm_users', JSON.stringify(merged)); } catch (e) {}
-              return merged;
-            });
-          }
-        })
-        .catch(() => {});
     };
 
-    const interval = setInterval(syncUsersWithServer, 5000);
-    return () => clearInterval(interval);
+    window.addEventListener('focus', refreshUsers);
+    const interval = setInterval(refreshUsers, 60000);
+    return () => {
+      window.removeEventListener('focus', refreshUsers);
+      clearInterval(interval);
+    };
   }, []);
 
   // Sanitize helper to purge any phantom or placeholder records from storage
@@ -1253,20 +1267,16 @@ export default function App() {
 
   // Admin User Provisioning Handlers
   const handleAddUser = async (newUser) => {
-    let nextUsers = [];
     setUsers(prev => {
       const next = sanitizeUsers([newUser, ...prev.filter(u => u.id !== newUser.id)]);
-      nextUsers = next;
       try { localStorage.setItem('tacrm_users', JSON.stringify(next)); } catch (e) {}
       return next;
     });
 
-    // Cloud sync for cross-device login (mobile <-> PC on deployed sites)
-    fetch('https://api.restful-api.dev/objects/ff808181a09d98f701a13fcb50086913', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: 'TA_CRM_USERS', data: { users: nextUsers } })
-    }).catch(() => {});
+    // Cloud sync via Supabase if configured
+    if (isSupabaseConfigured()) {
+      upsertSupabaseUser(newUser).catch(() => {});
+    }
 
     try {
       const res = await fetch('/api/users/add', {
@@ -1276,26 +1286,21 @@ export default function App() {
       });
       return res.ok;
     } catch (err) {
-      console.warn('Server sync error on add user:', err);
       return false;
     }
   };
 
   const handleUpdateUser = async (updatedUser) => {
-    let nextUsers = [];
     setUsers(prev => {
       const next = sanitizeUsers(prev.map(u => u.id === updatedUser.id ? updatedUser : u));
-      nextUsers = next;
       try { localStorage.setItem('tacrm_users', JSON.stringify(next)); } catch (e) {}
       return next;
     });
 
-    // Cloud sync for cross-device login (mobile <-> PC on deployed sites)
-    fetch('https://api.restful-api.dev/objects/ff808181a09d98f701a13fcb50086913', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: 'TA_CRM_USERS', data: { users: nextUsers } })
-    }).catch(() => {});
+    // Cloud sync via Supabase if configured
+    if (isSupabaseConfigured()) {
+      upsertSupabaseUser(updatedUser).catch(() => {});
+    }
 
     try {
       const res = await fetch('/api/users/add', {
@@ -1305,32 +1310,26 @@ export default function App() {
       });
       return res.ok;
     } catch (err) {
-      console.warn('Server sync error on update user:', err);
       return false;
     }
   };
 
   const handleDeleteUser = async (userId) => {
-    let nextUsers = [];
     setUsers(prev => {
       const next = sanitizeUsers(prev.filter(u => u.id !== userId));
-      nextUsers = next;
       try { localStorage.setItem('tacrm_users', JSON.stringify(next)); } catch (e) {}
       return next;
     });
 
-    // Cloud sync for cross-device login (mobile <-> PC on deployed sites)
-    fetch('https://api.restful-api.dev/objects/ff808181a09d98f701a13fcb50086913', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: 'TA_CRM_USERS', data: { users: nextUsers } })
-    }).catch(() => {});
+    // Cloud sync via Supabase if configured
+    if (isSupabaseConfigured()) {
+      deleteSupabaseUser(userId).catch(() => {});
+    }
 
     try {
       const res = await fetch(`/api/users/${userId}`, { method: 'DELETE' });
       return res.ok;
     } catch (err) {
-      console.warn('Server sync error on delete user:', err);
       return false;
     }
   };

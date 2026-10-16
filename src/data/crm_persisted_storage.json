@@ -1,40 +1,6 @@
 {
   "users": [
     {
-      "id": "hr-ananya",
-      "name": "Ananya Sharma",
-      "role": "MAIN_HR",
-      "title": "Head of Talent Acquisition",
-      "email": "ananya.sharma@talentconnect.io",
-      "password": "admin",
-      "avatar": "AS",
-      "status": "on-call",
-      "dailyTargetHours": 4,
-      "dailyTargetLeads": 25,
-      "username": "ananya.sharma"
-    },
-    {
-      "id": "intern-kavya",
-      "name": "Kavya Nair",
-      "role": "HR_INTERN",
-      "title": "Campus Talent Associate",
-      "email": "kavya.nair@talentconnect.io",
-      "password": "intern",
-      "avatar": "KN",
-      "status": "online",
-      "dailyTargetHours": 3.5,
-      "dailyTargetLeads": 20,
-      "username": "kavya.nair"
-    },
-    {
-      "id": "hr-test1",
-      "name": "Test User",
-      "email": "test@example.com",
-      "password": "pass123",
-      "role": "MAIN_HR",
-      "username": "test"
-    },
-    {
       "id": "hr-karthik",
       "name": "karthik",
       "role": "MAIN_HR",
@@ -415,5 +381,5 @@
       "notes": "Verify test environment & send calendar invite for round 2 technical interview."
     }
   ],
-  "updatedAt": "2026-10-15T13:44:55.880Z"
+  "updatedAt": "2026-10-16T09:09:39.535Z"
 }

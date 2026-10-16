@@ -6,53 +6,65 @@ import {
   AlertCircle,
   Eye,
   EyeOff,
-  Loader2
+  Loader2,
+  CheckCircle2,
+  Smartphone
 } from 'lucide-react';
+import { parseUrlTokens, cleanUrlTokens, persistUserToDevice, persistBulkUsersToDevice } from '../utils/staffSync';
+import { fetchSupabaseUsers, isSupabaseConfigured } from '../services/supabaseSync';
 
 export default function LoginScreen({ onLogin, users = [] }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [syncNotice, setSyncNotice] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Sync latest provisioned users immediately from server & cloud storage on mount
+  // 1. Process 1-Click Mobile Invite & Master Sync Tokens on Mount
   useEffect(() => {
-    const syncUsers = async () => {
-      const remoteUsers = [];
+    const processTokens = async () => {
+      const tokenResult = parseUrlTokens();
+      if (tokenResult) {
+        if (tokenResult.type === 'AUTH_USER' && tokenResult.user) {
+          // Instant 1-Click Mobile Login: Save to device and log in immediately
+          persistUserToDevice(tokenResult.user);
+          try {
+            localStorage.setItem('tacrm_auth_user', JSON.stringify(tokenResult.user));
+          } catch (e) {}
+          cleanUrlTokens();
+          onLogin(tokenResult.user);
+          return;
+        } else if (tokenResult.type === 'SYNC_USERS' && Array.isArray(tokenResult.users)) {
+          // Master Staff Sync: Save all employees to this phone/PC
+          persistBulkUsersToDevice(tokenResult.users);
+          cleanUrlTokens();
+          setSyncNotice(`✅ Successfully synchronized ${tokenResult.users.length} staff accounts to this device! You can now log in.`);
+        }
+      }
+
+      // Sync from Supabase if configured
+      if (isSupabaseConfigured()) {
+        const cloudUsers = await fetchSupabaseUsers();
+        if (Array.isArray(cloudUsers) && cloudUsers.length > 0) {
+          persistBulkUsersToDevice(cloudUsers);
+        }
+      }
+
+      // Sync from local Vite dev backend if running
       try {
         const res = await fetch('/api/users');
         if (res.ok) {
           const data = await res.json();
-          if (Array.isArray(data.users)) remoteUsers.push(...data.users);
-        }
-      } catch {}
-
-      try {
-        const cRes = await fetch('https://api.restful-api.dev/objects/ff808181a09d98f701a13fcb50086913');
-        if (cRes.ok) {
-          const cd = await cRes.json();
-          if (Array.isArray(cd?.data?.users)) remoteUsers.push(...cd.data.users);
-        }
-      } catch {}
-
-      if (remoteUsers.length > 0) {
-        try {
-          const local = JSON.parse(localStorage.getItem('tacrm_users') || '[]');
-          const merged = [...remoteUsers];
-          if (Array.isArray(local)) {
-            local.forEach(lu => {
-              if (lu && !merged.some(u => u.id === lu.id || (u.email && lu.email && u.email.toLowerCase() === lu.email.toLowerCase()))) {
-                merged.push(lu);
-              }
-            });
+          if (Array.isArray(data.users) && data.users.length > 0) {
+            persistBulkUsersToDevice(data.users);
           }
-          localStorage.setItem('tacrm_users', JSON.stringify(merged));
-        } catch (e) {}
-      }
+        }
+      } catch {}
     };
-    syncUsers();
-  }, []);
+
+    processTokens();
+  }, [onLogin]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -155,10 +167,10 @@ export default function LoginScreen({ onLogin, users = [] }) {
       return;
     }
 
-    // 4. Robust Dynamic Credential Fallback (Fetches latest server users + cloud users + merges with local accounts)
+    // 4. Robust Dynamic Credential Fallback (Fetches latest server users + Supabase + merges with local accounts)
     let allAccounts = Array.isArray(users) && users.length > 0 ? [...users] : [];
     
-    // Attempt dynamic fetch from /api/users to catch accounts created on mobile seconds ago
+    // Attempt dynamic fetch from /api/users to catch accounts created on local backend
     try {
       const uRes = await fetch('/api/users');
       if (uRes.ok) {
@@ -173,20 +185,19 @@ export default function LoginScreen({ onLogin, users = [] }) {
       }
     } catch {}
 
-    // Pull from cloud sync for deployed static sites (Vercel/Netlify)
-    try {
-      const cRes = await fetch('https://api.restful-api.dev/objects/ff808181a09d98f701a13fcb50086913');
-      if (cRes.ok) {
-        const cd = await cRes.json();
-        if (Array.isArray(cd?.data?.users)) {
-          cd.data.users.forEach(cu => {
+    // Pull from Supabase cloud database if configured
+    if (isSupabaseConfigured()) {
+      try {
+        const cloudUsers = await fetchSupabaseUsers();
+        if (Array.isArray(cloudUsers)) {
+          cloudUsers.forEach(cu => {
             if (cu && !allAccounts.some(u => u.id === cu.id || (u.email && cu.email && u.email.toLowerCase() === cu.email.toLowerCase()))) {
               allAccounts.push(cu);
             }
           });
         }
-      }
-    } catch {}
+      } catch {}
+    }
 
     // Merge with any cached accounts in local storage
     try {
@@ -239,7 +250,7 @@ export default function LoginScreen({ onLogin, users = [] }) {
       } catch (err) {}
       onLogin(matched);
     } else {
-      setErrorMessage('Invalid username or password. Please verify your credentials.');
+      setErrorMessage('Invalid username or password. Newly provisioned employees can tap their 1-Click Mobile Invite Link or scan their Admin QR code once to activate on this device.');
     }
 
     setIsLoading(false);
@@ -397,6 +408,26 @@ export default function LoginScreen({ onLogin, users = [] }) {
               </button>
             </div>
           </div>
+
+          {syncNotice && (
+            <div style={{
+              background: '#f0fdf4',
+              border: '1px solid #bbf7d0',
+              color: '#166534',
+              padding: '10px 14px',
+              borderRadius: '8px',
+              fontSize: '0.82rem',
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              marginBottom: '18px',
+              lineHeight: 1.4,
+            }}>
+              <CheckCircle2 size={16} color="#16a34a" style={{ flexShrink: 0 }} />
+              <div>{syncNotice}</div>
+            </div>
+          )}
 
           {errorMessage && (
             <div style={{

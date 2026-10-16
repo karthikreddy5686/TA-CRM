@@ -30,10 +30,27 @@ import {
   ChevronRight,
   Smartphone,
   QrCode,
-  RefreshCw
+  RefreshCw,
+  Share2,
+  Send,
+  Database,
+  Cloud,
+  MessageCircle
 } from 'lucide-react';
 import { formatDuration } from '../data/mockData';
 import { normalizePhoneNumber } from '../utils/phone';
+import { 
+  generateStaffInviteUrl, 
+  generateMasterSyncUrl, 
+  generateWhatsAppShareLink, 
+  generateQrCodeDataUrl 
+} from '../utils/staffSync';
+import { 
+  getSupabaseConfig, 
+  setSupabaseConfig, 
+  isSupabaseConfigured, 
+  testSupabaseConnection 
+} from '../services/supabaseSync';
 
 export default function AdminDashboard({
   users = [],
@@ -84,6 +101,16 @@ export default function AdminDashboard({
     dailyTargetLeads: 20
   });
 
+  // Multi-Device Staff Synchronization Modals & QR States
+  const [staffInviteModalUser, setStaffInviteModalUser] = useState(null);
+  const [inviteQrDataUrl, setInviteQrDataUrl] = useState('');
+  const [isMasterSyncModalOpen, setIsMasterSyncModalOpen] = useState(false);
+  const [masterSyncQrDataUrl, setMasterSyncQrDataUrl] = useState('');
+  const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState(false);
+  const [supabaseForm, setSupabaseForm] = useState(() => getSupabaseConfig());
+  const [supabaseStatusMsg, setSupabaseStatusMsg] = useState(null);
+  const [isTestingSupabase, setIsTestingSupabase] = useState(false);
+
   const [networkUrl, setNetworkUrl] = useState(() => {
     if (typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
       return `${window.location.protocol}//${window.location.host}/`;
@@ -101,6 +128,42 @@ export default function AdminDashboard({
       })
       .catch(() => {});
   }, []);
+
+  const handleOpenStaffInviteModal = async (user) => {
+    setStaffInviteModalUser(user);
+    const inviteUrl = generateStaffInviteUrl(user);
+    const qrUrl = await generateQrCodeDataUrl(inviteUrl);
+    setInviteQrDataUrl(qrUrl);
+  };
+
+  const handleOpenMasterSyncModal = async () => {
+    const syncUrl = generateMasterSyncUrl(users);
+    const qrUrl = await generateQrCodeDataUrl(syncUrl);
+    setMasterSyncQrDataUrl(qrUrl);
+    setIsMasterSyncModalOpen(true);
+  };
+
+  const handleSaveSupabaseConfig = async (e) => {
+    e.preventDefault();
+    setIsTestingSupabase(true);
+    setSupabaseStatusMsg(null);
+    const testResult = await testSupabaseConnection(supabaseForm.url, supabaseForm.key);
+    setIsTestingSupabase(false);
+    if (testResult.success) {
+      setSupabaseConfig(supabaseForm.url, supabaseForm.key);
+      showNotification('✅ Supabase connected! All employee logins now auto-sync across all devices in real-time.');
+      setIsSupabaseModalOpen(false);
+    } else {
+      setSupabaseStatusMsg({ error: testResult.message });
+    }
+  };
+
+  const handleClearSupabaseConfig = () => {
+    setSupabaseConfig('', '');
+    setSupabaseForm({ url: '', key: '' });
+    showNotification('Supabase cloud connection disconnected.');
+    setIsSupabaseModalOpen(false);
+  };
 
   const handleForceServerSync = async () => {
     setIsSyncingServer(true);
@@ -254,7 +317,8 @@ export default function AdminDashboard({
       };
       setIsUserModalOpen(false);
       await onUpdateUser?.(updated);
-      showNotification(`Updated credentials for ${cleanName}! Synced across all devices.`);
+      showNotification(`Updated credentials for ${cleanName}!`);
+      handleOpenStaffInviteModal(updated);
     } else {
       const newUser = {
         id: `${userFormData.role === 'MAIN_HR' ? 'hr' : 'intern'}-${Date.now()}`,
@@ -271,7 +335,8 @@ export default function AdminDashboard({
       };
       setIsUserModalOpen(false);
       await onAddUser?.(newUser);
-      showNotification(`Successfully provisioned account for ${cleanName}! Synced across all devices.`);
+      showNotification(`Provisioned account for ${cleanName}! 1-Click mobile access link & QR code generated.`);
+      handleOpenStaffInviteModal(newUser);
     }
   };
 
@@ -802,29 +867,39 @@ export default function AdminDashboard({
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.825rem', color: '#154360', fontWeight: 600 }}>
                 <ShieldCheck size={18} color="#154360" />
-                <span>Admin Master Controls: Employees created here synchronize instantly across PCs, laptops, and mobile devices.</span>
+                <span>Multi-Device Staff Controls: Employees added here can log in on any mobile, tablet, or PC.</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  onClick={handleOpenMasterSyncModal}
+                  className="btn-mustard btn-black-sm"
+                  style={{ fontSize: '0.75rem', padding: '5px 12px', fontWeight: 800 }}
+                  title="Generate Master QR code to import all staff to mobile at once"
+                >
+                  <QrCode size={13} color="#154360" />
+                  Sync All Staff to Mobile
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsSupabaseModalOpen(true)}
+                  className="btn-secondary btn-black-sm"
+                  style={{ fontSize: '0.75rem', padding: '5px 10px', borderColor: isSupabaseConfigured() ? '#10b981' : '#cbd5e1' }}
+                  title="Configure Supabase cloud database for automatic zero-link multi-device sync"
+                >
+                  <Database size={13} color={isSupabaseConfigured() ? '#10b981' : '#154360'} />
+                  {isSupabaseConfigured() ? 'Cloud DB: Connected' : 'Connect Cloud DB'}
+                </button>
                 <button
                   type="button"
                   onClick={handleForceServerSync}
                   disabled={isSyncingServer}
                   className="btn-secondary btn-black-sm"
-                  style={{ fontSize: '0.75rem', padding: '4px 10px' }}
+                  style={{ fontSize: '0.75rem', padding: '5px 10px' }}
                   title="Push all employees to central server database"
                 >
                   <RefreshCw size={12} className={isSyncingServer ? 'spinning' : ''} />
-                  {isSyncingServer ? 'Syncing...' : 'Sync to Server'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowMobileQr(prev => !prev)}
-                  className="btn-secondary btn-black-sm"
-                  style={{ fontSize: '0.75rem', padding: '4px 10px' }}
-                  title="Show Mobile QR code to open CRM on smartphone"
-                >
-                  <Smartphone size={12} color="#154360" />
-                  {showMobileQr ? 'Hide Mobile Link' : 'Mobile Access'}
+                  {isSyncingServer ? 'Syncing...' : 'Local Sync'}
                 </button>
               </div>
             </div>
@@ -999,7 +1074,16 @@ export default function AdminDashboard({
                       </td>
 
                       <td style={{ padding: '10px 14px', textAlign: 'right' }}>
-                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
+                          <button 
+                            type="button"
+                            onClick={() => handleOpenStaffInviteModal(user)}
+                            className="btn-secondary btn-black-sm"
+                            style={{ padding: '3px 8px', fontSize: '0.72rem', borderColor: '#0284c7', color: '#0369a1', fontWeight: 700 }}
+                            title="1-Click Mobile Access Link & QR Code"
+                          >
+                            <Smartphone size={12} color="#0284c7" /> Mobile
+                          </button>
                           <button 
                             onClick={() => handleOpenEditUser(user)}
                             className="btn-secondary btn-black-sm"
@@ -1049,7 +1133,15 @@ export default function AdminDashboard({
                   <div style={{ fontSize: '0.75rem', marginBottom: '10px' }}>
                     <strong>Password:</strong> <code>{isPassVisible ? userPassword : '••••••••'}</code>
                   </div>
-                  <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                  <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                    <button 
+                      type="button" 
+                      onClick={() => handleOpenStaffInviteModal(user)} 
+                      className="btn-secondary btn-black-sm" 
+                      style={{ padding: '2px 8px', fontSize: '0.7rem', color: '#0284c7', borderColor: '#bae6fd' }}
+                    >
+                      <Smartphone size={11} color="#0284c7" /> Mobile QR
+                    </button>
                     <button onClick={() => toggleShowPassword(user.id)} className="btn-secondary btn-black-sm" style={{ padding: '2px 6px', fontSize: '0.7rem' }}>
                       {isPassVisible ? 'Hide Pass' : 'Show Pass'}
                     </button>
@@ -2316,6 +2408,385 @@ export default function AdminDashboard({
                 <button type="submit" className="btn-mustard" style={{ fontWeight: 800 }}>
                   {editingCall ? 'Update Record' : 'Save Call Record'}
                 </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* MODAL 7: 1-CLICK MOBILE ACCESS & ONBOARDING QR CODE       */}
+      {/* ======================================================== */}
+      {staffInviteModalUser && (
+        <div className="modal-overlay" onClick={() => setStaffInviteModalUser(null)}>
+          <div className="modal-card" style={{ maxWidth: '480px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header" style={{ textAlign: 'left' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+                  <span className="badge badge-navy-subtle" style={{ fontSize: '0.72rem' }}>
+                    <Smartphone size={12} color="#154360" /> Mobile Ready
+                  </span>
+                  <span style={{ fontSize: '0.72rem', color: '#10b981', fontWeight: 700 }}>● Account Active</span>
+                </div>
+                <h3 className="modal-title" style={{ fontSize: '1.25rem', color: '#154360' }}>
+                  1-Click Mobile Access
+                </h3>
+                <p className="modal-subtitle">
+                  Instant login link & QR code for {staffInviteModalUser.name}
+                </p>
+              </div>
+              <button onClick={() => setStaffInviteModalUser(null)} className="modal-close-btn">&times;</button>
+            </div>
+
+            <div className="modal-body" style={{ padding: '20px' }}>
+              {/* Credentials summary card */}
+              <div style={{
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: '10px',
+                padding: '12px 14px',
+                marginBottom: '16px',
+                textAlign: 'left',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
+                <div>
+                  <div style={{ fontWeight: 800, color: '#154360', fontSize: '0.95rem' }}>
+                    {staffInviteModalUser.name}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '2px' }}>
+                    Role: <strong style={{ color: '#154360' }}>{staffInviteModalUser.role === 'MAIN_HR' ? 'HR Manager' : 'HR Intern'}</strong>
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                    Password: <code style={{ fontWeight: 700, color: '#0f172a' }}>{staffInviteModalUser.password}</code>
+                  </div>
+                </div>
+                <span className={staffInviteModalUser.role === 'MAIN_HR' ? 'badge badge-navy-subtle' : 'badge badge-mustard'}>
+                  {staffInviteModalUser.role === 'MAIN_HR' ? 'MAIN_HR' : 'INTERN'}
+                </span>
+              </div>
+
+              {/* QR Code Display */}
+              <div style={{
+                background: '#ffffff',
+                border: '2px dashed #bae6fd',
+                borderRadius: '12px',
+                padding: '16px',
+                display: 'inline-flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '8px',
+                marginBottom: '16px'
+              }}>
+                {inviteQrDataUrl ? (
+                  <img 
+                    src={inviteQrDataUrl} 
+                    alt="Scan for Mobile Login" 
+                    style={{ width: '180px', height: '180px', borderRadius: '8px', display: 'block' }} 
+                  />
+                ) : (
+                  <div style={{ width: '180px', height: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <RefreshCw size={24} className="spinning" color="#0284c7" />
+                  </div>
+                )}
+                <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0369a1' }}>
+                  📷 Point Phone Camera at Screen to Log In
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <a
+                  href={generateWhatsAppShareLink(staffInviteModalUser)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-mustard"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    padding: '10px 16px',
+                    fontWeight: 800,
+                    fontSize: '0.88rem',
+                    textDecoration: 'none',
+                    background: '#25D366',
+                    borderColor: '#22c55e',
+                    color: '#ffffff'
+                  }}
+                >
+                  <MessageCircle size={16} />
+                  Share Login via WhatsApp
+                </a>
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    type="text"
+                    readOnly
+                    value={generateStaffInviteUrl(staffInviteModalUser)}
+                    style={{
+                      flex: 1,
+                      padding: '8px 12px',
+                      fontSize: '0.78rem',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      background: '#f8fafc',
+                      color: '#475569'
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleCopyText(generateStaffInviteUrl(staffInviteModalUser), 'invite-link')}
+                    className="btn-secondary"
+                    style={{ padding: '8px 14px', fontSize: '0.8rem', whiteSpace: 'nowrap', fontWeight: 700 }}
+                  >
+                    {copiedKey === 'invite-link' ? <Check size={14} color="#10b981" /> : <Copy size={14} />}
+                    {copiedKey === 'invite-link' ? 'Copied!' : 'Copy Link'}
+                  </button>
+                </div>
+              </div>
+
+              <div style={{
+                marginTop: '16px',
+                padding: '10px 12px',
+                background: '#eff6ff',
+                borderRadius: '8px',
+                fontSize: '0.75rem',
+                color: '#1e40af',
+                textAlign: 'left',
+                lineHeight: 1.4
+              }}>
+                💡 <strong>How it works:</strong> Clicking this link or scanning the QR code on a phone logs the employee in instantly and permanently registers their account on that phone. On all future visits, they can also just type their username and password directly!
+              </div>
+            </div>
+
+            <div className="modal-footer" style={{ justifyContent: 'center', padding: '12px 20px', borderTop: '1px solid #e2e8f0' }}>
+              <button 
+                type="button" 
+                onClick={() => setStaffInviteModalUser(null)} 
+                className="btn-secondary"
+                style={{ minWidth: '120px' }}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* MODAL 8: MASTER STAFF BULK SYNC QR & LINK                 */}
+      {/* ======================================================== */}
+      {isMasterSyncModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsMasterSyncModalOpen(false)}>
+          <div className="modal-card" style={{ maxWidth: '480px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header" style={{ textAlign: 'left' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+                  <span className="badge badge-navy-subtle" style={{ fontSize: '0.72rem' }}>
+                    <QrCode size={12} color="#154360" /> Multi-Staff Transfer
+                  </span>
+                </div>
+                <h3 className="modal-title" style={{ fontSize: '1.25rem', color: '#154360' }}>
+                  Sync All Staff to Mobile
+                </h3>
+                <p className="modal-subtitle">
+                  Bulk import all {users.filter(u => u.role !== 'ADMIN').length} employee accounts to any phone in 1 scan
+                </p>
+              </div>
+              <button onClick={() => setIsMasterSyncModalOpen(false)} className="modal-close-btn">&times;</button>
+            </div>
+
+            <div className="modal-body" style={{ padding: '20px' }}>
+              <div style={{
+                background: '#ffffff',
+                border: '2px dashed #bae6fd',
+                borderRadius: '12px',
+                padding: '16px',
+                display: 'inline-flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '8px',
+                marginBottom: '16px'
+              }}>
+                {masterSyncQrDataUrl ? (
+                  <img 
+                    src={masterSyncQrDataUrl} 
+                    alt="Master Sync QR Code" 
+                    style={{ width: '200px', height: '200px', borderRadius: '8px', display: 'block' }} 
+                  />
+                ) : (
+                  <div style={{ width: '200px', height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <RefreshCw size={24} className="spinning" color="#0284c7" />
+                  </div>
+                )}
+                <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#0369a1' }}>
+                  📲 Scan with Mobile Phone Camera
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                <input
+                  type="text"
+                  readOnly
+                  value={generateMasterSyncUrl(users)}
+                  style={{
+                    flex: 1,
+                    padding: '8px 12px',
+                    fontSize: '0.78rem',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    background: '#f8fafc',
+                    color: '#475569'
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => handleCopyText(generateMasterSyncUrl(users), 'master-sync-link')}
+                  className="btn-mustard"
+                  style={{ padding: '8px 14px', fontSize: '0.8rem', whiteSpace: 'nowrap', fontWeight: 800 }}
+                >
+                  {copiedKey === 'master-sync-link' ? <Check size={14} color="#154360" /> : <Copy size={14} />}
+                  {copiedKey === 'master-sync-link' ? 'Copied!' : 'Copy Sync Link'}
+                </button>
+              </div>
+
+              <div style={{
+                padding: '12px',
+                background: '#f0fdf4',
+                border: '1px solid #bbf7d0',
+                borderRadius: '8px',
+                fontSize: '0.75rem',
+                color: '#166534',
+                textAlign: 'left',
+                lineHeight: 1.4
+              }}>
+                ✅ <strong>One-time sync:</strong> Scanning this QR code imports every HR manager and intern account into your mobile phone's memory. After that, any employee can log in directly anytime.
+              </div>
+            </div>
+
+            <div className="modal-footer" style={{ justifyContent: 'center', padding: '12px 20px', borderTop: '1px solid #e2e8f0' }}>
+              <button 
+                type="button" 
+                onClick={() => setIsMasterSyncModalOpen(false)} 
+                className="btn-secondary"
+                style={{ minWidth: '120px' }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* MODAL 9: SUPABASE CLOUD DATABASE CONFIGURATION            */}
+      {/* ======================================================== */}
+      {isSupabaseModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsSupabaseModalOpen(false)}>
+          <div className="modal-card" style={{ maxWidth: '520px' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+                  <Database size={14} color={isSupabaseConfigured() ? '#10b981' : '#154360'} />
+                  <span className={isSupabaseConfigured() ? 'badge badge-mustard' : 'badge badge-navy-subtle'}>
+                    {isSupabaseConfigured() ? 'Cloud DB Connected' : 'Optional Cloud Sync'}
+                  </span>
+                </div>
+                <h3 className="modal-title" style={{ fontSize: '1.25rem', color: '#154360' }}>
+                  Supabase Real-Time Cloud Database
+                </h3>
+                <p className="modal-subtitle">
+                  Enables 100% automatic cross-device employee login without invite links
+                </p>
+              </div>
+              <button onClick={() => setIsSupabaseModalOpen(false)} className="modal-close-btn">&times;</button>
+            </div>
+
+            <form onSubmit={handleSaveSupabaseConfig}>
+              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px', padding: '20px' }}>
+                <div style={{
+                  padding: '12px 14px',
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '8px',
+                  fontSize: '0.78rem',
+                  color: '#475569',
+                  lineHeight: 1.5
+                }}>
+                  🌐 <strong>Zero-Link Auto-Sync:</strong> Connecting a free Supabase project allows newly created employees to log in on any phone or PC directly by typing their username and password, with zero links or QR codes required.
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Supabase Project URL *</label>
+                  <input
+                    type="url"
+                    className="form-input"
+                    placeholder="https://your-project-id.supabase.co"
+                    value={supabaseForm.url}
+                    onChange={e => setSupabaseForm(prev => ({ ...prev, url: e.target.value }))}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Supabase Public Anon Key *</label>
+                  <input
+                    type="password"
+                    className="form-input"
+                    placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    value={supabaseForm.key}
+                    onChange={e => setSupabaseForm(prev => ({ ...prev, key: e.target.value }))}
+                    required
+                  />
+                </div>
+
+                {supabaseStatusMsg?.error && (
+                  <div style={{
+                    padding: '8px 12px',
+                    background: '#fef2f2',
+                    border: '1px solid #fecaca',
+                    borderRadius: '6px',
+                    fontSize: '0.75rem',
+                    color: '#991b1b'
+                  }}>
+                    ⚠️ {supabaseStatusMsg.error}
+                  </div>
+                )}
+
+                <div style={{
+                  fontSize: '0.73rem',
+                  color: '#64748b',
+                  lineHeight: 1.4
+                }}>
+                  <strong>Quick Setup (Takes 60 seconds):</strong><br />
+                  1. Go to <a href="https://supabase.com" target="_blank" rel="noreferrer" style={{ color: '#0284c7' }}>supabase.com</a> (Free)<br />
+                  2. Create project & copy <strong>Project URL</strong> and <strong>anon key</strong> from Settings &gt; API<br />
+                  3. Paste them here and click Connect!
+                </div>
+              </div>
+
+              <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 20px', borderTop: '1px solid #e2e8f0' }}>
+                {isSupabaseConfigured() ? (
+                  <button 
+                    type="button" 
+                    onClick={handleClearSupabaseConfig} 
+                    className="btn-secondary" 
+                    style={{ color: '#ef4444', borderColor: '#fca5a5' }}
+                  >
+                    Disconnect
+                  </button>
+                ) : <div />}
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button type="button" onClick={() => setIsSupabaseModalOpen(false)} className="btn-secondary">
+                    Cancel
+                  </button>
+                  <button type="submit" disabled={isTestingSupabase} className="btn-mustard" style={{ fontWeight: 800 }}>
+                    {isTestingSupabase ? 'Testing Connection...' : (isSupabaseConfigured() ? 'Update Connection' : 'Connect Cloud Database')}
+                  </button>
+                </div>
               </div>
             </form>
           </div>
