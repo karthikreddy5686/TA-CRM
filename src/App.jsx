@@ -43,17 +43,17 @@ import {
 import { webAudio } from './utils/audio';
 
 import LoginScreen from './components/LoginScreen';
-import AdminDashboard from './components/AdminDashboard';
-import MainHRDashboard from './components/MainHRDashboard';
-import InternDashboard from './components/InternDashboard';
-import DashboardOverview from './components/DashboardOverview';
-import TPODirectory from './components/TPODirectory';
-import LeadPipeline from './components/LeadPipeline';
-import DriveManagement from './components/DriveManagement';
-import FollowUpTracker from './components/FollowUpTracker';
+const AdminDashboard = React.lazy(() => import('./components/AdminDashboard'));
+const MainHRDashboard = React.lazy(() => import('./components/MainHRDashboard'));
+const InternDashboard = React.lazy(() => import('./components/InternDashboard'));
+const DashboardOverview = React.lazy(() => import('./components/DashboardOverview'));
+const TPODirectory = React.lazy(() => import('./components/TPODirectory'));
+const LeadPipeline = React.lazy(() => import('./components/LeadPipeline'));
+const DriveManagement = React.lazy(() => import('./components/DriveManagement'));
+const FollowUpTracker = React.lazy(() => import('./components/FollowUpTracker'));
 import CallModal from './components/CallModal';
 import CallDispositionModal from './components/CallDispositionModal';
-import PublishedDriveBoard from './components/PublishedDriveBoard';
+const PublishedDriveBoard = React.lazy(() => import('./components/PublishedDriveBoard'));
 import HRPhoneConnectModal from './components/HRPhoneConnectModal';
 import InstallAppModal from './components/InstallAppModal';
 import LogoutConfirmModal from './components/LogoutConfirmModal';
@@ -1657,6 +1657,12 @@ export default function App() {
 
         {/* Page Body Viewport */}
         <main className="page-body">
+          <React.Suspense fallback={
+            <div style={{ padding: '60px 20px', textAlign: 'center', color: '#154360', fontWeight: 700 }}>
+              <div className="loading-spinner" style={{ margin: '0 auto 12px' }} />
+              Loading view...
+            </div>
+          }>
           {(activeTab === 'dashboard' || activeTab === 'adminStaff') && (
             currentUser.role === 'ADMIN' ? (
               <AdminDashboard 
@@ -2011,6 +2017,7 @@ export default function App() {
               </div>
             </div>
           )}
+          </React.Suspense>
         </main>
       </div>
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   Calendar, 
   Users, 
@@ -22,7 +22,10 @@ import {
   Globe,
   MapPin,
   AlertCircle,
-  ArrowLeft
+  ArrowLeft,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 
 // 4 simple, natural hiring stages that anyone can understand immediately
@@ -81,6 +84,56 @@ export default function DriveManagement({
   const [driveCtc, setDriveCtc] = useState('');
   const [driveCriteria, setDriveCriteria] = useState('');
   const [driveDate, setDriveDate] = useState('');
+
+  // Drives Table Interactive Sorting State
+  const [drivesSortField, setDrivesSortField] = useState('date');
+  const [drivesSortDir, setDrivesSortDir] = useState('asc');
+
+  const handleToggleSort = (field) => {
+    if (drivesSortField === field) {
+      setDrivesSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setDrivesSortField(field);
+      setDrivesSortDir('asc');
+    }
+  };
+
+  const sortedDrives = useMemo(() => {
+    return [...drives].sort((a, b) => {
+      let valA = '';
+      let valB = '';
+      if (drivesSortField === 'title') {
+        valA = (a.title || '').toLowerCase();
+        valB = (b.title || '').toLowerCase();
+      } else if (drivesSortField === 'college') {
+        valA = (a.collegeName || '').toLowerCase();
+        valB = (b.collegeName || '').toLowerCase();
+      } else if (drivesSortField === 'role') {
+        valA = (a.jobRole || '').toLowerCase();
+        valB = (b.jobRole || '').toLowerCase();
+      } else if (drivesSortField === 'mode') {
+        valA = (a.mode || '').toLowerCase();
+        valB = (b.mode || '').toLowerCase();
+      } else if (drivesSortField === 'ctc') {
+        valA = parseFloat(a.ctc) || 0;
+        valB = parseFloat(b.ctc) || 0;
+        return drivesSortDir === 'asc' ? valA - valB : valB - valA;
+      } else if (drivesSortField === 'date') {
+        valA = a.driveDate || '';
+        valB = b.driveDate || '';
+      } else if (drivesSortField === 'status') {
+        valA = (a.status || '').toLowerCase();
+        valB = (b.status || '').toLowerCase();
+      } else if (drivesSortField === 'candidates') {
+        valA = students.filter(s => s.driveId === a.id).length;
+        valB = students.filter(s => s.driveId === b.id).length;
+        return drivesSortDir === 'asc' ? valA - valB : valB - valA;
+      }
+      return drivesSortDir === 'asc'
+        ? String(valA).localeCompare(String(valB))
+        : String(valB).localeCompare(String(valA));
+    });
+  }, [drives, students, drivesSortField, drivesSortDir]);
 
   // Confirmation Review Popup State
   const [isConfirmDriveOpen, setIsConfirmDriveOpen] = useState(false);
@@ -1043,25 +1096,65 @@ export default function DriveManagement({
             <table className="crm-table" style={{ width: '100%', tableLayout: 'auto' }}>
               <thead>
                 <tr>
-                  <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>Drive Name</th>
-                  <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>Mode</th>
-                  <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>College</th>
-                  <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>Role</th>
-                  <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff', whiteSpace: 'nowrap', minWidth: '90px' }}>CTC</th>
-                  <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>Date</th>
-                  <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>Status</th>
-                  <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>Candidates</th>
+                  <th onClick={() => handleToggleSort('title')} style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff', cursor: 'pointer', userSelect: 'none' }} title="Click to sort by Drive Name">
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      Drive Name
+                      {drivesSortField === 'title' ? (drivesSortDir === 'asc' ? <ArrowUp size={11} color="#FFDB58" /> : <ArrowDown size={11} color="#FFDB58" />) : <ArrowUpDown size={11} style={{ opacity: 0.5 }} />}
+                    </div>
+                  </th>
+                  <th onClick={() => handleToggleSort('mode')} style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff', cursor: 'pointer', userSelect: 'none' }} title="Click to sort by Mode">
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      Mode
+                      {drivesSortField === 'mode' ? (drivesSortDir === 'asc' ? <ArrowUp size={11} color="#FFDB58" /> : <ArrowDown size={11} color="#FFDB58" />) : <ArrowUpDown size={11} style={{ opacity: 0.5 }} />}
+                    </div>
+                  </th>
+                  <th onClick={() => handleToggleSort('college')} style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff', cursor: 'pointer', userSelect: 'none' }} title="Click to sort by College">
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      College
+                      {drivesSortField === 'college' ? (drivesSortDir === 'asc' ? <ArrowUp size={11} color="#FFDB58" /> : <ArrowDown size={11} color="#FFDB58" />) : <ArrowUpDown size={11} style={{ opacity: 0.5 }} />}
+                    </div>
+                  </th>
+                  <th onClick={() => handleToggleSort('role')} style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff', cursor: 'pointer', userSelect: 'none' }} title="Click to sort by Role">
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      Role
+                      {drivesSortField === 'role' ? (drivesSortDir === 'asc' ? <ArrowUp size={11} color="#FFDB58" /> : <ArrowDown size={11} color="#FFDB58" />) : <ArrowUpDown size={11} style={{ opacity: 0.5 }} />}
+                    </div>
+                  </th>
+                  <th onClick={() => handleToggleSort('ctc')} style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff', whiteSpace: 'nowrap', minWidth: '90px', cursor: 'pointer', userSelect: 'none' }} title="Click to sort by CTC">
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      CTC
+                      {drivesSortField === 'ctc' ? (drivesSortDir === 'asc' ? <ArrowUp size={11} color="#FFDB58" /> : <ArrowDown size={11} color="#FFDB58" />) : <ArrowUpDown size={11} style={{ opacity: 0.5 }} />}
+                    </div>
+                  </th>
+                  <th onClick={() => handleToggleSort('date')} style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff', cursor: 'pointer', userSelect: 'none' }} title="Click to sort by Date">
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      Date
+                      {drivesSortField === 'date' ? (drivesSortDir === 'asc' ? <ArrowUp size={11} color="#FFDB58" /> : <ArrowDown size={11} color="#FFDB58" />) : <ArrowUpDown size={11} style={{ opacity: 0.5 }} />}
+                    </div>
+                  </th>
+                  <th onClick={() => handleToggleSort('status')} style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff', cursor: 'pointer', userSelect: 'none' }} title="Click to sort by Status">
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      Status
+                      {drivesSortField === 'status' ? (drivesSortDir === 'asc' ? <ArrowUp size={11} color="#FFDB58" /> : <ArrowDown size={11} color="#FFDB58" />) : <ArrowUpDown size={11} style={{ opacity: 0.5 }} />}
+                    </div>
+                  </th>
+                  <th onClick={() => handleToggleSort('candidates')} style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff', cursor: 'pointer', userSelect: 'none' }} title="Click to sort by Candidates Count">
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      Candidates
+                      {drivesSortField === 'candidates' ? (drivesSortDir === 'asc' ? <ArrowUp size={11} color="#FFDB58" /> : <ArrowDown size={11} color="#FFDB58" />) : <ArrowUpDown size={11} style={{ opacity: 0.5 }} />}
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {drives.length === 0 ? (
+                {sortedDrives.length === 0 ? (
                   <tr>
                     <td colSpan={8} style={{ textAlign: 'center', padding: '28px', color: '#71717a', fontSize: '0.78rem' }}>
                       No drives scheduled yet. Click "New Drive" to add your first campus drive.
                     </td>
                   </tr>
                 ) : (
-                  drives.map(drive => {
+                  sortedDrives.map(drive => {
                     const driveCandidates = students.filter(s => s.driveId === drive.id);
                     return (
                       <tr key={drive.id}>

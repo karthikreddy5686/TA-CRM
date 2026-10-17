@@ -92,14 +92,11 @@ export default function PublishedDriveBoard({
 
   // 3 Scheduled Breaks (2 Tea Breaks [15m each] + 1 Lunch Break [45m] - manually entered by user)
   const [teaBreak1Start, setTeaBreak1Start] = useState('');
-  const [teaBreak1Duration, setTeaBreak1Duration] = useState(15);
+  const [teaBreak1Duration] = useState(15);
   const [lunchBreakStart, setLunchBreakStart] = useState('');
-  const [lunchBreakDuration, setLunchBreakDuration] = useState(45);
+  const [lunchBreakDuration] = useState(45);
   const [teaBreak2Start, setTeaBreak2Start] = useState('');
-  const [teaBreak2Duration, setTeaBreak2Duration] = useState(15);
-
-  // Selected count of students to interview on this day
-  const [studentsToScheduleCount, setStudentsToScheduleCount] = useState(0);
+  const [teaBreak2Duration] = useState(15);
 
   // Manager Approval State (required if schedule exceeds daily limit)
   const [managerApprovalGranted, setManagerApprovalGranted] = useState(false);
@@ -108,11 +105,9 @@ export default function PublishedDriveBoard({
 
   const [scheduleMeetLink, setScheduleMeetLink] = useState('');
   const [selectedCandidateIds, setSelectedCandidateIds] = useState([]);
-  const [autoDispatchInvites, setAutoDispatchInvites] = useState(true);
   const [isDispatching, setIsDispatching] = useState(false);
   const [dispatchConfirmationData, setDispatchConfirmationData] = useState(null);
   const [copiedScheduleText, setCopiedScheduleText] = useState(false);
-  const [copiedMeetLink, setCopiedMeetLink] = useState(false);
 
   // Email SMTP state for real Google Meet interview invite dispatch
   const [emailProvider, setEmailProvider] = useState('gmail');
@@ -2289,7 +2284,7 @@ export default function PublishedDriveBoard({
                           </td>
                         </tr>
                       ) : (
-                        candidatesEligibleForSchedule.map((student, idx) => {
+                        candidatesEligibleForSchedule.map(student => {
                           const isSelected = selectedCandidateIds.includes(student.id);
                           const slotItem = calculatedTimeSlots.find(c => c.student.id === student.id);
                           return (
