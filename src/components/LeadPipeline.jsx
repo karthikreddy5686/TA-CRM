@@ -738,8 +738,10 @@ export default function LeadPipeline({
                             if (onStartCall) {
                               onStartCall({
                                 ...lead,
-                                type: 'TPO',
-                                recipientType: 'TPO'
+                                recipientName: lead.name,
+                                recipientPhone: lead.phone,
+                                recipientType: 'TPO',
+                                type: 'AUDIO'
                               });
                             }
                           }}

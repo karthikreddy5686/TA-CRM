@@ -965,7 +965,7 @@ export default function App() {
     setCallState({
       active: true,
       timerRunning: false, // DO NOT start timer on call open; starts only after clicking "Dial on Mobile" or clicking timer
-      type,
+      type: type === 'VIDEO' ? 'VIDEO' : 'AUDIO',
       recipientType: recipientType || (matchedStudent ? 'STUDENT' : 'CONTACT'),
       recipientName: recipientName || 'Campus Contact',
       recipientDetail: recipientDetail || '',

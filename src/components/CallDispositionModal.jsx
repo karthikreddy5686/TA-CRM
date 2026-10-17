@@ -60,9 +60,6 @@ export default function CallDispositionModal({
             <h3 className="card-title">
               {sessionData.callType === 'VIDEO' ? '🎥 Interview Concluded & Evaluation Summary' : '📞 Call Concluded & Log Summary'}
             </h3>
-            <p className="card-subtitle">
-              Verify discussion notes, talk time, and update candidate stage in the CRM
-            </p>
           </div>
           <button onClick={onCancel} className="btn-icon" title="Dismiss">
             <X size={16} />
@@ -129,9 +126,6 @@ export default function CallDispositionModal({
                   <option value="OFFERED">3. Candidate Selected / Offer Extended</option>
                   <option value="REJECTED">4. Candidate Rejected</option>
                 </select>
-                <span style={{ fontSize: '0.72rem', color: '#71717a', marginTop: '4px' }}>
-                  Selecting a stage will automatically update the candidate's status across all drive boards.
-                </span>
               </div>
             )}
 

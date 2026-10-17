@@ -176,13 +176,13 @@ export default function CallModal({
           onClick={onToggleTimer || onStartTimer}
           style={{ 
             cursor: 'pointer',
-            background: callState.timerRunning ? 'rgba(16, 185, 129, 0.15)' : '#18181b',
-            border: callState.timerRunning ? '1px solid #10b981' : '1px solid #27272a'
+            background: callState.timerRunning ? 'rgba(255, 219, 88, 0.15)' : '#18181b',
+            border: callState.timerRunning ? '1px solid #FFDB58' : '1px solid #27272a'
           }}
           title={callState.timerRunning ? 'Timer active (Click to pause)' : 'Timer idle (Click to start)'}
         >
-          <Clock size={14} color={callState.timerRunning ? '#10b981' : '#71717a'} />
-          <span style={{ color: callState.timerRunning ? '#10b981' : '#a1a1aa' }}>
+          <Clock size={14} color={callState.timerRunning ? '#FFDB58' : '#71717a'} />
+          <span style={{ color: callState.timerRunning ? '#FFDB58' : '#a1a1aa' }}>
             {formatTimeDigital(callState.duration)}
           </span>
         </div>
@@ -220,7 +220,7 @@ export default function CallModal({
   // Full Calling / Interview Room Modal
   return (
     <div className="modal-overlay">
-      <div className="call-room-modal" style={{ maxWidth: callState.type === 'VIDEO' ? '960px' : '720px' }}>
+      <div className="call-room-modal" style={{ maxWidth: callState.type === 'VIDEO' ? '960px' : '480px', borderRadius: '14px', overflow: 'hidden' }}>
         
         {/* Top Header Bar */}
         <div style={{ 
@@ -238,16 +238,16 @@ export default function CallModal({
               display: 'inline-flex', 
               alignItems: 'center', 
               gap: '6px', 
-              background: '#18181b', 
-              color: '#10b981', 
+              background: '#154360', 
+              color: '#FFDB58', 
               padding: '4px 10px', 
               borderRadius: '20px', 
               fontSize: '0.72rem', 
-              fontWeight: 600,
-              border: '1px solid #27272a'
+              fontWeight: 700,
+              border: '1px solid #1b557a'
             }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }}></span>
-              {callState.type === 'VIDEO' ? 'Laptop Video Interview Room' : 'Live Phone Calling Hub'}
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FFDB58', display: 'inline-block' }}></span>
+              {callState.type === 'VIDEO' ? 'Laptop Video Interview Room' : 'Live Phone Calling'}
             </span>
 
             {/* Recipient Details */}
@@ -265,8 +265,8 @@ export default function CallModal({
               className="call-timer-box" 
               onClick={onToggleTimer || onStartTimer}
               style={{ 
-                background: callState.timerRunning ? 'rgba(16, 185, 129, 0.15)' : '#18181b', 
-                border: callState.timerRunning ? '1px solid #10b981' : '1px solid #27272a',
+                background: callState.timerRunning ? 'rgba(255, 219, 88, 0.15)' : '#18181b', 
+                border: callState.timerRunning ? '1px solid #FFDB58' : '1px solid #27272a',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -276,15 +276,15 @@ export default function CallModal({
               }}
               title={callState.timerRunning ? 'Timer Active (Click to Pause)' : 'Timer Idle (Click to Start or click Dial on Mobile)'}
             >
-              <Clock size={14} color={callState.timerRunning ? '#10b981' : '#71717a'} />
-              <span style={{ color: callState.timerRunning ? '#10b981' : '#ffffff', fontSize: '0.88rem', fontWeight: 700 }}>
+              <Clock size={14} color={callState.timerRunning ? '#FFDB58' : '#71717a'} />
+              <span style={{ color: callState.timerRunning ? '#FFDB58' : '#ffffff', fontSize: '0.88rem', fontWeight: 700 }}>
                 {formatTimeDigital(callState.duration)}
               </span>
               <span style={{ 
                 fontSize: '0.65rem', 
                 fontWeight: 700, 
-                color: callState.timerRunning ? '#10b981' : '#eab308',
-                background: callState.timerRunning ? 'rgba(16, 185, 129, 0.2)' : 'rgba(234, 179, 8, 0.15)',
+                color: callState.timerRunning ? '#154360' : '#eab308',
+                background: callState.timerRunning ? '#FFDB58' : 'rgba(234, 179, 8, 0.15)',
                 padding: '1px 5px',
                 borderRadius: '4px'
               }}>
@@ -304,222 +304,141 @@ export default function CallModal({
         </div>
 
         {/* =========================================================================
-            SECTION 1: DIRECT PHONE CALLING (MOBILE SIM / COMPANION QR)
+            DIRECT PHONE CALLING: STUDENT NAME, MOBILE NUMBER, CALL & END CALL BUTTONS
             ========================================================================= */}
-        {callState.type === 'AUDIO' && (
-          <div style={{ padding: '20px', background: '#121215', flex: '1 1 auto', overflowY: 'auto' }}>
+        {callState.type !== 'VIDEO' && (
+          <div style={{ padding: '36px 24px', background: '#0e1726', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '18px' }}>
+            {/* Student Avatar / Initials */}
             <div style={{
-              background: '#18181b',
-              border: '1px solid #27272a',
-              borderRadius: '12px',
-              padding: '24px',
-              display: 'grid',
-              gridTemplateColumns: '1.2fr 0.8fr',
-              gap: '24px',
-              alignItems: 'center'
+              width: '76px',
+              height: '76px',
+              borderRadius: '50%',
+              background: '#154360',
+              border: '3px solid #FFDB58',
+              color: '#FFDB58',
+              fontSize: '1.75rem',
+              fontWeight: 800,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)'
             }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                  <span className="badge badge-green" style={{ fontSize: '0.72rem' }}>
-                    <CheckCircle2 size={12} /> HR Direct Call
-                  </span>
-                </div>
+              {callState.recipientName ? callState.recipientName.slice(0, 2).toUpperCase() : 'ST'}
+            </div>
 
-                <h3 style={{ fontSize: '1.25rem', color: '#ffffff', fontWeight: 800, marginBottom: '6px' }}>
-                  {callState.recipientName}
-                </h3>
+            {/* Student Name */}
+            <div>
+              <h2 style={{ fontSize: '1.5rem', color: '#ffffff', fontWeight: 800, margin: '0 0 6px 0', letterSpacing: '-0.01em' }}>
+                {callState.recipientName}
+              </h2>
 
-                {/* Recipient Phone Number (Editable, No Hardcoding) */}
-                {isEditingPhone ? (
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap' }}>
-                    <input 
-                      type="tel"
-                      className="form-input"
-                      value={phoneNumber}
-                      onChange={(e) => {
-                        setPhoneNumber(e.target.value);
-                        if (onUpdateRecipientPhone) onUpdateRecipientPhone(e.target.value);
-                      }}
-                      placeholder="e.g. +91 98765 12345"
-                      style={{ 
-                        maxWidth: '220px', 
-                        fontSize: '0.92rem', 
-                        padding: '6px 12px', 
-                        background: '#09090b', 
-                        borderColor: '#10b981', 
-                        color: '#10b981', 
-                        fontWeight: 700 
-                      }}
-                      autoFocus
-                    />
-                    <button 
-                      type="button" 
-                      onClick={() => {
-                        setIsEditingPhone(false);
-                        if (onUpdateRecipientPhone && phoneNumber.trim()) {
-                          onUpdateRecipientPhone(phoneNumber.trim());
-                        }
-                      }}
-                      className="btn-black btn-black-sm"
-                      style={{ background: '#10b981', borderColor: '#10b981', color: '#09090b', padding: '6px 12px', fontSize: '0.75rem', fontWeight: 700 }}
-                    >
-                      <Check size={13} /> Save Number
-                    </button>
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-                    <div style={{ fontSize: '1.05rem', color: phoneNumber ? '#10b981' : '#f59e0b', fontFamily: 'monospace', fontWeight: 700 }}>
-                      {phoneNumber || '(No phone number set)'}
-                    </div>
-                    <button 
-                      type="button"
-                      onClick={() => setIsEditingPhone(true)}
-                      style={{ background: 'none', border: 'none', color: '#60a5fa', cursor: 'pointer', fontSize: '0.75rem', textDecoration: 'underline' }}
-                    >
-                      {phoneNumber ? 'Change' : '+ Set Number'}
-                    </button>
-                  </div>
-                )}
-
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
-                  {/* Standard E.164 +91 Mobile Dialer (+ prefix eliminates carrier incorrect number IVR error) */}
-                  <a 
-                    href={phoneInfo.telUrl || '#'}
-                    onClick={(e) => {
-                      if (!phoneInfo.telUrl) {
-                        e.preventDefault();
-                        setIsEditingPhone(true);
-                        return;
-                      }
-                      if (onStartTimer) onStartTimer();
+              {/* Mobile Number */}
+              {isEditingPhone ? (
+                <div style={{ display: 'inline-flex', gap: '8px', alignItems: 'center', marginTop: '6px' }}>
+                  <input 
+                    type="tel"
+                    className="form-input"
+                    value={phoneNumber}
+                    onChange={(e) => {
+                      setPhoneNumber(e.target.value);
+                      if (onUpdateRecipientPhone) onUpdateRecipientPhone(e.target.value);
                     }}
-                    className="btn-black"
+                    placeholder="Enter Mobile Number"
                     style={{ 
-                      background: '#10b981', 
-                      borderColor: '#10b981', 
-                      color: '#09090b', 
-                      fontSize: '0.85rem', 
-                      padding: '9px 16px', 
+                      maxWidth: '180px', 
+                      fontSize: '0.95rem', 
+                      padding: '6px 12px', 
+                      background: '#18181b', 
+                      borderColor: '#FFDB58', 
+                      color: '#FFDB58', 
                       fontWeight: 700,
-                      textDecoration: 'none',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px'
+                      textAlign: 'center'
                     }}
-                    title="Dial via smartphone carrier with international routing (+91)"
-                  >
-                    <Phone size={14} /> Dial +91 {phoneInfo.local10 || phoneInfo.cleanDigits || ''}
-                  </a>
-
-                  {/* Native 10-Digit Direct Dial for Indian SIMs */}
-                  {phoneInfo.local10 && (
-                    <a 
-                      href={phoneInfo.localTelUrl || '#'}
-                      onClick={(e) => {
-                        if (!phoneInfo.localTelUrl) {
-                          e.preventDefault();
-                          return;
-                        }
-                        if (onStartTimer) onStartTimer();
-                      }}
-                      className="btn-secondary"
-                      style={{ 
-                        background: '#27272a', 
-                        borderColor: '#3f3f46', 
-                        color: '#34d399', 
-                        fontSize: '0.82rem', 
-                        padding: '9px 12px',
-                        fontWeight: 600,
-                        textDecoration: 'none',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px'
-                      }}
-                      title="Dial pure 10-digit number without country code"
-                    >
-                      Direct 10-Digit: {phoneInfo.local10}
-                    </a>
-                  )}
-
-                  {/* Copy Phone */}
-                  <button
-                    type="button"
-                    onClick={handleCopyPhone}
-                    className="btn-secondary"
-                    style={{ background: '#27272a', borderColor: '#3f3f46', color: '#ffffff', fontSize: '0.82rem', padding: '9px 14px' }}
-                  >
-                    {copiedPhone ? <Check size={14} color="#10b981" /> : <Copy size={14} />}
-                    {copiedPhone ? 'Copied' : 'Copy'}
-                  </button>
-
-                  {/* Manual Timer Toggle */}
-                  <button
-                    type="button"
-                    onClick={onToggleTimer || onStartTimer}
-                    className="btn-secondary"
-                    style={{ 
-                      background: callState.timerRunning ? 'rgba(16, 185, 129, 0.15)' : '#27272a', 
-                      borderColor: callState.timerRunning ? '#10b981' : '#3f3f46', 
-                      color: callState.timerRunning ? '#10b981' : '#d1d5db', 
-                      fontSize: '0.82rem', 
-                      padding: '9px 14px' 
+                    autoFocus
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setIsEditingPhone(false);
+                      if (onUpdateRecipientPhone && phoneNumber.trim()) {
+                        onUpdateRecipientPhone(phoneNumber.trim());
+                      }
                     }}
-                    title="Start or pause stopwatch"
+                    className="btn-mustard"
+                    style={{ padding: '6px 12px', fontSize: '0.78rem', fontWeight: 800 }}
                   >
-                    <Clock size={14} /> {callState.timerRunning ? 'Pause Timer' : 'Start Timer'}
+                    Save
                   </button>
                 </div>
-
-                <div style={{ fontSize: '0.78rem', color: '#71717a', lineHeight: 1.45 }}>
-                  💡 <strong>How it works:</strong> Click <strong>Dial on Mobile</strong> or scan the companion QR code. The call stopwatch will begin tracking your talk duration and log it into CRM Call Logs upon ending.
+              ) : (
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                  <span style={{ fontSize: '1.25rem', color: '#FFDB58', fontFamily: 'monospace', fontWeight: 800, letterSpacing: '0.5px' }}>
+                    {phoneNumber || '(No phone number)'}
+                  </span>
+                  <button 
+                    type="button"
+                    onClick={() => setIsEditingPhone(true)}
+                    style={{ background: 'none', border: 'none', color: '#93c5fd', cursor: 'pointer', fontSize: '0.78rem', textDecoration: 'underline' }}
+                  >
+                    {phoneNumber ? 'Change' : '+ Set Number'}
+                  </button>
                 </div>
-              </div>
+              )}
+            </div>
 
-              {/* QR Code Card for Instant Mobile Phone Dialing */}
-              <div style={{
-                background: '#09090b',
-                border: '1px solid #27272a',
-                borderRadius: '10px',
-                padding: '20px',
-                textAlign: 'center',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center'
-              }}>
-                <div style={{
-                  background: '#ffffff',
-                  padding: '8px',
-                  borderRadius: '8px',
-                  marginBottom: '12px',
-                  width: '130px',
-                  height: '130px',
-                  display: 'flex',
+            {/* Call Button & End Call Button */}
+            <div style={{ display: 'flex', gap: '14px', alignItems: 'center', justifyContent: 'center', marginTop: '12px', flexWrap: 'wrap' }}>
+              {/* Call Button - App Theme Color (#FFDB58 Mustard Yellow) */}
+              <a 
+                href={phoneInfo.telUrl || '#'}
+                onClick={(e) => {
+                  if (!phoneInfo.telUrl) {
+                    e.preventDefault();
+                    setIsEditingPhone(true);
+                    return;
+                  }
+                  if (onStartTimer) onStartTimer();
+                }}
+                className="btn-mustard"
+                style={{ 
+                  padding: '12px 28px', 
+                  fontSize: '0.98rem', 
+                  fontWeight: 800, 
+                  borderRadius: '10px',
+                  textDecoration: 'none',
+                  display: 'inline-flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  {phoneInfo.isValid && phoneInfo.e164 ? (
-                    <img 
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=114x114&data=tel:${encodeURIComponent(phoneInfo.e164)}`} 
-                      alt="Scan to call" 
-                      style={{ width: '114px', height: '114px', display: 'block' }}
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                      }}
-                    />
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '114px', color: '#71717a' }}>
-                      <QrCode size={36} color="#71717a" />
-                      <span style={{ fontSize: '0.65rem', marginTop: '4px', color: '#18181b', fontWeight: 600 }}>Enter Phone</span>
-                    </div>
-                  )}
-                </div>
-                <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#ffffff', marginBottom: '4px' }}>
-                  Scan with Phone Camera
-                </div>
-                <div style={{ fontSize: '0.7rem', color: '#a1a1aa' }}>
-                  Point phone camera to dial {callState.recipientName} directly from your mobile SIM
-                </div>
-              </div>
+                  gap: '8px',
+                  boxShadow: '0 4px 12px rgba(255, 219, 88, 0.35)',
+                  cursor: 'pointer'
+                }}
+                title="Dial mobile number directly"
+              >
+                <Phone size={18} color="#154360" /> Call {phoneInfo.local10 || phoneInfo.cleanDigits || ''}
+              </a>
+
+              {/* End Call Button */}
+              <button 
+                type="button"
+                onClick={handleEndCallWithData}
+                style={{ 
+                  background: '#dc2626', 
+                  color: '#ffffff',
+                  border: '1px solid #b91c1c', 
+                  padding: '12px 28px',
+                  fontSize: '0.98rem',
+                  fontWeight: 800,
+                  borderRadius: '10px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  boxShadow: '0 4px 12px rgba(220, 38, 38, 0.3)',
+                  cursor: 'pointer'
+                }}
+                title="End call and log to CRM"
+              >
+                <PhoneOff size={18} /> End Call
+              </button>
             </div>
           </div>
         )}
@@ -780,50 +699,50 @@ export default function CallModal({
           </div>
         )}
 
-        {/* Live Call / Interview Scratchpad Note */}
-        <div style={{ padding: '12px 20px', background: '#18181b', borderTop: '1px solid #27272a' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-            <FileText size={14} color="#a1a1aa" />
-            <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#d1d5db' }}>
-              Live Call Scratchpad (Auto-saves into CRM Call Log & Student Profile)
-            </span>
-          </div>
-          <input 
-            type="text"
-            className="form-input"
-            value={notesDuringCall}
-            onChange={(e) => setNotesDuringCall(e.target.value)}
-            placeholder={callState.type === 'VIDEO' ? 'Enter interview feedback (e.g. solved array problem, strong in React, expected CTC 16 LPA)...' : 'Enter call discussion points (e.g. confirmed drive slot, candidate available for interview)...'}
-            style={{ 
-              background: '#09090b', 
-              borderColor: '#3f3f46', 
-              color: '#ffffff',
-              fontSize: '0.85rem',
-              padding: '8px 12px'
-            }}
-          />
-        </div>
-
-        {/* Bottom Controls Bar */}
-        <div className="call-controls-bar">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            {/* Microphone Toggle */}
-            <button 
-              type="button"
-              onClick={() => setIsMuted(!isMuted)}
-              className="btn-icon"
+        {/* Live Call / Interview Scratchpad Note - Video Mode Only */}
+        {callState.type === 'VIDEO' && (
+          <div style={{ padding: '12px 20px', background: '#18181b', borderTop: '1px solid #27272a' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+              <FileText size={14} color="#a1a1aa" />
+              <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#d1d5db' }}>
+                Live Call Scratchpad (Auto-saves into CRM Call Log & Student Profile)
+              </span>
+            </div>
+            <input 
+              type="text"
+              className="form-input"
+              value={notesDuringCall}
+              onChange={(e) => setNotesDuringCall(e.target.value)}
+              placeholder="Enter interview feedback (e.g. solved array problem, strong in React, expected CTC 16 LPA)..."
               style={{ 
-                background: isMuted ? '#ef4444' : '#27272a', 
-                color: '#ffffff', 
-                borderColor: isMuted ? '#ef4444' : '#3f3f46' 
+                background: '#09090b', 
+                borderColor: '#3f3f46', 
+                color: '#ffffff',
+                fontSize: '0.85rem',
+                padding: '8px 12px'
               }}
-              title={isMuted ? 'Unmute Microphone' : 'Mute Microphone'}
-            >
-              {isMuted ? <MicOff size={17} /> : <Mic size={17} />}
-            </button>
+            />
+          </div>
+        )}
 
-            {/* Camera Toggle (Video Mode) */}
-            {callState.type === 'VIDEO' && (
+        {/* Bottom Controls Bar - Video Mode Only */}
+        {callState.type === 'VIDEO' && (
+          <div className="call-controls-bar">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <button 
+                type="button"
+                onClick={() => setIsMuted(!isMuted)}
+                className="btn-icon"
+                style={{ 
+                  background: isMuted ? '#ef4444' : '#27272a', 
+                  color: '#ffffff', 
+                  borderColor: isMuted ? '#ef4444' : '#3f3f46' 
+                }}
+                title={isMuted ? 'Unmute Microphone' : 'Mute Microphone'}
+              >
+                {isMuted ? <MicOff size={17} /> : <Mic size={17} />}
+              </button>
+
               <button 
                 type="button"
                 onClick={() => setIsVideoEnabled(!isVideoEnabled)}
@@ -837,35 +756,35 @@ export default function CallModal({
               >
                 {!isVideoEnabled ? <VideoOff size={17} /> : <VideoIcon size={17} />}
               </button>
-            )}
 
-            <button 
-              type="button"
-              onClick={onMinimize}
-              className="btn-secondary btn-black-sm"
-              style={{ background: '#18181b', color: '#ffffff', borderColor: '#3f3f46' }}
-            >
-              <Minimize2 size={13} /> Minimize to Dock
-            </button>
-          </div>
+              <button 
+                type="button"
+                onClick={onMinimize}
+                className="btn-secondary btn-black-sm"
+                style={{ background: '#18181b', color: '#ffffff', borderColor: '#3f3f46' }}
+              >
+                <Minimize2 size={13} /> Minimize to Dock
+              </button>
+            </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <button 
-              type="button"
-              onClick={handleEndCallWithData}
-              className="btn-black"
-              style={{ 
-                background: '#dc2626', 
-                borderColor: '#dc2626', 
-                padding: '9px 20px',
-                fontSize: '0.88rem',
-                fontWeight: 700
-              }}
-            >
-              <PhoneOff size={16} /> End Call & Log to CRM
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <button 
+                type="button"
+                onClick={handleEndCallWithData}
+                className="btn-black"
+                style={{ 
+                  background: '#dc2626', 
+                  borderColor: '#dc2626', 
+                  padding: '9px 20px',
+                  fontSize: '0.88rem',
+                  fontWeight: 700
+                }}
+              >
+                <PhoneOff size={16} /> End Call & Log to CRM
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
       </div>
     </div>
