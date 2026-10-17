@@ -650,7 +650,7 @@ export default function App() {
     window.addEventListener('appinstalled', () => {
       setIsAppInstalled(true);
       setDeferredPrompt(null);
-      addToast('TalentConnect installed successfully as native Web App!', 'success');
+      addToast('Flux TA CRM installed successfully as native Web App!', 'success');
     });
     return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
   }, []);
@@ -757,7 +757,7 @@ export default function App() {
   // 7. Global Export & Import CRM Backup (JSON)
   const handleExportBackup = () => {
     const backupData = {
-      appName: 'TalentConnect TA CRM',
+      appName: 'Flux TA CRM',
       version: '2.0',
       exportedAt: new Date().toISOString(),
       colleges,
@@ -773,7 +773,7 @@ export default function App() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `TalentConnect_Backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `Flux_Backup_${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -1651,14 +1651,12 @@ export default function App() {
           boxSizing: 'border-box',
           flexShrink: 0
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FFDB58' }} />
-            <span style={{ fontWeight: 800, fontSize: '0.88rem', color: '#ffffff', letterSpacing: '-0.02em' }}>
-              TalentConnect
-            </span>
-            <span style={{ fontSize: '0.62rem', background: '#FFDB58', color: '#154360', padding: '1px 5px', borderRadius: '4px', fontWeight: 800 }}>
-              CRM
-            </span>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <img 
+              src="/flux-logo.png" 
+              alt="Flux" 
+              style={{ height: '26px', width: 'auto', objectFit: 'contain' }} 
+            />
           </div>
           <button 
             type="button"
@@ -2137,7 +2135,7 @@ export default function App() {
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <Smartphone size={15} color="#16a34a" />
-                  <span style={{ fontWeight: 600 }}>Install TalentConnect Web App</span>
+                  <span style={{ fontWeight: 600 }}>Install Flux TA CRM Web App</span>
                 </div>
                 <span className="badge badge-green" style={{ fontSize: '0.68rem' }}>PWA</span>
               </button>
@@ -2434,7 +2432,7 @@ export default function App() {
             deferredPrompt.userChoice.then(({ outcome }) => {
               if (outcome === 'accepted') {
                 setDeferredPrompt(null);
-                addToast('TalentConnect installed as native app!', 'success');
+                addToast('Flux TA CRM installed as native app!', 'success');
               }
               setIsInstallModalOpen(false);
             });

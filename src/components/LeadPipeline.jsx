@@ -762,7 +762,7 @@ export default function LeadPipeline({
                         {/* WhatsApp Button */}
                         {lead.phone && (
                           <a
-                            href={`https://wa.me/${formatPhoneForWa(lead.phone)}?text=Hello%20${encodeURIComponent(lead.name)},%20reaching%20out%20from%20TalentConnect%20regarding%20campus%20placement%20drives.`}
+                            href={`https://wa.me/${formatPhoneForWa(lead.phone)}?text=Hello%20${encodeURIComponent(lead.name)},%20reaching%20out%20from%20Flux%20regarding%20campus%20placement%20drives.`}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{
@@ -786,7 +786,7 @@ export default function LeadPipeline({
                         {/* Email Button */}
                         {lead.email && (
                           <a
-                            href={`mailto:${lead.email}?subject=Campus%20Recruitment%20Drive%20Collaboration%20-%20TalentConnect&body=Dear%20${encodeURIComponent(lead.name)},%0A%0AWe%20would%20like%20to%20conduct%20a%20campus%20recruitment%20drive%20for%20your%20students.%0A%0ABest%20regards,%0ATalentConnect%20Team`}
+                            href={`mailto:${lead.email}?subject=Campus%20Recruitment%20Drive%20Collaboration%20-%20Flux&body=Dear%20${encodeURIComponent(lead.name)},%0A%0AWe%20would%20like%20to%20conduct%20a%20campus%20recruitment%20drive%20for%20your%20students.%0A%0ABest%20regards,%0AFlux%20Team`}
                             style={{
                               display: 'inline-flex',
                               alignItems: 'center',

@@ -60,7 +60,7 @@ export default function InstallAppModal({
             </div>
             <div>
               <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0, color: '#ffffff' }}>
-                Install TalentConnect Web App
+                Install Flux TA CRM Web App
               </h3>
               <p style={{ fontSize: '0.74rem', color: '#a1a1aa', margin: 0 }}>
                 Progressive Web App for Mobile & Desktop
@@ -136,7 +136,7 @@ export default function InstallAppModal({
                   Scroll down the options list and select <strong>"Add to Home Screen"</strong> <PlusSquare size={13} style={{ verticalAlign: 'middle', margin: '0 2px' }} />.
                 </li>
                 <li>
-                  Tap <strong>Add</strong> in the top-right corner. The TalentConnect icon will appear on your phone home screen!
+                  Tap <strong>Add</strong> in the top-right corner. The Flux TA CRM icon will appear on your phone home screen!
                 </li>
               </ol>
             )}
@@ -153,7 +153,7 @@ export default function InstallAppModal({
                   Tap <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong>.
                 </li>
                 <li>
-                  Confirm <strong>Install</strong>. TalentConnect will launch in full screen with push notifications and fast caching!
+                  Confirm <strong>Install</strong>. Flux TA CRM will launch in full screen with push notifications and fast caching!
                 </li>
               </ol>
             )}
@@ -164,10 +164,10 @@ export default function InstallAppModal({
                   Look at the right side of your browser URL address bar in <strong>Chrome</strong> or <strong>Edge</strong>.
                 </li>
                 <li>
-                  Click the <strong>Install</strong> icon <Download size={13} style={{ verticalAlign: 'middle', margin: '0 2px' }} /> (or click <strong>Settings ⋮ &gt; Cast, save, and share &gt; Install TalentConnect</strong>).
+                  Click the <strong>Install</strong> icon <Download size={13} style={{ verticalAlign: 'middle', margin: '0 2px' }} /> (or click <strong>Settings ⋮ &gt; Cast, save, and share &gt; Install Flux TA CRM</strong>).
                 </li>
                 <li>
-                  Click <strong>Install</strong>. TalentConnect opens in a dedicated, distraction-free desktop window with keyboard shortcuts!
+                  Click <strong>Install</strong>. Flux TA CRM opens in a dedicated, distraction-free desktop window with keyboard shortcuts!
                 </li>
               </ol>
             )}

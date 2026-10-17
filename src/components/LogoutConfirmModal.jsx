@@ -79,7 +79,7 @@ export default function LogoutConfirmModal({
                 Confirm Sign Out
               </h3>
               <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.75)' }}>
-                TalentConnect CRM Session
+                Flux TA CRM Session
               </span>
             </div>
           </div>

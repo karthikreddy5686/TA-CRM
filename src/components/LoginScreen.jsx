@@ -478,7 +478,7 @@ export default function LoginScreen({ onLogin, users = [] }) {
           borderTop: '1px solid #f1f5f9',
           paddingTop: '14px'
         }}>
-          TalentConnect Recruitment & Placement System
+          Flux Recruitment & Placement System
         </div>
       </div>
     </div>
