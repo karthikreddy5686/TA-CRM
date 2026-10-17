@@ -51,7 +51,6 @@ import {
   isSupabaseConfigured, 
   testSupabaseConnection 
 } from '../services/supabaseSync';
-import DashboardOverview from './DashboardOverview';
 
 export default function AdminDashboard({
   users = [],
@@ -82,9 +81,9 @@ export default function AdminDashboard({
   onStartCall,
   onSelectTab,
   onLoadDemoData,
-  defaultTab = 'overview'
+  defaultTab = 'staff'
 }) {
-  const [activeAdminTab, setActiveAdminTab] = useState(defaultTab); // 'overview' | 'staff' | 'drives' | 'students' | 'tpos' | 'followups' | 'calls'
+  const [activeAdminTab, setActiveAdminTab] = useState(defaultTab); // 'staff' | 'drives' | 'students' | 'tpos' | 'followups' | 'calls'
 
   React.useEffect(() => {
     if (defaultTab) {
@@ -819,7 +818,6 @@ export default function AdminDashboard({
         borderBottom: '1px solid #e2e8f0'
       }}>
         {[
-          { id: 'overview', label: '📊 Overview' },
           { id: 'staff', label: 'HR Staff & Credentials' },
           { id: 'drives', label: 'Drives' },
           { id: 'students', label: 'Students' },
@@ -854,29 +852,6 @@ export default function AdminDashboard({
         })}
       </div>
 
-      {/* ======================================================== */}
-      {/* TAB 0: RECRUITMENT OVERVIEW & MONTHLY TARGETS ANALYTICS  */}
-      {/* ======================================================== */}
-      {activeAdminTab === 'overview' && (
-        <div style={{ marginBottom: '24px' }}>
-          <DashboardOverview 
-            tpos={tpos}
-            drives={drives}
-            students={students}
-            users={users}
-            onUpdateStudent={onUpdateStudent}
-            onStartCall={onStartCall}
-            onSelectTab={(tab) => {
-              if (['staff', 'drives', 'students', 'tpos', 'calls', 'followups'].includes(tab)) {
-                setActiveAdminTab(tab);
-              } else if (onSelectTab) {
-                onSelectTab(tab);
-              }
-            }}
-            onLoadDemoData={onLoadDemoData}
-          />
-        </div>
-      )}
 
       {/* ======================================================== */}
       {/* TAB 1: HR STAFF & LOGIN CREDENTIALS PROVISIONING        */}

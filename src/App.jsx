@@ -1689,7 +1689,7 @@ export default function App() {
                 onStartCall={handleStartCall}
                 onSelectTab={setActiveTab}
                 onLoadDemoData={handleLoadDemoData}
-                defaultTab={activeTab === 'adminStaff' ? 'staff' : 'overview'}
+                defaultTab={activeTab === 'adminStaff' ? 'staff' : 'staff'}
               />
             ) : currentUser.role === 'MAIN_HR' ? (
               <MainHRDashboard 
