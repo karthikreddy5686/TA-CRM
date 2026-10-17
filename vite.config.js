@@ -468,6 +468,8 @@ function crmServerStoragePlugin() {
           const smtpConfig = db.smtpSettings || {}
           const user = (smtpConfig.user || smtpConfig.senderEmail || process.env.SMTP_USER || 'admin@geonixa.com').trim()
           const pass = (smtpConfig.pass || process.env.SMTP_PASS || 'idug jfit skya kwla').trim()
+          const cleanPass = (pass || '').replace(/\s+/g, '')
+          const isRealEmailReady = Boolean(pass && user)
 
           let transporter = null
           const isResend = Boolean((pass && pass.startsWith('re_')) || smtpConfig.service === 'resend' || process.env.RESEND_API_KEY)
