@@ -2414,75 +2414,94 @@ export default function PublishedDriveBoard({
           ========================================================================= */}
       {dispatchConfirmationData && (
         <div className="modal-overlay" style={{ zIndex: 10000 }}>
-          <div className="modal-content" style={{ maxWidth: '640px', width: '92%', borderRadius: '14px', overflow: 'hidden', padding: 0 }}>
-            <div style={{ background: '#154360', color: '#ffffff', padding: '14px 18px', textAlign: 'center', borderBottom: '3px solid #FFDB58' }}>
-              <div style={{ width: '40px', height: '40px', background: '#FFDB58', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 6px' }}>
+          <div style={{
+            background: '#ffffff',
+            maxWidth: '620px',
+            width: '94%',
+            borderRadius: '12px',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2)',
+            border: '1px solid #cbd5e1',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
+            {/* Form Dialog Header */}
+            <div style={{ background: '#154360', color: '#ffffff', padding: '16px 20px', textAlign: 'center', borderBottom: '3px solid #FFDB58' }}>
+              <div style={{ width: '42px', height: '42px', background: '#FFDB58', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px' }}>
                 <CheckCircle2 size={24} color="#154360" />
               </div>
-              <h3 style={{ margin: 0, fontSize: '1.08rem', fontWeight: 800, color: '#ffffff' }}>
+              <h3 style={{ margin: 0, fontSize: '1.12rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.01em' }}>
                 Interview Drive Scheduled & Dispatched!
               </h3>
-              <p style={{ margin: '3px 0 0 0', fontSize: '0.78rem', color: '#e2e8f0' }}>
+              <p style={{ margin: '4px 0 0 0', fontSize: '0.8rem', color: '#e2e8f0' }}>
                 Interview time slots and Google Meet links have been generated and dispatched to students.
               </p>
             </div>
 
-            <div style={{ padding: '12px 18px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {/* Summary Cards */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px 6px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 700 }}>TOTAL SCHEDULED</div>
-                  <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#154360' }}>
+            {/* Form Body - Seamless with zero external gaps */}
+            <div style={{ background: '#ffffff', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {/* Form Row 1: Key Schedule Metrics */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                padding: '10px 8px'
+              }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.66rem', color: '#64748b', fontWeight: 800, letterSpacing: '0.5px' }}>TOTAL SCHEDULED</div>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#154360', marginTop: '1px' }}>
                     {dispatchConfirmationData.totalCount}
                   </div>
                 </div>
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px 6px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 700 }}>DATE</div>
-                  <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#154360', marginTop: '2px' }}>
+                <div style={{ textAlign: 'center', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: '0.66rem', color: '#64748b', fontWeight: 800, letterSpacing: '0.5px' }}>INTERVIEW DATE</div>
+                  <div style={{ fontSize: '0.86rem', fontWeight: 800, color: '#154360', marginTop: '4px' }}>
                     {dispatchConfirmationData.scheduledDate}
                   </div>
                 </div>
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px 6px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 700 }}>TIME WINDOW</div>
-                  <div style={{ fontSize: '0.76rem', fontWeight: 800, color: '#0284c7', marginTop: '3px' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.66rem', color: '#64748b', fontWeight: 800, letterSpacing: '0.5px' }}>TIME WINDOW</div>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#0284c7', marginTop: '4px' }}>
                     {dispatchConfirmationData.firstSlot} - {dispatchConfirmationData.lastSlot}
                   </div>
                 </div>
               </div>
 
-              {/* Email Delivery Status Box */}
+              {/* Form Row 2: Candidate Email Dispatch Box */}
               <div style={{
                 background: dispatchConfirmationData.emailStatus?.sentCount > 0 ? '#f0fdf4' : '#fffbeb',
                 border: `1px solid ${dispatchConfirmationData.emailStatus?.sentCount > 0 ? '#bbf7d0' : '#fde68a'}`,
                 borderRadius: '8px',
-                padding: '10px 12px'
+                padding: '10px 14px'
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '5px' }}>
-                  <div style={{ fontSize: '0.78rem', fontWeight: 800, color: dispatchConfirmationData.emailStatus?.sentCount > 0 ? '#166534' : '#92400e', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 800, color: dispatchConfirmationData.emailStatus?.sentCount > 0 ? '#166534' : '#92400e', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Mail size={15} color={dispatchConfirmationData.emailStatus?.sentCount > 0 ? '#16a34a' : '#d97706'} />
                     {dispatchConfirmationData.emailStatus?.sentCount > 0 
                       ? `Interview Links Delivered (${dispatchConfirmationData.emailStatus.sentCount} Students Emailed)`
                       : 'Candidate Email Dispatch Status'}
                   </div>
                   {dispatchConfirmationData.emailStatus?.sentCount > 0 ? (
-                    <span style={{ fontSize: '0.68rem', background: '#dcfce7', color: '#15803d', fontWeight: 700, padding: '2px 6px', borderRadius: '4px' }}>
+                    <span style={{ fontSize: '0.66rem', background: '#dcfce7', color: '#15803d', fontWeight: 800, padding: '2px 8px', borderRadius: '4px' }}>
                       DELIVERED LIVE
                     </span>
                   ) : (
-                    <span style={{ fontSize: '0.68rem', background: '#fef3c7', color: '#b45309', fontWeight: 700, padding: '2px 6px', borderRadius: '4px' }}>
+                    <span style={{ fontSize: '0.66rem', background: '#fef3c7', color: '#b45309', fontWeight: 800, padding: '2px 8px', borderRadius: '4px' }}>
                       READY TO DISPATCH
                     </span>
                   )}
                 </div>
 
                 {dispatchConfirmationData.emailStatus?.sentCount > 0 ? (
-                  <div style={{ fontSize: '0.74rem', color: '#15803d' }}>
+                  <div style={{ fontSize: '0.76rem', color: '#15803d', lineHeight: 1.4 }}>
                     Personalized Google Meet invitation emails with date, allocated slot, and meet link were successfully delivered to candidate inboxes.
                   </div>
                 ) : (
                   <div>
                     <div style={{ fontSize: '0.74rem', color: '#78350f', lineHeight: 1.35 }}>
-                      Interview invitations generated with Google Meet links for <strong>{dispatchConfirmationData.totalCount} candidates</strong>. Enter your Gmail address and 16-character Google App Password below to deliver live emails directly to students:
+                      Interview invitations generated with Google Meet links for <strong>{dispatchConfirmationData.totalCount} candidates</strong>. Enter your sender email and password below to dispatch live:
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr 1fr auto', gap: '6px', marginTop: '6px', alignItems: 'center' }}>
                       <select
@@ -2498,7 +2517,7 @@ export default function PublishedDriveBoard({
                       <input 
                         type="email"
                         className="form-input"
-                        placeholder="Sender Gmail"
+                        placeholder="Sender Email"
                         value={smtpSenderEmail}
                         onChange={e => setSmtpSenderEmail(e.target.value)}
                         style={{ fontSize: '0.72rem', padding: '4px 8px' }}
@@ -2506,7 +2525,7 @@ export default function PublishedDriveBoard({
                       <input 
                         type="password"
                         className="form-input"
-                        placeholder="16-digit Google App Password"
+                        placeholder="Password / App Key"
                         value={smtpAppPassword}
                         onChange={e => setSmtpAppPassword(e.target.value)}
                         style={{ fontSize: '0.72rem', padding: '4px 8px' }}
@@ -2518,41 +2537,47 @@ export default function PublishedDriveBoard({
                         className="btn-mustard"
                         style={{ fontSize: '0.72rem', fontWeight: 800, padding: '5px 12px', whiteSpace: 'nowrap' }}
                       >
-                        {isSendingLiveEmails ? 'Sending...' : 'Save & Send Now'}
+                        {isSendingLiveEmails ? 'Sending...' : 'Save & Send'}
                       </button>
-                    </div>
-                    <div style={{ fontSize: '0.67rem', color: '#92400e', marginTop: '4px' }}>
-                      💡 Don't have an App Password? Generate one in 30 seconds at: <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noreferrer" style={{ color: '#0369a1', textDecoration: 'underline' }}>Google Account &gt; Security &gt; App Passwords</a>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Google Meet Info Box */}
-              <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
-                <div>
-                  <div style={{ fontSize: '0.68rem', color: '#166534', fontWeight: 700 }}>GOOGLE MEET ROOM</div>
-                  <code style={{ fontSize: '0.8rem', fontWeight: 800, color: '#15803d' }}>
+              {/* Form Row 3: Google Meet Virtual Room */}
+              <div style={{
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                padding: '9px 14px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '10px'
+              }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: '0.66rem', color: '#64748b', fontWeight: 800, letterSpacing: '0.5px' }}>GOOGLE MEET ROOM</div>
+                  <div style={{ fontSize: '0.84rem', fontWeight: 800, color: '#15803d', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '1px' }}>
                     {dispatchConfirmationData.meetLink}
-                  </code>
+                  </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => window.open(dispatchConfirmationData.meetLink, '_blank')}
                   className="btn-navy btn-black-sm"
-                  style={{ fontSize: '0.72rem', padding: '4px 10px', gap: '4px' }}
+                  style={{ fontSize: '0.72rem', padding: '5px 12px', gap: '5px', flexShrink: 0 }}
                 >
                   <Video size={13} color="#FFDB58" /> Open Meet Room
                 </button>
               </div>
 
-              {/* Action Buttons: Side-by-side in 2-column grid */}
+              {/* Form Row 4: Action Buttons in 2-column grid */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                 <button
                   type="button"
                   onClick={handleCopyScheduleToClipboard}
                   className="btn-secondary"
-                  style={{ justifyContent: 'center', padding: '8px 10px', fontSize: '0.78rem', fontWeight: 700 }}
+                  style={{ justifyContent: 'center', padding: '8px 10px', fontSize: '0.76rem', fontWeight: 700, background: '#ffffff' }}
                 >
                   {copiedScheduleText ? <Check size={14} color="#10b981" /> : <Copy size={14} />}
                   {copiedScheduleText ? 'Copied Full Schedule Sheet!' : 'Copy Formatted Schedule Sheet for College TPO'}
@@ -2562,14 +2587,15 @@ export default function PublishedDriveBoard({
                   type="button"
                   onClick={handleShareWhatsApp}
                   className="btn-secondary"
-                  style={{ justifyContent: 'center', padding: '8px 10px', fontSize: '0.78rem', fontWeight: 700, color: '#047857', borderColor: '#a7f3d0' }}
+                  style={{ justifyContent: 'center', padding: '8px 10px', fontSize: '0.76rem', fontWeight: 700, color: '#047857', borderColor: '#a7f3d0', background: '#ffffff' }}
                 >
                   <Share2 size={14} color="#059669" /> Share Schedule to WhatsApp Placement Group
                 </button>
               </div>
             </div>
 
-            <div className="modal-footer" style={{ padding: '12px 20px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end' }}>
+            {/* Form Footer */}
+            <div style={{ padding: '12px 20px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end' }}>
               <button
                 type="button"
                 onClick={() => {

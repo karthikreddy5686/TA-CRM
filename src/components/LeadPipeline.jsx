@@ -674,17 +674,6 @@ export default function LeadPipeline({
                             <span style={{ fontWeight: 800, fontSize: '0.98rem', color: '#154360' }}>
                               {lead.name}
                             </span>
-                            <span style={{
-                              fontSize: '0.72rem',
-                              color: '#154360',
-                              background: '#ebf5fb',
-                              border: '1px solid #aed6f1',
-                              padding: '1px 6px',
-                              borderRadius: '4px',
-                              fontWeight: 700
-                            }}>
-                              {lead.designation || 'TPO Head'}
-                            </span>
                           </div>
 
                           <div style={{
@@ -698,19 +687,6 @@ export default function LeadPipeline({
                             <Building2 size={13} color="#154360" />
                             <strong style={{ color: '#09090b' }}>{lead.collegeName}</strong>
                             {lead.city && <span>• {lead.city}</span>}
-                            {lead.tier && (
-                              <span style={{
-                                fontSize: '0.68rem',
-                                background: '#FFDB58',
-                                color: '#154360',
-                                fontWeight: 800,
-                                padding: '1px 6px',
-                                borderRadius: '3px',
-                                marginLeft: '4px'
-                              }}>
-                                {lead.tier}
-                              </span>
-                            )}
                           </div>
                         </div>
                       </div>
