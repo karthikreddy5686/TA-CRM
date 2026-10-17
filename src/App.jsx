@@ -57,6 +57,8 @@ const PublishedDriveBoard = React.lazy(() => import('./components/PublishedDrive
 import HRPhoneConnectModal from './components/HRPhoneConnectModal';
 import InstallAppModal from './components/InstallAppModal';
 import LogoutConfirmModal from './components/LogoutConfirmModal';
+import TopNavbar from './components/TopNavbar';
+import InternalChatModal from './components/InternalChatModal';
 import {
   GlobalNewDriveModal,
   GlobalNewTpoModal,
@@ -603,6 +605,7 @@ export default function App() {
   const [isAppInstalled, setIsAppInstalled] = useState(false);
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isInternalChatOpen, setIsInternalChatOpen] = useState(false);
 
   // Global Quick Action Modals & Action Sheet
   const [isGlobalNewMenuOpen, setIsGlobalNewMenuOpen] = useState(false);
@@ -1447,47 +1450,49 @@ export default function App() {
 
   return (
     <div className="app-container">
-      {/* Mobile Sidebar Backdrop */}
-      <div 
-        className={`mobile-sidebar-backdrop ${isMobileSidebarOpen ? 'active' : ''}`} 
-        onClick={() => setIsMobileSidebarOpen(false)} 
-        aria-hidden="true"
+      {/* Sleek Top Navbar (matching reference design) */}
+      <TopNavbar 
+        currentUser={currentUser}
+        activeTab={activeTab}
+        isSidebarCollapsed={isSidebarCollapsed}
+        onToggleSidebar={() => {
+          if (window.innerWidth <= 768) {
+            setIsMobileSidebarOpen(prev => !prev);
+          } else {
+            setIsSidebarCollapsed(prev => !prev);
+          }
+        }}
+        onOpenSearch={() => setIsCommandPaletteOpen(true)}
+        onOpenChat={() => setIsInternalChatOpen(true)}
+        onOpenQuickCall={() => setIsGlobalQuickCallModalOpen(true)}
+        onOpenLogout={() => setIsLogoutModalOpen(true)}
       />
 
-      {/* Sidebar Navigation (Desktop and Off-Canvas Mobile Drawer) */}
-      <aside className={`sidebar ${isSidebarCollapsed && !isMobileSidebarOpen ? 'collapsed' : ''} ${isMobileSidebarOpen ? 'mobile-open' : ''}`}>
-        <div className="sidebar-brand" style={{ background: '#ffffff', padding: '10px 14px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
-            <img 
-              src="/flux-logo.png" 
-              alt="Flux" 
-              style={{ 
-                height: '34px', 
-                width: 'auto', 
-                maxWidth: '160px',
-                objectFit: 'contain',
-                borderRadius: '7px',
-                boxShadow: '0 2px 4px rgba(21, 67, 96, 0.2)',
-                display: isSidebarCollapsed && !isMobileSidebarOpen ? 'none' : 'block'
-              }} 
-            />
-            {isSidebarCollapsed && !isMobileSidebarOpen && (
-              <img 
-                src="/flux-icon.png" 
-                alt="Flux" 
-                style={{ height: '32px', width: '32px', objectFit: 'contain', borderRadius: '7px', boxShadow: '0 2px 4px rgba(21, 67, 96, 0.2)' }} 
-              />
-            )}
-          </div>
-          <button 
-            type="button"
-            className="btn-icon mobile-sidebar-close-btn"
-            onClick={() => setIsMobileSidebarOpen(false)}
-            title="Close navigation menu"
-          >
-            <X size={15} />
-          </button>
-        </div>
+      {/* Main Layout Container */}
+      <div className="app-main-layout">
+        {/* Mobile Sidebar Backdrop */}
+        <div 
+          className={`mobile-sidebar-backdrop ${isMobileSidebarOpen ? 'active' : ''}`} 
+          onClick={() => setIsMobileSidebarOpen(false)} 
+          aria-hidden="true"
+        />
+
+        {/* Sidebar Navigation (Desktop and Off-Canvas Mobile Drawer) */}
+        <aside className={`sidebar ${isSidebarCollapsed && !isMobileSidebarOpen ? 'collapsed' : ''} ${isMobileSidebarOpen ? 'mobile-open' : ''}`}>
+          {/* Mobile drawer header (visible only in mobile off-canvas drawer) */}
+          {isMobileSidebarOpen && (
+            <div style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', background: '#ffffff' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#154360' }}>Navigation Menu</span>
+              <button 
+                type="button"
+                className="btn-icon"
+                onClick={() => setIsMobileSidebarOpen(false)}
+                title="Close navigation menu"
+              >
+                <X size={15} />
+              </button>
+            </div>
+          )}
 
         <nav className="sidebar-nav">
           <div className="nav-section-title">Main</div>
@@ -1615,37 +1620,6 @@ export default function App() {
 
       {/* Main Workspace Area */}
       <div className="main-content">
-        {/* Mobile-only Top App Bar */}
-        <div className="mobile-only mobile-top-bar" style={{
-          height: '44px',
-          background: '#154360',
-          borderBottom: '1px solid #0e2e42',
-          padding: '0 12px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          width: '100%',
-          boxSizing: 'border-box',
-          flexShrink: 0
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <img 
-              src="/flux-logo.png" 
-              alt="Flux" 
-              style={{ height: '26px', width: 'auto', objectFit: 'contain' }} 
-            />
-          </div>
-          <button 
-            type="button"
-            onClick={() => setIsMobileSidebarOpen(true)}
-            className="btn-icon"
-            style={{ width: '30px', height: '30px', background: '#0e2e42', color: '#FFDB58', borderColor: '#1b557a' }}
-            title="Open Menu"
-          >
-            <Menu size={16} />
-          </button>
-        </div>
-
         {/* Page Body Viewport */}
         <main className="page-body">
           <React.Suspense fallback={
@@ -2011,6 +1985,7 @@ export default function App() {
           </React.Suspense>
         </main>
       </div>
+      </div> {/* closes app-main-layout */}
 
       {/* Web App Command Palette (Ctrl+K / ⌘K) */}
       {isCommandPaletteOpen && (
@@ -2426,6 +2401,14 @@ export default function App() {
           handleLogout();
         }}
         currentUser={currentUser}
+      />
+
+      {/* Internal Team Chat Drawer Modal */}
+      <InternalChatModal 
+        isOpen={isInternalChatOpen}
+        onClose={() => setIsInternalChatOpen(false)}
+        currentUser={currentUser}
+        users={users}
       />
     </div>
   );
