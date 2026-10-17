@@ -1,6 +1,5 @@
 import React from 'react';
 import { 
-  PanelLeft, 
   Search, 
   MessageSquare, 
   LogOut 
@@ -22,7 +21,7 @@ export default function TopNavbar({
 
   return (
     <header className="app-top-navbar">
-      {/* Left: Brand Logo & Sidebar Toggle */}
+      {/* Left: Brand Logo */}
       <div className="navbar-left-group">
         <div className="navbar-brand-link">
           <img 
@@ -31,15 +30,6 @@ export default function TopNavbar({
             className="navbar-logo-img"
           />
         </div>
-
-        <button 
-          type="button" 
-          onClick={onToggleSidebar}
-          className="navbar-panel-btn"
-          title="Toggle Navigation Sidebar"
-        >
-          <PanelLeft size={16} />
-        </button>
       </div>
 
       {/* Center: Search Workspace with ⌘K Badge */}

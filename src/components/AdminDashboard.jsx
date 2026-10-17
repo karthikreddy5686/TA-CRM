@@ -691,7 +691,7 @@ export default function AdminDashboard({
         </div>
 
         {/* Global Quick Post Action Buttons */}
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap', alignItems: 'center' }}>
           <button 
             type="button" 
             onClick={handleOpenAddUser}
@@ -732,7 +732,7 @@ export default function AdminDashboard({
       </div>
 
       {/* KPI Overview Metrics */}
-      <div className="metrics-grid">
+      <div className="metrics-grid admin-metrics-grid">
         <div className="metric-card" onClick={() => setActiveAdminTab('staff')} style={{ cursor: 'pointer' }}>
           <div className="metric-header">
             <span className="metric-title">HR Staff Accounts</span>

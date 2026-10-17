@@ -716,6 +716,45 @@ input, select, textarea, button {
   margin-bottom: 16px;
 }
 
+.admin-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.admin-metrics-grid .metric-card {
+  padding: 10px 12px;
+  min-width: 0;
+}
+
+.admin-metrics-grid .metric-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 11px;
+}
+
+.admin-metrics-grid .metric-value {
+  font-size: 1.45rem;
+  font-weight: 800;
+  margin: 3px 0;
+}
+
+.admin-metrics-grid .metric-subtext {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+@media (max-width: 900px) {
+  .admin-metrics-grid {
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)) !important;
+  }
+}
+
 .metric-card {
   background: var(--bg-card);
   border: 1px solid var(--border-default);
