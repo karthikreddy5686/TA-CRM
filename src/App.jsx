@@ -1462,10 +1462,12 @@ export default function App() {
               src="/flux-logo.png" 
               alt="Flux" 
               style={{ 
-                height: '38px', 
+                height: '34px', 
                 width: 'auto', 
                 maxWidth: '160px',
                 objectFit: 'contain',
+                borderRadius: '7px',
+                boxShadow: '0 2px 4px rgba(21, 67, 96, 0.2)',
                 display: isSidebarCollapsed && !isMobileSidebarOpen ? 'none' : 'block'
               }} 
             />
@@ -1473,7 +1475,7 @@ export default function App() {
               <img 
                 src="/flux-icon.png" 
                 alt="Flux" 
-                style={{ height: '32px', width: '32px', objectFit: 'contain' }} 
+                style={{ height: '32px', width: '32px', objectFit: 'contain', borderRadius: '7px', boxShadow: '0 2px 4px rgba(21, 67, 96, 0.2)' }} 
               />
             )}
           </div>

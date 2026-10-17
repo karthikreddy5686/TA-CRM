@@ -288,7 +288,7 @@ export default function LoginScreen({ onLogin, users = [] }) {
             <img 
               src="/flux-logo.png" 
               alt="Flux" 
-              style={{ height: '52px', width: 'auto', objectFit: 'contain' }} 
+              style={{ height: '52px', width: 'auto', objectFit: 'contain', borderRadius: '10px', boxShadow: '0 4px 6px -1px rgba(21, 67, 96, 0.25)' }} 
             />
           </div>
           <h1 style={{ 
