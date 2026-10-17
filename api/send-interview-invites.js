@@ -29,7 +29,7 @@ export default async function handler(req, res) {
     }
 
     const user = (process.env.SMTP_USER || process.env.VITE_SMTP_USER || 'admin@geonixa.com').trim();
-    const pass = (process.env.SMTP_PASS || process.env.VITE_SMTP_PASS || 'idug jfit skya kwla').trim();
+    const pass = (process.env.SMTP_PASS || process.env.VITE_SMTP_PASS || '').trim();
     const cleanPass = pass.replace(/\s+/g, '');
     const senderName = process.env.SMTP_SENDER_NAME || 'Talent Acquisition Team';
 
