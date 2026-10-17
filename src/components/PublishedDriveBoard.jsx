@@ -116,7 +116,7 @@ export default function PublishedDriveBoard({
 
   // Email SMTP state for real Google Meet interview invite dispatch
   const [emailProvider, setEmailProvider] = useState('gmail');
-  const [smtpSenderEmail, setSmtpSenderEmail] = useState('karthikreddy5686@gmail.com');
+  const [smtpSenderEmail, setSmtpSenderEmail] = useState('admin@geonixa.com');
   const [smtpAppPassword, setSmtpAppPassword] = useState('');
   const [isSendingLiveEmails, setIsSendingLiveEmails] = useState(false);
 
@@ -463,8 +463,8 @@ export default function PublishedDriveBoard({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          senderEmail: smtpSenderEmail.trim() || 'karthikreddy5686@gmail.com',
-          user: smtpSenderEmail.trim() || 'karthikreddy5686@gmail.com',
+          senderEmail: smtpSenderEmail.trim() || 'admin@geonixa.com',
+          user: smtpSenderEmail.trim() || 'admin@geonixa.com',
           pass: smtpAppPassword.trim(),
           service: emailProvider || (smtpAppPassword.startsWith('re_') ? 'resend' : smtpAppPassword.startsWith('SG.') ? 'sendgrid' : 'gmail')
         })

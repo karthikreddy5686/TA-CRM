@@ -193,175 +193,26 @@ export default function LeadPipeline({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
-      {/* 1. Header Banner - Matching App Theme */}
+      {/* 1. Header Banner - Clean Lead Pipeline Title Only */}
       <div style={{
         background: 'linear-gradient(135deg, #154360 0%, #0e2e42 100%)',
         color: '#ffffff',
-        borderRadius: '12px',
-        padding: '20px 24px',
+        borderRadius: '10px',
+        padding: '14px 20px',
         boxShadow: 'var(--shadow-card)',
         display: 'flex',
-        flexWrap: 'wrap',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: '16px'
+        alignItems: 'center'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div style={{
-            width: '46px',
-            height: '46px',
-            borderRadius: '12px',
-            background: '#FFDB58',
-            color: '#154360',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 3px 8px rgba(255, 219, 88, 0.35)',
-            flexShrink: 0
-          }}>
-            <GitFork size={24} strokeWidth={2.4} />
-          </div>
-
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px' }}>
-              <span style={{
-                background: '#FFDB58',
-                color: '#154360',
-                fontSize: '0.68rem',
-                fontWeight: 800,
-                padding: '2px 8px',
-                borderRadius: '4px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em'
-              }}>
-                OUTREACH PIPELINE
-              </span>
-              <span style={{ fontSize: '0.78rem', color: '#93c5fd', fontWeight: 600 }}>
-                Live Placement Funnel
-              </span>
-            </div>
-
-            <h1 style={{
-              fontSize: '1.45rem',
-              fontWeight: 800,
-              color: '#ffffff',
-              lineHeight: 1.2,
-              margin: 0,
-              letterSpacing: '-0.02em'
-            }}>
-              Lead Pipeline
-            </h1>
-
-            {/* Flow Indicator with rich colors */}
-            <div style={{
-              fontSize: '0.78rem',
-              color: '#cbd5e1',
-              marginTop: '5px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              flexWrap: 'wrap',
-              fontWeight: 500
-            }}>
-              <span>Call</span>
-              <span style={{ color: '#93c5fd' }}>→</span>
-              <span>Interested</span>
-              <span style={{ color: '#93c5fd' }}>→</span>
-              <span>Details</span>
-              <span style={{ color: '#93c5fd' }}>→</span>
-              <span>Proposal</span>
-              <span style={{ color: '#93c5fd' }}>→</span>
-              <span style={{
-                color: '#154360',
-                fontWeight: 800,
-                background: '#FFDB58',
-                padding: '1px 7px',
-                borderRadius: '4px',
-                fontSize: '0.72rem'
-              }}>
-                Drive Confirmed
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Right side: Search + Add Lead button */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-          <div style={{
-            position: 'relative',
-            width: '260px',
-            maxWidth: '100%'
-          }}>
-            <Search 
-              size={15} 
-              color="#FFDB58" 
-              style={{
-                position: 'absolute',
-                left: '12px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                pointerEvents: 'none'
-              }}
-            />
-            <input 
-              type="text"
-              placeholder="Search name, email, WhatsApp..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '8px 12px 8px 34px',
-                fontSize: '0.82rem',
-                border: '1px solid rgba(255, 255, 255, 0.25)',
-                borderRadius: '8px',
-                background: 'rgba(255, 255, 255, 0.12)',
-                color: '#ffffff',
-                outline: 'none',
-                boxSizing: 'border-box'
-              }}
-            />
-            {searchQuery && (
-              <button 
-                type="button" 
-                onClick={() => setSearchQuery('')}
-                style={{
-                  position: 'absolute',
-                  right: '10px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: '#cbd5e1',
-                  padding: 0
-                }}
-              >
-                <X size={13} />
-              </button>
-            )}
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setIsAddModalOpen(true)}
-            className="btn-mustard"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '8px 14px',
-              fontSize: '0.82rem',
-              fontWeight: 800,
-              borderRadius: '8px',
-              boxShadow: '0 2px 8px rgba(255, 219, 88, 0.45)',
-              cursor: 'pointer',
-              border: 'none',
-              color: '#154360'
-            }}
-          >
-            <Plus size={15} strokeWidth={2.6} color="#154360" /> Add Lead
-          </button>
-        </div>
+        <h1 style={{
+          fontSize: '1.25rem',
+          fontWeight: 800,
+          color: '#ffffff',
+          lineHeight: 1.2,
+          margin: 0,
+          letterSpacing: '-0.02em'
+        }}>
+          Lead Pipeline
+        </h1>
       </div>
 
       {/* 2. Main Pipeline Card Container */}
@@ -498,6 +349,56 @@ export default function LeadPipeline({
                 color="#154360" 
                 style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} 
               />
+            </div>
+
+            {/* Search Input */}
+            <div style={{ position: 'relative' }}>
+              <Search 
+                size={13} 
+                color="#94a3b8" 
+                style={{
+                  position: 'absolute',
+                  left: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  pointerEvents: 'none'
+                }}
+              />
+              <input 
+                type="text"
+                placeholder="Search name, email, WhatsApp..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  padding: '5px 26px 5px 28px',
+                  fontSize: '0.78rem',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '8px',
+                  background: '#ffffff',
+                  color: '#154360',
+                  outline: 'none',
+                  width: '210px'
+                }}
+              />
+              {searchQuery && (
+                <button 
+                  type="button" 
+                  onClick={() => setSearchQuery('')}
+                  style={{
+                    position: 'absolute',
+                    right: '8px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: '#94a3b8',
+                    padding: 0
+                  }}
+                >
+                  <X size={12} />
+                </button>
+              )}
             </div>
 
             {/* Reset Filters if active */}

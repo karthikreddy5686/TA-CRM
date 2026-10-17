@@ -10,11 +10,19 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DB_FILE = path.resolve(__dirname, 'src/data/crm_persisted_storage.json')
 
 // Automatically load .env into process.env for Node.js middlewares
-const envVars = loadEnv(process.env.NODE_ENV || 'development', process.cwd(), '')
-for (const [key, val] of Object.entries(envVars)) {
-  if (process.env[key] === undefined) {
-    process.env[key] = val
-  }
+const envFile = path.resolve(__dirname, '.env')
+if (fs.existsSync(envFile)) {
+  const content = fs.readFileSync(envFile, 'utf8')
+  content.split(/\r?\n/).forEach(line => {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#')) return
+    const idx = trimmed.indexOf('=')
+    if (idx !== -1) {
+      const k = trimmed.slice(0, idx).trim()
+      const v = trimmed.slice(idx + 1).trim()
+      process.env[k] = v
+    }
+  })
 }
 
 function getLocalIpAddress() {
@@ -387,13 +395,18 @@ function crmServerStoragePlugin() {
     if (cleanUrl === '/api/smtp-config') {
       if (req.method === 'GET') {
         const db = readDb()
-        const activeUser = config.senderEmail || config.user || process.env.SMTP_USER || 'karthikreddy5686@gmail.com'
+        const config = db.smtpSettings || {}
+        const activeUser = config.senderEmail || config.user || process.env.SMTP_USER || 'admin@geonixa.com'
+        const activeHost = config.host || process.env.SMTP_HOST || ''
+        const activePort = config.port || process.env.SMTP_PORT || '465'
         const isConfigured = Boolean((config.pass || process.env.SMTP_PASS) && activeUser)
         res.setHeader('Content-Type', 'application/json')
         res.end(JSON.stringify({
           senderEmail: activeUser,
           senderName: config.senderName || 'Talent Acquisition Team',
-          service: config.service || 'gmail',
+          service: config.service || (activeHost ? 'custom' : 'gmail'),
+          host: activeHost,
+          port: activePort,
           configured: isConfigured,
         }))
         return
@@ -453,8 +466,8 @@ function crmServerStoragePlugin() {
 
           const db = readDb()
           const smtpConfig = db.smtpSettings || {}
-          const user = (smtpConfig.user || smtpConfig.senderEmail || process.env.SMTP_USER || 'karthikreddy5686@gmail.com').trim()
-          const pass = (smtpConfig.pass || process.env.SMTP_PASS || '').trim()
+          const user = (smtpConfig.user || smtpConfig.senderEmail || process.env.SMTP_USER || 'admin@geonixa.com').trim()
+          const pass = (smtpConfig.pass || process.env.SMTP_PASS || 'idug jfit skya kwla').trim()
 
           let transporter = null
           const isResend = Boolean((pass && pass.startsWith('re_')) || smtpConfig.service === 'resend' || process.env.RESEND_API_KEY)
@@ -462,17 +475,37 @@ function crmServerStoragePlugin() {
           const isSendGrid = Boolean((pass && pass.startsWith('SG.')) || smtpConfig.service === 'sendgrid' || process.env.SENDGRID_API_KEY)
           const sendgridKey = (pass && pass.startsWith('SG.')) ? pass : (smtpConfig.pass || process.env.SENDGRID_API_KEY)
 
-          const cleanPass = pass.replace(/\s+/g, '')
-          const isRealEmailReady = Boolean(isResend || isSendGrid || (cleanPass && user))
+          const host = (smtpConfig.host || process.env.SMTP_HOST || '').trim()
+          const port = parseInt(smtpConfig.port || process.env.SMTP_PORT || '465', 10)
+          const secure = smtpConfig.secure !== undefined 
+            ? Boolean(smtpConfig.secure) 
+            : (port === 465 || process.env.SMTP_SECURE === 'true')
 
           if (!isResend && !isSendGrid && cleanPass && user) {
-            transporter = nodemailer.createTransport({
-              service: 'gmail',
-              auth: { 
-                user: user, 
-                pass: cleanPass 
-              }
-            })
+            if (host) {
+              // Custom domain SMTP (Zoho, Microsoft 365, Hostinger, cPanel, Private Domain, etc.)
+              transporter = nodemailer.createTransport({
+                host: host,
+                port: port,
+                secure: secure,
+                auth: { 
+                  user: user, 
+                  pass: cleanPass 
+                },
+                tls: {
+                  rejectUnauthorized: false
+                }
+              })
+            } else {
+              // Google / Google Workspace domain email
+              transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: { 
+                  user: user, 
+                  pass: cleanPass 
+                }
+              })
+            }
           }
 
           const results = []
