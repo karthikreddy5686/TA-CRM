@@ -1,5 +1,5 @@
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
@@ -8,6 +8,14 @@ import nodemailer from 'nodemailer'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DB_FILE = path.resolve(__dirname, 'src/data/crm_persisted_storage.json')
+
+// Automatically load .env into process.env for Node.js middlewares
+const envVars = loadEnv(process.env.NODE_ENV || 'development', process.cwd(), '')
+for (const [key, val] of Object.entries(envVars)) {
+  if (process.env[key] === undefined) {
+    process.env[key] = val
+  }
+}
 
 function getLocalIpAddress() {
   const interfaces = os.networkInterfaces()
@@ -379,13 +387,14 @@ function crmServerStoragePlugin() {
     if (cleanUrl === '/api/smtp-config') {
       if (req.method === 'GET') {
         const db = readDb()
-        const config = db.smtpSettings || {}
+        const activeUser = config.senderEmail || config.user || process.env.SMTP_USER || 'karthikreddy5686@gmail.com'
+        const isConfigured = Boolean((config.pass || process.env.SMTP_PASS) && activeUser)
         res.setHeader('Content-Type', 'application/json')
         res.end(JSON.stringify({
-          senderEmail: config.senderEmail || config.user || 'karthikreddy5686@gmail.com',
+          senderEmail: activeUser,
           senderName: config.senderName || 'Talent Acquisition Team',
           service: config.service || 'gmail',
-          configured: Boolean(config.pass && (config.user || config.senderEmail)),
+          configured: isConfigured,
         }))
         return
       }
