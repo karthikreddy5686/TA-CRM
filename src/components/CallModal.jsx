@@ -220,16 +220,22 @@ export default function CallModal({
   // Full Calling / Interview Room Modal
   return (
     <div className="modal-overlay">
-      <div className="call-room-modal" style={{ maxWidth: callState.type === 'VIDEO' ? '960px' : '480px', borderRadius: '14px', overflow: 'hidden' }}>
+      <div className="call-room-modal" style={{ 
+        maxWidth: callState.type === 'VIDEO' ? '960px' : '480px', 
+        borderRadius: '14px', 
+        overflow: 'hidden',
+        background: callState.type === 'VIDEO' ? '#18181b' : '#ffffff',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+      }}>
         
         {/* Top Header Bar */}
         <div style={{ 
           padding: '14px 20px', 
-          borderBottom: '1px solid #27272a',
+          borderBottom: callState.type === 'VIDEO' ? '1px solid #27272a' : '1px solid #e2e8f0',
           display: 'flex', 
           alignItems: 'center', 
           justifyContent: 'space-between',
-          background: '#09090b',
+          background: callState.type === 'VIDEO' ? '#09090b' : '#ffffff',
           flexWrap: 'wrap',
           gap: '10px'
         }}>
@@ -251,10 +257,10 @@ export default function CallModal({
             </span>
 
             {/* Recipient Details */}
-            <div style={{ color: '#ffffff', fontWeight: 700, fontSize: '0.92rem' }}>
+            <div style={{ color: callState.type === 'VIDEO' ? '#ffffff' : '#0f172a', fontWeight: 700, fontSize: '0.92rem' }}>
               {callState.recipientName}
             </div>
-            <span style={{ color: '#a1a1aa', fontSize: '0.75rem' }}>
+            <span style={{ color: callState.type === 'VIDEO' ? '#a1a1aa' : '#64748b', fontSize: '0.75rem' }}>
               ({callState.recipientType === 'TPO' ? 'College TPO' : 'Candidate'})
             </span>
           </div>
@@ -265,8 +271,12 @@ export default function CallModal({
               className="call-timer-box" 
               onClick={onToggleTimer || onStartTimer}
               style={{ 
-                background: callState.timerRunning ? 'rgba(255, 219, 88, 0.15)' : '#18181b', 
-                border: callState.timerRunning ? '1px solid #FFDB58' : '1px solid #27272a',
+                background: callState.timerRunning 
+                  ? (callState.type === 'VIDEO' ? 'rgba(255, 219, 88, 0.15)' : '#fef9c3') 
+                  : (callState.type === 'VIDEO' ? '#18181b' : '#f8fafc'), 
+                border: callState.timerRunning 
+                  ? '1px solid #ca8a04' 
+                  : (callState.type === 'VIDEO' ? '1px solid #27272a' : '1px solid #e2e8f0'),
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -276,15 +286,15 @@ export default function CallModal({
               }}
               title={callState.timerRunning ? 'Timer Active (Click to Pause)' : 'Timer Idle (Click to Start or click Dial on Mobile)'}
             >
-              <Clock size={14} color={callState.timerRunning ? '#FFDB58' : '#71717a'} />
-              <span style={{ color: callState.timerRunning ? '#FFDB58' : '#ffffff', fontSize: '0.88rem', fontWeight: 700 }}>
+              <Clock size={14} color={callState.timerRunning ? '#ca8a04' : '#71717a'} />
+              <span style={{ color: callState.type === 'VIDEO' ? (callState.timerRunning ? '#FFDB58' : '#ffffff') : '#0f172a', fontSize: '0.88rem', fontWeight: 700 }}>
                 {formatTimeDigital(callState.duration)}
               </span>
               <span style={{ 
                 fontSize: '0.65rem', 
                 fontWeight: 700, 
-                color: callState.timerRunning ? '#154360' : '#eab308',
-                background: callState.timerRunning ? '#FFDB58' : 'rgba(234, 179, 8, 0.15)',
+                color: callState.timerRunning ? '#154360' : '#854d0e',
+                background: callState.timerRunning ? '#FFDB58' : '#fef08a',
                 padding: '1px 5px',
                 borderRadius: '4px'
               }}>
@@ -296,7 +306,11 @@ export default function CallModal({
               onClick={onMinimize} 
               className="btn-icon" 
               title="Minimize to Dock (Keep browsing CRM)"
-              style={{ background: '#18181b', borderColor: '#27272a', color: '#ffffff' }}
+              style={{ 
+                background: callState.type === 'VIDEO' ? '#18181b' : '#f8fafc', 
+                borderColor: callState.type === 'VIDEO' ? '#27272a' : '#e2e8f0', 
+                color: callState.type === 'VIDEO' ? '#ffffff' : '#475569' 
+              }}
             >
               <Minimize2 size={15} />
             </button>
@@ -307,28 +321,28 @@ export default function CallModal({
             DIRECT PHONE CALLING: STUDENT NAME, MOBILE NUMBER, CALL & END CALL BUTTONS
             ========================================================================= */}
         {callState.type !== 'VIDEO' && (
-          <div style={{ padding: '36px 24px', background: '#0e1726', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '18px' }}>
+          <div style={{ padding: '36px 24px', background: '#ffffff', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '18px' }}>
             {/* Student Avatar / Initials */}
             <div style={{
               width: '76px',
               height: '76px',
               borderRadius: '50%',
               background: '#154360',
-              border: '3px solid #FFDB58',
-              color: '#FFDB58',
+              border: '3px solid #16a34a',
+              color: '#ffffff',
               fontSize: '1.75rem',
               fontWeight: 800,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)'
+              boxShadow: '0 4px 16px rgba(21, 67, 96, 0.2)'
             }}>
               {callState.recipientName ? callState.recipientName.slice(0, 2).toUpperCase() : 'ST'}
             </div>
 
             {/* Student Name */}
             <div>
-              <h2 style={{ fontSize: '1.5rem', color: '#ffffff', fontWeight: 800, margin: '0 0 6px 0', letterSpacing: '-0.01em' }}>
+              <h2 style={{ fontSize: '1.5rem', color: '#0f172a', fontWeight: 800, margin: '0 0 6px 0', letterSpacing: '-0.01em' }}>
                 {callState.recipientName}
               </h2>
 
@@ -348,9 +362,9 @@ export default function CallModal({
                       maxWidth: '180px', 
                       fontSize: '0.95rem', 
                       padding: '6px 12px', 
-                      background: '#18181b', 
-                      borderColor: '#FFDB58', 
-                      color: '#FFDB58', 
+                      background: '#f8fafc', 
+                      borderColor: '#16a34a', 
+                      color: '#0f172a', 
                       fontWeight: 700,
                       textAlign: 'center'
                     }}
@@ -372,13 +386,13 @@ export default function CallModal({
                 </div>
               ) : (
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-                  <span style={{ fontSize: '1.25rem', color: '#FFDB58', fontFamily: 'monospace', fontWeight: 800, letterSpacing: '0.5px' }}>
+                  <span style={{ fontSize: '1.25rem', color: '#154360', fontFamily: 'monospace', fontWeight: 800, letterSpacing: '0.5px' }}>
                     {phoneNumber || '(No phone number)'}
                   </span>
                   <button 
                     type="button"
                     onClick={() => setIsEditingPhone(true)}
-                    style={{ background: 'none', border: 'none', color: '#93c5fd', cursor: 'pointer', fontSize: '0.78rem', textDecoration: 'underline' }}
+                    style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', fontSize: '0.78rem', textDecoration: 'underline', fontWeight: 600 }}
                   >
                     {phoneNumber ? 'Change' : '+ Set Number'}
                   </button>
@@ -388,7 +402,7 @@ export default function CallModal({
 
             {/* Call Button & End Call Button */}
             <div style={{ display: 'flex', gap: '14px', alignItems: 'center', justifyContent: 'center', marginTop: '12px', flexWrap: 'wrap' }}>
-              {/* Call Button - App Theme Color (#FFDB58 Mustard Yellow) */}
+              {/* Call Button - Green Color */}
               <a 
                 href={phoneInfo.telUrl || '#'}
                 onClick={(e) => {
@@ -399,8 +413,10 @@ export default function CallModal({
                   }
                   if (onStartTimer) onStartTimer();
                 }}
-                className="btn-mustard"
                 style={{ 
+                  background: '#16a34a', 
+                  color: '#ffffff',
+                  border: '1px solid #15803d', 
                   padding: '12px 28px', 
                   fontSize: '0.98rem', 
                   fontWeight: 800, 
@@ -409,12 +425,12 @@ export default function CallModal({
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '8px',
-                  boxShadow: '0 4px 12px rgba(255, 219, 88, 0.35)',
+                  boxShadow: '0 4px 14px rgba(22, 163, 74, 0.35)',
                   cursor: 'pointer'
                 }}
                 title="Dial mobile number directly"
               >
-                <Phone size={18} color="#154360" /> Call {phoneInfo.local10 || phoneInfo.cleanDigits || ''}
+                <Phone size={18} color="#ffffff" /> Call {phoneInfo.local10 || phoneInfo.cleanDigits || ''}
               </a>
 
               {/* End Call Button */}

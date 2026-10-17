@@ -631,7 +631,6 @@ export default function LeadPipeline({
                     style={{
                       background: '#ffffff',
                       border: '1px solid #e2e8f0',
-                      borderLeft: '4px solid #154360',
                       borderRadius: '10px',
                       padding: '14px 18px',
                       display: 'flex',

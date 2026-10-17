@@ -108,11 +108,10 @@ export default function CallDispositionModal({
               </div>
             </div>
 
-            {/* Candidate Pipeline Stage Update (if candidate) */}
             {sessionData.recipientType === 'STUDENT' && (
               <div className="form-group" style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px', marginBottom: '16px' }}>
-                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#09090b' }}>
-                  <Sparkles size={13} color="#eab308" /> Update Candidate Pipeline Stage
+                <label className="form-label" style={{ display: 'flex', alignItems: 'center', color: '#09090b', fontWeight: 700 }}>
+                  Update Candidate Pipeline Stage
                 </label>
                 <select
                   className="form-select"
@@ -227,11 +226,27 @@ export default function CallDispositionModal({
             </div>
           </div>
 
-          <div className="modal-footer">
-            <button type="button" onClick={onCancel} className="btn-secondary">
+          <div className="modal-footer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '12px', padding: '16px 20px' }}>
+            <button 
+              type="button" 
+              onClick={onCancel} 
+              className="btn-secondary"
+              style={{ padding: '12px 20px', fontSize: '0.92rem', fontWeight: 600, borderRadius: '8px' }}
+            >
               Discard Log
             </button>
-            <button type="submit" className="btn-mustard" style={{ fontWeight: 800 }}>
+            <button 
+              type="submit" 
+              className="btn-mustard" 
+              style={{ 
+                fontWeight: 800, 
+                fontSize: '1.05rem', 
+                padding: '14px 32px', 
+                borderRadius: '8px',
+                boxShadow: '0 4px 14px rgba(255, 219, 88, 0.45)',
+                cursor: 'pointer'
+              }}
+            >
               Save Log & Update CRM Roster
             </button>
           </div>

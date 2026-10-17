@@ -34,6 +34,156 @@ import {
   ShieldCheck
 } from 'lucide-react';
 
+// Custom Time Input without browser dashed lines (--:-- --), with clean text typing and AM / PM options
+function TimeSelectInput({ value, onChange, placeholder = "09:00", isCompact = false, required = false }) {
+  // Parse incoming 24h "HH:MM" into display 12h time and AM/PM
+  const parseVal = (val) => {
+    if (!val || typeof val !== 'string' || !val.includes(':')) {
+      return { timeStr: '', ampm: 'AM' };
+    }
+    const [hStr, mStr] = val.split(':');
+    let h = parseInt(hStr, 10);
+    const m = mStr ? mStr.slice(0, 2) : '00';
+    if (isNaN(h)) return { timeStr: '', ampm: 'AM' };
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    let h12 = h % 12;
+    if (h12 === 0) h12 = 12;
+    const timeStr = `${String(h12).padStart(2, '0')}:${m}`;
+    return { timeStr, ampm };
+  };
+
+  const initial = parseVal(value);
+  const [typedTime, setTypedTime] = useState(initial.timeStr);
+  const [ampm, setAmpm] = useState(initial.ampm);
+
+  useEffect(() => {
+    const updated = parseVal(value);
+    setTypedTime(updated.timeStr);
+    setAmpm(updated.ampm);
+  }, [value]);
+
+  const emit24h = (rawTime, currentAmpm) => {
+    if (!rawTime || !rawTime.trim()) {
+      onChange('');
+      return;
+    }
+    let cleaned = rawTime.trim().toLowerCase();
+    
+    // Auto-detect AM/PM if typed in input
+    let detectedAmpm = currentAmpm;
+    if (cleaned.includes('am')) {
+      detectedAmpm = 'AM';
+      cleaned = cleaned.replace('am', '').trim();
+    } else if (cleaned.includes('pm')) {
+      detectedAmpm = 'PM';
+      cleaned = cleaned.replace('pm', '').trim();
+    }
+    if (detectedAmpm !== currentAmpm) {
+      setAmpm(detectedAmpm);
+    }
+
+    let h = 0;
+    let m = 0;
+    if (cleaned.includes(':')) {
+      const parts = cleaned.split(':');
+      h = parseInt(parts[0], 10) || 0;
+      m = parseInt(parts[1], 10) || 0;
+    } else if (cleaned.length === 3) {
+      h = parseInt(cleaned[0], 10) || 0;
+      m = parseInt(cleaned.slice(1), 10) || 0;
+    } else if (cleaned.length === 4) {
+      h = parseInt(cleaned.slice(0, 2), 10) || 0;
+      m = parseInt(cleaned.slice(2), 10) || 0;
+    } else {
+      h = parseInt(cleaned, 10) || 0;
+      m = 0;
+    }
+
+    if (isNaN(h)) {
+      onChange('');
+      return;
+    }
+    if (isNaN(m)) m = 0;
+    if (m > 59) m = 59;
+
+    let h24 = h;
+    if (detectedAmpm === 'PM') {
+      if (h < 12) h24 = h + 12;
+    } else {
+      if (h === 12) h24 = 0;
+      else if (h > 12) h24 = h;
+    }
+
+    const h24Str = String(h24 % 24).padStart(2, '0');
+    const mStr = String(m).padStart(2, '0');
+    onChange(`${h24Str}:${mStr}`);
+  };
+
+  const handleInputChange = (e) => {
+    const val = e.target.value;
+    setTypedTime(val);
+    emit24h(val, ampm);
+  };
+
+  const handleAmpmChange = (e) => {
+    const newAmpm = e.target.value;
+    setAmpm(newAmpm);
+    emit24h(typedTime, newAmpm);
+  };
+
+  return (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      border: '1px solid #cbd5e1',
+      borderRadius: '6px',
+      background: '#ffffff',
+      overflow: 'hidden',
+      transition: 'border-color 150ms ease, box-shadow 150ms ease',
+      width: '100%'
+    }}>
+      <input
+        type="text"
+        value={typedTime}
+        onChange={handleInputChange}
+        placeholder={placeholder}
+        required={required}
+        style={{
+          flex: '1 1 auto',
+          border: 'none',
+          outline: 'none',
+          padding: isCompact ? '4px 8px' : '7px 10px',
+          fontSize: isCompact ? '0.78rem' : '0.85rem',
+          color: '#0f172a',
+          background: 'transparent',
+          minWidth: 0,
+          fontFamily: 'inherit'
+        }}
+      />
+      <select
+        value={ampm}
+        onChange={handleAmpmChange}
+        title="Time Option (AM / PM)"
+        style={{
+          border: 'none',
+          borderLeft: '1px solid #e2e8f0',
+          background: '#f8fafc',
+          color: '#154360',
+          fontWeight: 800,
+          padding: isCompact ? '4px 8px' : '7px 10px',
+          fontSize: isCompact ? '0.72rem' : '0.80rem',
+          cursor: 'pointer',
+          outline: 'none',
+          borderRadius: 0
+        }}
+      >
+        <option value="AM">AM</option>
+        <option value="PM">PM</option>
+      </select>
+    </div>
+  );
+}
+
 export default function PublishedDriveBoard({
   drives,
   students,
@@ -1835,22 +1985,20 @@ export default function PublishedDriveBoard({
 
                   <div className="form-group" style={{ marginBottom: 0 }}>
                     <label className="form-label">Interview Starts From *</label>
-                    <input 
-                      type="time" 
-                      className="form-input" 
+                    <TimeSelectInput 
                       value={scheduleStartTime} 
-                      onChange={e => setScheduleStartTime(e.target.value)}
+                      onChange={setScheduleStartTime}
+                      placeholder="09:00"
                       required 
                     />
                   </div>
 
                   <div className="form-group" style={{ marginBottom: 0 }}>
                     <label className="form-label">Interview Ends At *</label>
-                    <input 
-                      type="time" 
-                      className="form-input" 
+                    <TimeSelectInput 
                       value={scheduleEndTime} 
-                      onChange={e => setScheduleEndTime(e.target.value)}
+                      onChange={setScheduleEndTime}
+                      placeholder="05:00"
                       required 
                     />
                   </div>
@@ -1917,12 +2065,11 @@ export default function PublishedDriveBoard({
                     </div>
                     <div className="form-group" style={{ marginBottom: 0 }}>
                       <label style={{ fontSize: '0.66rem', color: '#71717a', fontWeight: 600 }}>Start Time</label>
-                      <input 
-                        type="time" 
-                        className="form-input" 
+                      <TimeSelectInput 
                         value={teaBreak1Start} 
-                        onChange={e => setTeaBreak1Start(e.target.value)} 
-                        style={{ fontSize: '0.76rem', padding: '4px 8px' }} 
+                        onChange={setTeaBreak1Start} 
+                        placeholder="11:00"
+                        isCompact
                       />
                     </div>
                     <div style={{ fontSize: '0.66rem', color: '#64748b', marginTop: '3px' }}>
@@ -1942,12 +2089,11 @@ export default function PublishedDriveBoard({
                     </div>
                     <div className="form-group" style={{ marginBottom: 0 }}>
                       <label style={{ fontSize: '0.66rem', color: '#71717a', fontWeight: 600 }}>Start Time</label>
-                      <input 
-                        type="time" 
-                        className="form-input" 
+                      <TimeSelectInput 
                         value={lunchBreakStart} 
-                        onChange={e => setLunchBreakStart(e.target.value)} 
-                        style={{ fontSize: '0.76rem', padding: '4px 8px' }} 
+                        onChange={setLunchBreakStart} 
+                        placeholder="01:00"
+                        isCompact
                       />
                     </div>
                     <div style={{ fontSize: '0.66rem', color: '#64748b', marginTop: '3px' }}>
@@ -1967,12 +2113,11 @@ export default function PublishedDriveBoard({
                     </div>
                     <div className="form-group" style={{ marginBottom: 0 }}>
                       <label style={{ fontSize: '0.66rem', color: '#71717a', fontWeight: 600 }}>Start Time</label>
-                      <input 
-                        type="time" 
-                        className="form-input" 
+                      <TimeSelectInput 
                         value={teaBreak2Start} 
-                        onChange={e => setTeaBreak2Start(e.target.value)} 
-                        style={{ fontSize: '0.76rem', padding: '4px 8px' }} 
+                        onChange={setTeaBreak2Start} 
+                        placeholder="04:00"
+                        isCompact
                       />
                     </div>
                     <div style={{ fontSize: '0.66rem', color: '#64748b', marginTop: '3px' }}>
