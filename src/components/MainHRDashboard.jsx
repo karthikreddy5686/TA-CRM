@@ -15,6 +15,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { formatDuration } from '../data/mockData';
+import DashboardOverview from './DashboardOverview';
 
 export default function MainHRDashboard({ 
   users, 
@@ -31,8 +32,10 @@ export default function MainHRDashboard({
   onOpenNewStudentModal,
   onOpenNewTpoModal,
   onOpenQuickCallModal,
-  onOpenQuickActions
+  onOpenQuickActions,
+  onUpdateStudent
 }) {
+  const [mainView, setMainView] = useState('overview'); // 'overview' | 'productivity'
   const [internFilter, setInternFilter] = useState('ALL');
   const [callTypeFilter, setCallTypeFilter] = useState('ALL');
 
@@ -140,8 +143,70 @@ export default function MainHRDashboard({
         )}
       </div>
 
-      {/* KPI Cards Grid - Clickable for Instant Module Navigation */}
-      <div className="metrics-grid">
+      {/* View Switcher: Overview & Monthly Targets vs Intern Leaderboard */}
+      <div style={{
+        display: 'flex',
+        gap: '6px',
+        marginBottom: '16px',
+        borderBottom: '1px solid #e2e8f0',
+        paddingBottom: '4px'
+      }}>
+        <button
+          type="button"
+          onClick={() => setMainView('overview')}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            padding: '8px 16px',
+            borderRadius: '8px',
+            border: '1px solid',
+            borderColor: mainView === 'overview' ? '#154360' : 'transparent',
+            background: mainView === 'overview' ? '#154360' : '#ffffff',
+            color: mainView === 'overview' ? '#ffffff' : '#52525b',
+            fontWeight: mainView === 'overview' ? 700 : 500,
+            fontSize: '0.825rem',
+            cursor: 'pointer'
+          }}
+        >
+          <span>📊 Overview</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setMainView('productivity')}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            padding: '8px 16px',
+            borderRadius: '8px',
+            border: '1px solid',
+            borderColor: mainView === 'productivity' ? '#154360' : 'transparent',
+            background: mainView === 'productivity' ? '#154360' : '#ffffff',
+            color: mainView === 'productivity' ? '#ffffff' : '#52525b',
+            fontWeight: mainView === 'productivity' ? 700 : 500,
+            fontSize: '0.825rem',
+            cursor: 'pointer'
+          }}
+        >
+          <span>👥 Intern Leaderboard & Call Logs</span>
+        </button>
+      </div>
+
+      {mainView === 'overview' ? (
+        <DashboardOverview 
+          tpos={tpos}
+          drives={drives}
+          students={students}
+          users={users}
+          onUpdateStudent={onUpdateStudent}
+          onStartCall={onStartCall}
+          onSelectTab={onSelectTab}
+          onLoadDemoData={onLoadDemoData}
+        />
+      ) : (
+        <>
+          {/* KPI Cards Grid - Clickable for Instant Module Navigation */}
+          <div className="metrics-grid">
         <div 
           className="metric-card" 
           onClick={() => onSelectTab('calls')}
@@ -570,6 +635,8 @@ export default function MainHRDashboard({
           )}
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }

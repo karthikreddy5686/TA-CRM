@@ -193,83 +193,108 @@ export default function LeadPipeline({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
-      {/* 1. Main Pipeline Card Container */}
+      {/* 1. Header Banner - Matching App Theme */}
       <div style={{
-        background: '#ffffff',
-        border: '1px solid #e2e8f0',
-        borderRadius: '16px',
-        padding: '20px 22px',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+        background: 'linear-gradient(135deg, #154360 0%, #0e2e42 100%)',
+        color: '#ffffff',
+        borderRadius: '12px',
+        padding: '20px 24px',
+        boxShadow: 'var(--shadow-card)',
         display: 'flex',
-        flexDirection: 'column',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        justifyContent: 'space-between',
         gap: '16px'
       }}>
-        {/* Top Header Row */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '12px'
-        }}>
-          {/* Left Brand & Flow Indicator */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: '10px',
-              background: '#154360',
-              color: '#ffffff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 2px 4px rgba(21, 67, 96, 0.25)',
-              flexShrink: 0
-            }}>
-              <GitFork size={20} />
-            </div>
-
-            <div>
-              <h1 style={{
-                fontSize: '1.25rem',
-                fontWeight: 800,
-                color: '#09090b',
-                lineHeight: 1.2,
-                margin: 0
-              }}>
-                Lead Pipeline
-              </h1>
-              <div style={{
-                fontSize: '0.78rem',
-                color: '#71717a',
-                marginTop: '3px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                flexWrap: 'wrap'
-              }}>
-                <span>Call</span>
-                <span style={{ color: '#cbd5e1' }}>→</span>
-                <span>Interested</span>
-                <span style={{ color: '#cbd5e1' }}>→</span>
-                <span>Details</span>
-                <span style={{ color: '#cbd5e1' }}>→</span>
-                <span>Proposal</span>
-                <span style={{ color: '#cbd5e1' }}>→</span>
-                <span style={{ color: '#154360', fontWeight: 700 }}>Drive Confirmed</span>
-              </div>
-            </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{
+            width: '46px',
+            height: '46px',
+            borderRadius: '12px',
+            background: '#FFDB58',
+            color: '#154360',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 3px 8px rgba(255, 219, 88, 0.35)',
+            flexShrink: 0
+          }}>
+            <GitFork size={24} strokeWidth={2.4} />
           </div>
 
-          {/* Right Search Input */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px' }}>
+              <span style={{
+                background: '#FFDB58',
+                color: '#154360',
+                fontSize: '0.68rem',
+                fontWeight: 800,
+                padding: '2px 8px',
+                borderRadius: '4px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em'
+              }}>
+                OUTREACH PIPELINE
+              </span>
+              <span style={{ fontSize: '0.78rem', color: '#93c5fd', fontWeight: 600 }}>
+                Live Placement Funnel
+              </span>
+            </div>
+
+            <h1 style={{
+              fontSize: '1.45rem',
+              fontWeight: 800,
+              color: '#ffffff',
+              lineHeight: 1.2,
+              margin: 0,
+              letterSpacing: '-0.02em'
+            }}>
+              Lead Pipeline
+            </h1>
+
+            {/* Flow Indicator with rich colors */}
+            <div style={{
+              fontSize: '0.78rem',
+              color: '#cbd5e1',
+              marginTop: '5px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              flexWrap: 'wrap',
+              fontWeight: 500
+            }}>
+              <span>Call</span>
+              <span style={{ color: '#93c5fd' }}>→</span>
+              <span>Interested</span>
+              <span style={{ color: '#93c5fd' }}>→</span>
+              <span>Details</span>
+              <span style={{ color: '#93c5fd' }}>→</span>
+              <span>Proposal</span>
+              <span style={{ color: '#93c5fd' }}>→</span>
+              <span style={{
+                color: '#154360',
+                fontWeight: 800,
+                background: '#FFDB58',
+                padding: '1px 7px',
+                borderRadius: '4px',
+                fontSize: '0.72rem'
+              }}>
+                Drive Confirmed
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Right side: Search + Add Lead button */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
           <div style={{
             position: 'relative',
-            width: '280px',
+            width: '260px',
             maxWidth: '100%'
           }}>
             <Search 
               size={15} 
-              color="#94a3b8" 
+              color="#FFDB58" 
               style={{
                 position: 'absolute',
                 left: '12px',
@@ -286,11 +311,11 @@ export default function LeadPipeline({
               style={{
                 width: '100%',
                 padding: '8px 12px 8px 34px',
-                fontSize: '0.825rem',
-                border: '1px solid #e2e8f0',
+                fontSize: '0.82rem',
+                border: '1px solid rgba(255, 255, 255, 0.25)',
                 borderRadius: '8px',
-                background: '#ffffff',
-                color: '#09090b',
+                background: 'rgba(255, 255, 255, 0.12)',
+                color: '#ffffff',
                 outline: 'none',
                 boxSizing: 'border-box'
               }}
@@ -307,7 +332,7 @@ export default function LeadPipeline({
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
-                  color: '#94a3b8',
+                  color: '#cbd5e1',
                   padding: 0
                 }}
               >
@@ -315,182 +340,217 @@ export default function LeadPipeline({
               </button>
             )}
           </div>
-        </div>
 
+          <button
+            type="button"
+            onClick={() => setIsAddModalOpen(true)}
+            className="btn-mustard"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 14px',
+              fontSize: '0.82rem',
+              fontWeight: 800,
+              borderRadius: '8px',
+              boxShadow: '0 2px 8px rgba(255, 219, 88, 0.45)',
+              cursor: 'pointer',
+              border: 'none',
+              color: '#154360'
+            }}
+          >
+            <Plus size={15} strokeWidth={2.6} color="#154360" /> Add Lead
+          </button>
+        </div>
+      </div>
+
+      {/* 2. Main Pipeline Card Container */}
+      <div className="content-card" style={{
+        padding: '16px 20px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '14px'
+      }}>
         {/* Filters Row */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '10px',
+          justifyContent: 'space-between',
           flexWrap: 'wrap',
-          paddingTop: '4px'
+          gap: '10px'
         }}>
-          <span style={{
-            fontSize: '0.68rem',
-            fontWeight: 800,
-            color: '#71717a',
-            letterSpacing: '0.06em',
-            textTransform: 'uppercase',
-            marginRight: '4px'
-          }}>
-            FILTERS
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <span style={{
+              fontSize: '0.68rem',
+              fontWeight: 800,
+              color: '#154360',
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              background: '#ebf5fb',
+              padding: '4px 8px',
+              borderRadius: '6px',
+              border: '1px solid #aed6f1'
+            }}>
+              <Filter size={11} color="#154360" /> FILTERS
+            </span>
 
-          {/* Filter 1: Time */}
-          <div style={{ position: 'relative' }}>
-            <select
-              value={timeFilter}
-              onChange={(e) => setTimeFilter(e.target.value)}
-              style={{
-                appearance: 'none',
-                padding: '6px 26px 6px 28px',
-                fontSize: '0.78rem',
-                fontWeight: 600,
-                color: '#334155',
-                background: '#ffffff',
-                border: '1px solid #e2e8f0',
-                borderRadius: '8px',
-                cursor: 'pointer'
-              }}
-            >
-              <option value="ALL">Any time</option>
-              <option value="TODAY">Today</option>
-              <option value="WEEK">This week</option>
-              <option value="MONTH">This month</option>
-            </select>
-            <Calendar 
-              size={13} 
-              color="#64748b" 
-              style={{ position: 'absolute', left: '9px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} 
-            />
-            <ChevronDown 
-              size={13} 
-              color="#64748b" 
-              style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} 
-            />
+            {/* Filter 1: Time */}
+            <div style={{ position: 'relative' }}>
+              <select
+                value={timeFilter}
+                onChange={(e) => setTimeFilter(e.target.value)}
+                style={{
+                  appearance: 'none',
+                  padding: '6px 26px 6px 28px',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  color: '#154360',
+                  background: '#ffffff',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="ALL">Any time</option>
+                <option value="TODAY">Today</option>
+                <option value="WEEK">This week</option>
+                <option value="MONTH">This month</option>
+              </select>
+              <Calendar 
+                size={13} 
+                color="#154360" 
+                style={{ position: 'absolute', left: '9px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} 
+              />
+              <ChevronDown 
+                size={13} 
+                color="#154360" 
+                style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} 
+              />
+            </div>
+
+            {/* Filter 2: Colleges */}
+            <div style={{ position: 'relative' }}>
+              <select
+                value={collegeFilter}
+                onChange={(e) => setCollegeFilter(e.target.value)}
+                style={{
+                  appearance: 'none',
+                  padding: '6px 26px 6px 28px',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  color: '#154360',
+                  background: '#ffffff',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  maxWidth: '220px'
+                }}
+              >
+                <option value="ALL">All colleges</option>
+                {uniqueColleges.map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+              <GraduationCap 
+                size={13} 
+                color="#154360" 
+                style={{ position: 'absolute', left: '9px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} 
+              />
+              <ChevronDown 
+                size={13} 
+                color="#154360" 
+                style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} 
+              />
+            </div>
+
+            {/* Filter 3: Recruiters */}
+            <div style={{ position: 'relative' }}>
+              <select
+                value={recruiterFilter}
+                onChange={(e) => setRecruiterFilter(e.target.value)}
+                style={{
+                  appearance: 'none',
+                  padding: '6px 26px 6px 28px',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  color: '#154360',
+                  background: '#ffffff',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="ALL">All recruiters</option>
+                {uniqueRecruiters.map(r => (
+                  <option key={r} value={r}>{r}</option>
+                ))}
+              </select>
+              <BookOpen 
+                size={13} 
+                color="#154360" 
+                style={{ position: 'absolute', left: '9px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} 
+              />
+              <ChevronDown 
+                size={13} 
+                color="#154360" 
+                style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} 
+              />
+            </div>
+
+            {/* Reset Filters if active */}
+            {(searchQuery || timeFilter !== 'ALL' || collegeFilter !== 'ALL' || recruiterFilter !== 'ALL') && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setTimeFilter('ALL');
+                  setCollegeFilter('ALL');
+                  setRecruiterFilter('ALL');
+                }}
+                style={{
+                  background: '#fee2e2',
+                  border: '1px solid #fca5a5',
+                  color: '#b91c1c',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  padding: '4px 8px',
+                  borderRadius: '6px'
+                }}
+              >
+                Clear filters
+              </button>
+            )}
           </div>
 
-          {/* Filter 2: Colleges */}
-          <div style={{ position: 'relative' }}>
-            <select
-              value={collegeFilter}
-              onChange={(e) => setCollegeFilter(e.target.value)}
-              style={{
-                appearance: 'none',
-                padding: '6px 26px 6px 28px',
-                fontSize: '0.78rem',
-                fontWeight: 600,
-                color: '#334155',
-                background: '#ffffff',
-                border: '1px solid #e2e8f0',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                maxWidth: '200px'
-              }}
-            >
-              <option value="ALL">All colleges</option>
-              {uniqueColleges.map(c => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-            <GraduationCap 
-              size={13} 
-              color="#64748b" 
-              style={{ position: 'absolute', left: '9px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} 
-            />
-            <ChevronDown 
-              size={13} 
-              color="#64748b" 
-              style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} 
-            />
-          </div>
-
-          {/* Filter 3: Recruiters */}
-          <div style={{ position: 'relative' }}>
-            <select
-              value={recruiterFilter}
-              onChange={(e) => setRecruiterFilter(e.target.value)}
-              style={{
-                appearance: 'none',
-                padding: '6px 26px 6px 28px',
-                fontSize: '0.78rem',
-                fontWeight: 600,
-                color: '#334155',
-                background: '#ffffff',
-                border: '1px solid #e2e8f0',
-                borderRadius: '8px',
-                cursor: 'pointer'
-              }}
-            >
-              <option value="ALL">All recruiters</option>
-              {uniqueRecruiters.map(r => (
-                <option key={r} value={r}>{r}</option>
-              ))}
-            </select>
-            <BookOpen 
-              size={13} 
-              color="#64748b" 
-              style={{ position: 'absolute', left: '9px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} 
-            />
-            <ChevronDown 
-              size={13} 
-              color="#64748b" 
-              style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} 
-            />
-          </div>
-
-          {/* Reset Filters if active */}
-          {(searchQuery || timeFilter !== 'ALL' || collegeFilter !== 'ALL' || recruiterFilter !== 'ALL') && (
-            <button
-              type="button"
-              onClick={() => {
-                setSearchQuery('');
-                setTimeFilter('ALL');
-                setCollegeFilter('ALL');
-                setRecruiterFilter('ALL');
-              }}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#ef4444',
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                padding: '4px 6px'
-              }}
-            >
-              Clear filters
-            </button>
-          )}
-
-          {/* Quick Add Lead Button on the far right */}
-          <div style={{ marginLeft: 'auto' }}>
-            <button
-              type="button"
-              onClick={() => setIsAddModalOpen(true)}
-              className="btn-black-sm"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '5px',
-                padding: '6px 12px',
-                fontSize: '0.78rem',
-                fontWeight: 700,
-                borderRadius: '8px'
-              }}
-            >
-              <Plus size={14} /> Add Lead
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setIsAddModalOpen(true)}
+            className="btn-mustard btn-black-sm"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '5px',
+              padding: '5px 12px',
+              fontSize: '0.78rem',
+              fontWeight: 800,
+              boxShadow: '0 1px 3px rgba(255, 219, 88, 0.4)'
+            }}
+          >
+            <Plus size={13} color="#154360" /> + Add Lead
+          </button>
         </div>
 
-        {/* Stage Pills Row (Exactly like the user's reference image) */}
+        {/* Stage Pills Row */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
           flexWrap: 'wrap',
-          paddingTop: '6px'
+          paddingTop: '2px'
         }}>
           {PIPELINE_STAGES.map(stage => {
             const count = stageCounts[stage.id] || 0;
@@ -508,11 +568,11 @@ export default function LeadPipeline({
                   padding: '6px 14px',
                   borderRadius: '9999px',
                   fontSize: '0.8rem',
-                  fontWeight: isActive ? 700 : 500,
-                  color: isActive ? '#09090b' : '#52525b',
-                  background: isActive ? '#ffffff' : '#f8fafc',
-                  border: isActive ? '1px solid #cbd5e1' : '1px solid transparent',
-                  boxShadow: isActive ? '0 1px 3px rgba(0, 0, 0, 0.08)' : 'none',
+                  fontWeight: isActive ? 800 : 600,
+                  color: isActive ? '#ffffff' : '#334155',
+                  background: isActive ? '#154360' : '#f8fafc',
+                  border: isActive ? '1px solid #154360' : '1px solid #e2e8f0',
+                  boxShadow: isActive ? '0 2px 6px rgba(21, 67, 96, 0.28)' : 'none',
                   cursor: 'pointer',
                   transition: 'all 150ms ease'
                 }}
@@ -522,7 +582,7 @@ export default function LeadPipeline({
                   width: '8px',
                   height: '8px',
                   borderRadius: '50%',
-                  background: stage.dotColor,
+                  background: isActive ? '#FFDB58' : stage.dotColor,
                   flexShrink: 0
                 }} />
 
@@ -531,8 +591,11 @@ export default function LeadPipeline({
                 {/* Count Badge */}
                 <span style={{
                   fontSize: '0.72rem',
-                  fontWeight: 700,
-                  color: isActive ? '#09090b' : '#71717a',
+                  fontWeight: 800,
+                  color: isActive ? '#154360' : '#64748b',
+                  background: isActive ? '#FFDB58' : '#e2e8f0',
+                  padding: '1px 7px',
+                  borderRadius: '9999px',
                   marginLeft: '2px'
                 }}>
                   {count}
@@ -542,19 +605,19 @@ export default function LeadPipeline({
           })}
         </div>
 
-        {/* 2. Active Stage View Container */}
+        {/* 3. Active Stage View Container */}
         <div style={{
           background: '#ffffff',
           border: '1px solid #e2e8f0',
           borderRadius: '12px',
           overflow: 'hidden',
-          marginTop: '6px'
+          marginTop: '4px'
         }}>
           {/* Active Stage Card Header */}
           <div style={{
             padding: '12px 18px',
-            background: '#ffffff',
-            borderBottom: '1px solid #f1f5f9',
+            background: '#f8fafc',
+            borderBottom: '1px solid #e2e8f0',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -564,19 +627,19 @@ export default function LeadPipeline({
             {/* Left: Active Stage Name & Count */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Layers size={16} color="#154360" />
-              <span style={{ fontWeight: 800, fontSize: '0.92rem', color: '#09090b' }}>
+              <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#154360' }}>
                 {activeStage.label}
               </span>
               <span style={{
-                background: '#f1f5f9',
+                background: '#ebf5fb',
                 color: '#154360',
                 fontSize: '0.72rem',
                 fontWeight: 800,
                 padding: '2px 8px',
                 borderRadius: '9999px',
-                border: '1px solid #e2e8f0'
+                border: '1px solid #aed6f1'
               }}>
-                {activeStageLeads.length}
+                {activeStageLeads.length} {activeStageLeads.length === 1 ? 'lead' : 'leads'}
               </span>
             </div>
 
@@ -592,8 +655,8 @@ export default function LeadPipeline({
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '8px',
-                background: '#f8fafc',
-                border: '1px solid #e2e8f0',
+                background: '#ffffff',
+                border: '1px solid #cbd5e1',
                 padding: '3px 10px',
                 borderRadius: '6px'
               }}>
@@ -603,7 +666,7 @@ export default function LeadPipeline({
                 <span style={{ color: '#cbd5e1' }}>•</span>
                 <span>↵ action</span>
               </div>
-              <span style={{ fontWeight: 700, color: '#334155' }}>
+              <span style={{ fontWeight: 700, color: '#154360' }}>
                 {activeStageLeads.length} {activeStageLeads.length === 1 ? 'lead' : 'leads'}
               </span>
             </div>
@@ -612,7 +675,7 @@ export default function LeadPipeline({
           {/* Active Stage Content Area */}
           <div style={{ padding: activeStageLeads.length === 0 ? '50px 20px' : '16px' }}>
             {activeStageLeads.length === 0 ? (
-              /* Empty State (Visually matching user reference screenshot) */
+              /* Empty State */
               <div style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -634,7 +697,7 @@ export default function LeadPipeline({
                 }}>
                   <User size={32} strokeWidth={1.5} />
                 </div>
-                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#1e293b', marginTop: '4px' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#154360', marginTop: '4px' }}>
                   No leads in {activeStage.label}
                 </div>
                 <div style={{ fontSize: '0.78rem', color: '#64748b', maxWidth: '380px' }}>
@@ -643,7 +706,7 @@ export default function LeadPipeline({
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(true)}
-                  className="btn-navy-outline btn-black-sm"
+                  className="btn-mustard btn-black-sm"
                   style={{
                     marginTop: '8px',
                     display: 'inline-flex',
@@ -651,11 +714,11 @@ export default function LeadPipeline({
                     gap: '6px',
                     padding: '6px 14px',
                     fontSize: '0.8rem',
-                    fontWeight: 700,
+                    fontWeight: 800,
                     borderRadius: '8px'
                   }}
                 >
-                  <Plus size={14} /> Add New TPO Lead
+                  <Plus size={14} color="#154360" /> Add New TPO Lead
                 </button>
               </div>
             ) : (
@@ -667,11 +730,13 @@ export default function LeadPipeline({
                     style={{
                       background: '#ffffff',
                       border: '1px solid #e2e8f0',
+                      borderLeft: '4px solid #154360',
                       borderRadius: '10px',
-                      padding: '14px 16px',
+                      padding: '14px 18px',
                       display: 'flex',
                       flexDirection: 'column',
                       gap: '10px',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
                       transition: 'border-color 150ms ease, box-shadow 150ms ease'
                     }}
                   >
@@ -686,17 +751,18 @@ export default function LeadPipeline({
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                         {/* Avatar */}
                         <div style={{
-                          width: '40px',
-                          height: '40px',
+                          width: '42px',
+                          height: '42px',
                           borderRadius: '10px',
-                          background: '#ebf5fb',
-                          border: '1px solid #aed6f1',
-                          color: '#154360',
+                          background: '#154360',
+                          border: '1px solid #0e2e42',
+                          color: '#FFDB58',
                           fontWeight: 800,
                           fontSize: '0.9rem',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
+                          boxShadow: '0 2px 4px rgba(21, 67, 96, 0.2)',
                           flexShrink: 0
                         }}>
                           {lead.name ? lead.name.split(' ').map(n => n[0]).slice(0, 2).join('') : 'TP'}
@@ -704,17 +770,17 @@ export default function LeadPipeline({
 
                         <div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                            <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#09090b' }}>
+                            <span style={{ fontWeight: 800, fontSize: '0.98rem', color: '#154360' }}>
                               {lead.name}
                             </span>
                             <span style={{
                               fontSize: '0.72rem',
                               color: '#154360',
-                              background: '#f8fafc',
-                              border: '1px solid #e2e8f0',
+                              background: '#ebf5fb',
+                              border: '1px solid #aed6f1',
                               padding: '1px 6px',
                               borderRadius: '4px',
-                              fontWeight: 600
+                              fontWeight: 700
                             }}>
                               {lead.designation || 'TPO Head'}
                             </span>
@@ -736,8 +802,8 @@ export default function LeadPipeline({
                                 fontSize: '0.68rem',
                                 background: '#FFDB58',
                                 color: '#154360',
-                                fontWeight: 700,
-                                padding: '0 5px',
+                                fontWeight: 800,
+                                padding: '1px 6px',
                                 borderRadius: '3px',
                                 marginLeft: '4px'
                               }}>
@@ -800,18 +866,19 @@ export default function LeadPipeline({
                               });
                             }
                           }}
-                          className="btn-black-sm"
+                          className="btn-mustard btn-black-sm"
                           style={{
                             display: 'inline-flex',
                             alignItems: 'center',
-                            gap: '5px',
-                            padding: '5px 11px',
+                            gap: '6px',
+                            padding: '5px 12px',
                             fontSize: '0.78rem',
-                            fontWeight: 700,
-                            borderRadius: '6px'
+                            fontWeight: 800,
+                            borderRadius: '6px',
+                            boxShadow: '0 1px 3px rgba(255, 219, 88, 0.4)'
                           }}
                         >
-                          <Phone size={13} /> Call {lead.phone}
+                          <Phone size={13} color="#154360" /> Call {lead.phone}
                         </button>
 
                         {/* WhatsApp Button */}
@@ -876,19 +943,19 @@ export default function LeadPipeline({
                             fontSize: '0.75rem',
                             fontWeight: 600,
                             background: '#ffffff',
-                            color: '#52525b',
-                            border: '1px solid #e2e8f0',
+                            color: '#154360',
+                            border: '1px solid #cbd5e1',
                             borderRadius: '6px',
                             cursor: 'pointer'
                           }}
                         >
-                          <Clock size={13} /> Follow-up
+                          <Clock size={13} color="#154360" /> Follow-up
                         </button>
                       </div>
 
                       {/* Right: Stage Mover Dropdown */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '0.72rem', color: '#71717a', fontWeight: 600 }}>
+                        <span style={{ fontSize: '0.72rem', color: '#154360', fontWeight: 700 }}>
                           Move to:
                         </span>
                         <select
@@ -902,10 +969,10 @@ export default function LeadPipeline({
                             padding: '4px 8px',
                             fontSize: '0.75rem',
                             fontWeight: 700,
-                            background: '#f8fafc',
-                            border: '1px solid #cbd5e1',
+                            background: '#ffffff',
+                            border: '1px solid #154360',
                             borderRadius: '6px',
-                            color: '#09090b',
+                            color: '#154360',
                             cursor: 'pointer'
                           }}
                         >
@@ -931,10 +998,10 @@ export default function LeadPipeline({
           <div className="modal-card" style={{ maxWidth: '480px', width: '92%' }}>
             <div className="modal-header">
               <div>
-                <span className="badge badge-black" style={{ marginBottom: '6px', fontSize: '0.7rem' }}>
+                <span className="badge badge-mustard" style={{ background: '#FFDB58', color: '#154360', fontWeight: 800, marginBottom: '6px', fontSize: '0.7rem' }}>
                   NEW PIPELINE LEAD
                 </span>
-                <h3 className="card-title">Add College TPO Lead</h3>
+                <h3 className="card-title" style={{ color: '#154360' }}>Add College TPO Lead</h3>
                 <p className="card-subtitle">Register a placement officer into the active outreach pipeline</p>
               </div>
               <button onClick={() => setIsAddModalOpen(false)} className="btn-icon">
@@ -1035,7 +1102,7 @@ export default function LeadPipeline({
                 <button type="button" onClick={() => setIsAddModalOpen(false)} className="btn-secondary">
                   Cancel
                 </button>
-                <button type="submit" className="btn-black">
+                <button type="submit" className="btn-mustard" style={{ fontWeight: 800, color: '#154360' }}>
                   Create Lead
                 </button>
               </div>

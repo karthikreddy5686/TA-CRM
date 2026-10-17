@@ -461,17 +461,6 @@ export default function DriveManagement({
             <UserPlus size={13} /> + Student
           </button>
 
-          <button 
-            onClick={() => {
-              setIsCsvModalOpen(true);
-              setIsManualStudentModalOpen(false);
-              setIsCreateDriveOpen(false);
-            }} 
-            className="btn-secondary btn-black-sm"
-            style={{ fontSize: '0.75rem', padding: '4px 8px' }}
-          >
-            <Upload size={13} /> + CSV
-          </button>
 
           <button 
             onClick={() => {
@@ -536,20 +525,6 @@ export default function DriveManagement({
               />
             </div>
 
-            {selectedDriveId !== 'ALL' && onDeleteDrive && (
-              <button
-                type="button"
-                onClick={() => {
-                  onDeleteDrive(selectedDriveId);
-                  setSelectedDriveId('ALL');
-                }}
-                className="btn-secondary"
-                style={{ color: '#ef4444', borderColor: '#fca5a5', fontSize: '0.72rem', padding: '2px 6px' }}
-                title="Delete this selected drive"
-              >
-                <Trash2 size={11} /> Delete Drive
-              </button>
-            )}
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
@@ -575,17 +550,6 @@ export default function DriveManagement({
               {copiedShareLink ? 'Copied Link!' : 'Share Board'}
             </button>
 
-            {onClearAllDrives && drives.length > 0 && (
-              <button
-                type="button"
-                onClick={onClearAllDrives}
-                className="btn-secondary"
-                style={{ color: '#ef4444', borderColor: '#fca5a5', fontSize: '0.72rem', padding: '3px 8px' }}
-                title="Delete all campus recruitment drives"
-              >
-                <Trash2 size={11} /> Delete All ({drives.length})
-              </button>
-            )}
           </div>
         </div>
       )}
@@ -1073,22 +1037,6 @@ export default function DriveManagement({
               </h2>
               <p className="card-subtitle">Scheduled campus visits and hiring details</p>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {currentRole === 'ADMIN' && drives.length > 0 && onClearAllDrives && (
-                <button 
-                  type="button" 
-                  onClick={onClearAllDrives} 
-                  className="btn-secondary btn-black-sm"
-                  style={{ color: '#ef4444', borderColor: '#fca5a5' }}
-                  title="Delete all campus recruitment drives"
-                >
-                  <Trash2 size={13} /> Delete All Drives ({drives.length})
-                </button>
-              )}
-              <button onClick={() => setIsCreateDriveOpen(true)} className="btn-mustard btn-black-sm" style={{ boxShadow: '0 1px 3px rgba(255, 219, 88, 0.4)' }}>
-                <Plus size={13} color="#154360" /> New Drive
-              </button>
-            </div>
           </div>
 
           <div className="desktop-only" style={{ width: '100%', overflowX: 'hidden' }}>
@@ -1103,15 +1051,12 @@ export default function DriveManagement({
                   <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>Date</th>
                   <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>Status</th>
                   <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff' }}>Candidates</th>
-                  {currentRole === 'ADMIN' && (
-                    <th style={{ width: '30px', padding: '6px 4px', background: '#154360', color: '#ffffff' }}></th>
-                  )}
                 </tr>
               </thead>
               <tbody>
                 {drives.length === 0 ? (
                   <tr>
-                    <td colSpan={currentRole === 'ADMIN' ? 9 : 8} style={{ textAlign: 'center', padding: '28px', color: '#71717a', fontSize: '0.78rem' }}>
+                    <td colSpan={8} style={{ textAlign: 'center', padding: '28px', color: '#71717a', fontSize: '0.78rem' }}>
                       No drives scheduled yet. Click "New Drive" to add your first campus drive.
                     </td>
                   </tr>
@@ -1197,20 +1142,6 @@ export default function DriveManagement({
                           </button>
                         </td>
 
-                        {currentRole === 'ADMIN' && (
-                          <td style={{ padding: '6px 4px' }}>
-                            {onDeleteDrive && (
-                              <button 
-                                onClick={() => onDeleteDrive(drive.id)}
-                                className="btn-icon"
-                                style={{ width: '22px', height: '22px', color: '#ef4444' }}
-                                title="Delete campus drive"
-                              >
-                                <Trash2 size={11} />
-                              </button>
-                            )}
-                          </td>
-                        )}
                       </tr>
                     );
                   })
@@ -1306,17 +1237,6 @@ export default function DriveManagement({
                       </button>
                     </div>
 
-                    {currentRole === 'ADMIN' && onDeleteDrive && (
-                      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                        <button
-                          onClick={() => onDeleteDrive(drive.id)}
-                          className="btn-secondary btn-black-sm"
-                          style={{ padding: '2px 6px', fontSize: '0.68rem', color: '#ef4444', borderColor: '#fca5a5', gap: '3px' }}
-                        >
-                          <Trash2 size={10} /> Delete Drive
-                        </button>
-                      </div>
-                    )}
                   </div>
                 );
               })

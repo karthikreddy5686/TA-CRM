@@ -51,6 +51,7 @@ import {
   isSupabaseConfigured, 
   testSupabaseConnection 
 } from '../services/supabaseSync';
+import DashboardOverview from './DashboardOverview';
 
 export default function AdminDashboard({
   users = [],
@@ -65,6 +66,7 @@ export default function AdminDashboard({
   onAddDrive,
   onUpdateDrive,
   onDeleteDrive,
+  onClearAllDrives,
   onAddStudent,
   onUpdateStudent,
   onDeleteStudent,
@@ -80,9 +82,16 @@ export default function AdminDashboard({
   onStartCall,
   onSelectTab,
   onLoadDemoData,
-  defaultTab = 'staff'
+  defaultTab = 'overview'
 }) {
-  const [activeAdminTab, setActiveAdminTab] = useState(defaultTab); // 'staff' | 'drives' | 'students' | 'tpos' | 'followups' | 'calls'
+  const [activeAdminTab, setActiveAdminTab] = useState(defaultTab); // 'overview' | 'staff' | 'drives' | 'students' | 'tpos' | 'followups' | 'calls'
+
+  React.useEffect(() => {
+    if (defaultTab) {
+      setActiveAdminTab(defaultTab);
+    }
+  }, [defaultTab]);
+
   const [showPasswordMap, setShowPasswordMap] = useState({});
   const [copiedKey, setCopiedKey] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -810,6 +819,7 @@ export default function AdminDashboard({
         borderBottom: '1px solid #e2e8f0'
       }}>
         {[
+          { id: 'overview', label: '📊 Overview' },
           { id: 'staff', label: 'HR Staff & Credentials' },
           { id: 'drives', label: 'Drives' },
           { id: 'students', label: 'Students' },
@@ -843,6 +853,30 @@ export default function AdminDashboard({
           );
         })}
       </div>
+
+      {/* ======================================================== */}
+      {/* TAB 0: RECRUITMENT OVERVIEW & MONTHLY TARGETS ANALYTICS  */}
+      {/* ======================================================== */}
+      {activeAdminTab === 'overview' && (
+        <div style={{ marginBottom: '24px' }}>
+          <DashboardOverview 
+            tpos={tpos}
+            drives={drives}
+            students={students}
+            users={users}
+            onUpdateStudent={onUpdateStudent}
+            onStartCall={onStartCall}
+            onSelectTab={(tab) => {
+              if (['staff', 'drives', 'students', 'tpos', 'calls', 'followups'].includes(tab)) {
+                setActiveAdminTab(tab);
+              } else if (onSelectTab) {
+                onSelectTab(tab);
+              }
+            }}
+            onLoadDemoData={onLoadDemoData}
+          />
+        </div>
+      )}
 
       {/* ======================================================== */}
       {/* TAB 1: HR STAFF & LOGIN CREDENTIALS PROVISIONING        */}
@@ -1173,9 +1207,27 @@ export default function AdminDashboard({
                 Edit drive dates, packages, roles, or post new campus recruitment drives across all colleges.
               </p>
             </div>
-            <button onClick={handleOpenAddDrive} className="btn-mustard btn-black-sm" style={{ fontWeight: 800 }}>
-              <Plus size={14} color="#154360" /> Post New Campus Drive
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {drives.length > 0 && onClearAllDrives && (
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    if (window.confirm(`Are you sure you want to delete all ${drives.length} campus recruitment drives? This cannot be undone.`)) {
+                      onClearAllDrives();
+                      showNotification('All campus recruitment drives deleted');
+                    }
+                  }} 
+                  className="btn-secondary btn-black-sm"
+                  style={{ color: '#ef4444', borderColor: '#fca5a5' }}
+                  title="Delete all campus recruitment drives"
+                >
+                  <Trash2 size={13} /> Delete All Drives ({drives.length})
+                </button>
+              )}
+              <button onClick={handleOpenAddDrive} className="btn-mustard btn-black-sm" style={{ fontWeight: 800 }}>
+                <Plus size={14} color="#154360" /> Post New Campus Drive
+              </button>
+            </div>
           </div>
 
           <div className="desktop-only" style={{ width: '100%', overflowX: 'hidden' }}>

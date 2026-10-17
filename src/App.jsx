@@ -29,7 +29,9 @@ import {
   Menu,
   ShieldCheck,
   Key,
-  GitFork
+  GitFork,
+  TrendingUp,
+  Target
 } from 'lucide-react';
 
 import { 
@@ -44,6 +46,7 @@ import LoginScreen from './components/LoginScreen';
 import AdminDashboard from './components/AdminDashboard';
 import MainHRDashboard from './components/MainHRDashboard';
 import InternDashboard from './components/InternDashboard';
+import DashboardOverview from './components/DashboardOverview';
 import TPODirectory from './components/TPODirectory';
 import LeadPipeline from './components/LeadPipeline';
 import DriveManagement from './components/DriveManagement';
@@ -1476,11 +1479,23 @@ export default function App() {
           <button 
             onClick={() => { setActiveTab('dashboard'); setIsMobileSidebarOpen(false); }}
             className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
-            title="Dashboard Overview"
+            title="Dashboard"
           >
             <BarChart3 size={17} />
             <span className="nav-label">{currentUser.role === 'ADMIN' ? 'Admin Dashboard' : 'Dashboard'}</span>
             {activeTab === 'dashboard' && (
+              <span style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', background: '#FFDB58' }} />
+            )}
+          </button>
+
+          <button 
+            onClick={() => { setActiveTab('overview'); setIsMobileSidebarOpen(false); }}
+            className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`}
+            title="Overview"
+          >
+            <TrendingUp size={17} />
+            <span className="nav-label">Overview</span>
+            {activeTab === 'overview' && (
               <span style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', background: '#FFDB58' }} />
             )}
           </button>
@@ -1657,6 +1672,7 @@ export default function App() {
                 onAddDrive={handleCreateDrive}
                 onUpdateDrive={handleUpdateDrive}
                 onDeleteDrive={handleDeleteDrive}
+                onClearAllDrives={handleClearAllDrives}
                 onAddStudent={handleAddStudentsBatch}
                 onUpdateStudent={handleUpdateStudent}
                 onDeleteStudent={handleDeleteStudent}
@@ -1673,7 +1689,7 @@ export default function App() {
                 onStartCall={handleStartCall}
                 onSelectTab={setActiveTab}
                 onLoadDemoData={handleLoadDemoData}
-                defaultTab={activeTab === 'adminStaff' ? 'staff' : 'staff'}
+                defaultTab={activeTab === 'adminStaff' ? 'staff' : 'overview'}
               />
             ) : currentUser.role === 'MAIN_HR' ? (
               <MainHRDashboard 
@@ -1692,6 +1708,7 @@ export default function App() {
                 onOpenNewTpoModal={() => setIsGlobalTpoModalOpen(true)}
                 onOpenQuickCallModal={() => setIsGlobalQuickCallModalOpen(true)}
                 onOpenQuickActions={() => setIsGlobalNewMenuOpen(true)}
+                onUpdateStudent={handleUpdateStudent}
               />
             ) : (
               <InternDashboard 
@@ -1705,6 +1722,19 @@ export default function App() {
                 onCompleteFollowUp={handleToggleCompleteFollowUp}
               />
             )
+          )}
+
+          {activeTab === 'overview' && (
+            <DashboardOverview 
+              tpos={tpos}
+              drives={drives}
+              students={students}
+              users={users}
+              onUpdateStudent={handleUpdateStudent}
+              onStartCall={handleStartCall}
+              onSelectTab={setActiveTab}
+              onLoadDemoData={handleLoadDemoData}
+            />
           )}
 
 
