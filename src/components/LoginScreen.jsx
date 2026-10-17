@@ -280,22 +280,16 @@ export default function LoginScreen({ onLogin, users = [] }) {
         {/* Brand Header */}
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>
           <div style={{
-            width: '52px',
-            height: '52px',
-            background: '#154360',
-            color: '#FFDB58',
-            border: '2px solid #FFDB58',
-            borderRadius: '14px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            margin: '0 auto 14px',
-            fontWeight: 800,
-            fontSize: '1.3rem',
-            fontFamily: "'Public Sans', sans-serif",
-            boxShadow: '0 4px 6px -1px rgba(21, 67, 96, 0.25)'
+            margin: '0 auto 12px'
           }}>
-            TA
+            <img 
+              src="/flux-logo.png" 
+              alt="Flux" 
+              style={{ height: '52px', width: 'auto', objectFit: 'contain' }} 
+            />
           </div>
           <h1 style={{ 
             fontSize: '1.45rem', 
@@ -304,7 +298,7 @@ export default function LoginScreen({ onLogin, users = [] }) {
             letterSpacing: '-0.02em', 
             margin: 0 
           }}>
-            TalentConnect CRM
+            Flux TA CRM
           </h1>
           <p style={{ 
             fontSize: '0.85rem', 

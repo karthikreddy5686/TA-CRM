@@ -1456,12 +1456,26 @@ export default function App() {
 
       {/* Sidebar Navigation (Desktop and Off-Canvas Mobile Drawer) */}
       <aside className={`sidebar ${isSidebarCollapsed && !isMobileSidebarOpen ? 'collapsed' : ''} ${isMobileSidebarOpen ? 'mobile-open' : ''}`}>
-        <div className="sidebar-brand">
-          <div className="brand-icon">
-            TA
-          </div>
-          <div className="brand-text">
-            <div className="brand-title">TalentConnect</div>
+        <div className="sidebar-brand" style={{ background: '#ffffff', padding: '10px 14px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
+            <img 
+              src="/flux-logo.png" 
+              alt="Flux" 
+              style={{ 
+                height: '38px', 
+                width: 'auto', 
+                maxWidth: '160px',
+                objectFit: 'contain',
+                display: isSidebarCollapsed && !isMobileSidebarOpen ? 'none' : 'block'
+              }} 
+            />
+            {isSidebarCollapsed && !isMobileSidebarOpen && (
+              <img 
+                src="/flux-icon.png" 
+                alt="Flux" 
+                style={{ height: '32px', width: '32px', objectFit: 'contain' }} 
+              />
+            )}
           </div>
           <button 
             type="button"

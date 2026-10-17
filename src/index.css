@@ -391,13 +391,14 @@ input, select, textarea, button {
 }
 
 .sidebar-brand {
-  padding: 10px 12px;
+  padding: 8px 14px;
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 48px;
+  height: 52px;
   flex-shrink: 0;
+  background: #ffffff;
 }
 
 .brand-icon {
