@@ -1497,7 +1497,6 @@ export default function App() {
             className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
             title="Dashboard"
           >
-            <BarChart3 size={17} />
             <span className="nav-label">{currentUser.role === 'ADMIN' ? 'Admin Dashboard' : 'Dashboard'}</span>
             {activeTab === 'dashboard' && (
               <span style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', background: '#FFDB58' }} />
@@ -1509,34 +1508,17 @@ export default function App() {
             className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`}
             title="Overview"
           >
-            <TrendingUp size={17} />
             <span className="nav-label">Overview</span>
             {activeTab === 'overview' && (
               <span style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', background: '#FFDB58' }} />
             )}
           </button>
 
-          {currentUser.role === 'ADMIN' && (
-            <button 
-              onClick={() => { setActiveTab('adminStaff'); setIsMobileSidebarOpen(false); }}
-              className={`nav-item ${activeTab === 'adminStaff' ? 'active' : ''}`}
-              title="HR & Intern Staff Provisioning"
-            >
-              <Key size={17} />
-              <span className="nav-label">HR Staff & Logins</span>
-              {activeTab === 'adminStaff' && (
-                <span style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', background: '#FFDB58' }} />
-              )}
-            </button>
-          )}
-
-
           <button 
             onClick={() => { setActiveTab('drives'); setIsMobileSidebarOpen(false); }}
             className={`nav-item ${activeTab === 'drives' ? 'active' : ''}`}
             title="Drives"
           >
-            <Calendar size={17} />
             <span className="nav-label">Drives</span>
             {activeTab === 'drives' && (
               <span style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', background: '#FFDB58' }} />
@@ -1548,7 +1530,6 @@ export default function App() {
             className={`nav-item ${activeTab === 'liveBoard' ? 'active' : ''}`}
             title="Students"
           >
-            <Users size={17} />
             <span className="nav-label">Students</span>
             {activeTab === 'liveBoard' && (
               <span style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', background: '#FFDB58' }} />
@@ -1562,7 +1543,6 @@ export default function App() {
             className={`nav-item ${activeTab === 'tpos' ? 'active' : ''}`}
             title="College TPOs"
           >
-            <Building2 size={17} />
             <span className="nav-label">College TPOs</span>
             {activeTab === 'tpos' && (
               <span style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', background: '#FFDB58' }} />
@@ -1574,7 +1554,6 @@ export default function App() {
             className={`nav-item ${activeTab === 'pipeline' ? 'active' : ''}`}
             title="Lead Pipeline"
           >
-            <GitFork size={17} />
             <span className="nav-label">Pipeline</span>
             {activeTab === 'pipeline' && (
               <span style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', background: '#FFDB58' }} />
@@ -1586,7 +1565,6 @@ export default function App() {
             className={`nav-item ${activeTab === 'followups' ? 'active' : ''}`}
             title="Follow-Ups"
           >
-            <Clock size={17} />
             <span className="nav-label">Follow-Ups</span>
             {activeTab === 'followups' && (
               <span style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', background: '#FFDB58' }} />
@@ -1598,7 +1576,6 @@ export default function App() {
             className={`nav-item ${activeTab === 'calls' ? 'active' : ''}`}
             title="Call Logs"
           >
-            <PhoneCall size={17} />
             <span className="nav-label">Call Logs</span>
             {activeTab === 'calls' && (
               <span style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', background: '#FFDB58' }} />
@@ -1677,7 +1654,7 @@ export default function App() {
               Loading view...
             </div>
           }>
-          {(activeTab === 'dashboard' || activeTab === 'adminStaff') && (
+          {activeTab === 'dashboard' && (
             currentUser.role === 'ADMIN' ? (
               <AdminDashboard 
                 users={users}
@@ -1709,7 +1686,7 @@ export default function App() {
                 onStartCall={handleStartCall}
                 onSelectTab={setActiveTab}
                 onLoadDemoData={handleLoadDemoData}
-                defaultTab={activeTab === 'adminStaff' ? 'staff' : 'staff'}
+                defaultTab="staff"
               />
             ) : currentUser.role === 'MAIN_HR' ? (
               <MainHRDashboard 

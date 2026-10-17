@@ -685,18 +685,9 @@ export default function AdminDashboard({
         boxShadow: 'var(--shadow-card)'
       }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-            <span className="badge badge-navy-subtle" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-              <ShieldCheck size={13} color="#154360" /> Geonixa Admin Control
-            </span>
-            <span style={{ fontSize: '0.72rem', color: '#71717a' }}>• Master Authority & Provisioning</span>
-          </div>
           <h1 style={{ fontSize: '1.45rem', fontWeight: 800, color: '#154360', letterSpacing: '-0.02em', margin: 0 }}>
-            Admin Master Dashboard
+            Admin Dashboard
           </h1>
-          <p style={{ color: '#52525b', fontSize: '0.85rem', marginTop: '4px', maxWidth: '650px' }}>
-            Provision login credentials for HR Managers & HR Interns, edit details across all CRM sections, and post new records.
-          </p>
         </div>
 
         {/* Global Quick Post Action Buttons */}
@@ -708,7 +699,7 @@ export default function AdminDashboard({
             style={{ fontWeight: 800 }}
             title="Provision a new HR or Intern account with login credentials"
           >
-            <Key size={14} color="#154360" /> Add HR / Intern
+            Add HR / Intern
           </button>
 
           <button 
@@ -717,7 +708,7 @@ export default function AdminDashboard({
             className="btn-secondary btn-black-sm"
             title="Post a new campus recruitment drive"
           >
-            <Plus size={14} /> Post Drive
+            Post Drive
           </button>
 
           <button 
@@ -726,7 +717,7 @@ export default function AdminDashboard({
             className="btn-secondary btn-black-sm"
             title="Post a new candidate to the student pipeline"
           >
-            <UserPlus size={14} /> Post Student
+            Post Student
           </button>
 
           <button 
@@ -735,7 +726,7 @@ export default function AdminDashboard({
             className="btn-secondary btn-black-sm"
             title="Post a new college placement officer lead"
           >
-            <Building2 size={14} /> Post TPO
+            Post TPO
           </button>
         </div>
       </div>
@@ -745,9 +736,6 @@ export default function AdminDashboard({
         <div className="metric-card" onClick={() => setActiveAdminTab('staff')} style={{ cursor: 'pointer' }}>
           <div className="metric-header">
             <span className="metric-title">HR Staff Accounts</span>
-            <div className="metric-icon-box" style={{ background: '#ebf5fb', borderColor: '#aed6f1' }}>
-              <Users size={18} color="#154360" />
-            </div>
           </div>
           <div className="metric-value">{hrStaffList.length}</div>
           <div className="metric-subtext">
@@ -758,9 +746,6 @@ export default function AdminDashboard({
         <div className="metric-card" onClick={() => setActiveAdminTab('drives')} style={{ cursor: 'pointer' }}>
           <div className="metric-header">
             <span className="metric-title">Drives</span>
-            <div className="metric-icon-box" style={{ background: '#fffdf0', borderColor: '#fae27a' }}>
-              <Calendar size={18} color="#154360" />
-            </div>
           </div>
           <div className="metric-value">{drives.length}</div>
           <div className="metric-subtext">
@@ -771,9 +756,6 @@ export default function AdminDashboard({
         <div className="metric-card" onClick={() => setActiveAdminTab('students')} style={{ cursor: 'pointer' }}>
           <div className="metric-header">
             <span className="metric-title">Students</span>
-            <div className="metric-icon-box" style={{ background: '#ebf5fb', borderColor: '#aed6f1' }}>
-              <Briefcase size={18} color="#154360" />
-            </div>
           </div>
           <div className="metric-value">{students.length}</div>
           <div className="metric-subtext">
@@ -784,9 +766,6 @@ export default function AdminDashboard({
         <div className="metric-card" onClick={() => setActiveAdminTab('tpos')} style={{ cursor: 'pointer' }}>
           <div className="metric-header">
             <span className="metric-title">College TPOs</span>
-            <div className="metric-icon-box" style={{ background: '#fffdf0', borderColor: '#fae27a' }}>
-              <Building2 size={18} color="#154360" />
-            </div>
           </div>
           <div className="metric-value">{tpos.length}</div>
           <div className="metric-subtext">
@@ -797,9 +776,6 @@ export default function AdminDashboard({
         <div className="metric-card" onClick={() => setActiveAdminTab('calls')} style={{ cursor: 'pointer' }}>
           <div className="metric-header">
             <span className="metric-title">Total Calling Time</span>
-            <div className="metric-icon-box" style={{ background: '#ebf5fb', borderColor: '#aed6f1' }}>
-              <PhoneCall size={18} color="#154360" />
-            </div>
           </div>
           <div className="metric-value">{formatDuration(totalCallSeconds)}</div>
           <div className="metric-subtext">
