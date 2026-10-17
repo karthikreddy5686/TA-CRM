@@ -1453,7 +1453,6 @@ export default function App() {
       {/* Sleek Top Navbar (matching reference design) */}
       <TopNavbar 
         currentUser={currentUser}
-        activeTab={activeTab}
         isSidebarCollapsed={isSidebarCollapsed}
         onToggleSidebar={() => {
           if (window.innerWidth <= 768) {
@@ -1464,7 +1463,6 @@ export default function App() {
         }}
         onOpenSearch={() => setIsCommandPaletteOpen(true)}
         onOpenChat={() => setIsInternalChatOpen(true)}
-        onOpenQuickCall={() => setIsGlobalQuickCallModalOpen(true)}
         onOpenLogout={() => setIsLogoutModalOpen(true)}
       />
 

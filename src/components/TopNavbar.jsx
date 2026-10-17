@@ -3,46 +3,26 @@ import {
   PanelLeft, 
   Search, 
   MessageSquare, 
-  Phone, 
-  LogOut,
-  ChevronRight,
-  Menu
+  LogOut 
 } from 'lucide-react';
-
-const TAB_TITLES = {
-  dashboard: 'Admin Dashboard',
-  overview: 'Overview',
-  drives: 'Campus Drives',
-  liveBoard: 'Students',
-  tpos: 'College TPOs',
-  pipeline: 'Lead Pipeline',
-  followups: 'Follow-Ups',
-  calls: 'Call Logs'
-};
 
 export default function TopNavbar({
   currentUser,
-  activeTab,
   isSidebarCollapsed,
   onToggleSidebar,
   onOpenSearch,
   onOpenChat,
-  onOpenQuickCall,
   onOpenLogout
 }) {
-  const currentTabName = currentUser?.role === 'ADMIN' && activeTab === 'dashboard'
-    ? 'Admin Dashboard'
-    : (TAB_TITLES[activeTab] || 'Workspace');
-
   const roleLabel = currentUser?.role === 'ADMIN'
-    ? 'SUPER ADMIN'
+    ? 'Super Admin'
     : currentUser?.role === 'MAIN_HR'
-      ? 'HR MANAGER'
-      : 'HR INTERN';
+      ? 'HR Manager'
+      : 'HR Intern';
 
   return (
     <header className="app-top-navbar">
-      {/* Left: Brand Logo, Role Badge, Separator, Sidebar Toggle, Breadcrumbs */}
+      {/* Left: Brand Logo & Sidebar Toggle */}
       <div className="navbar-left-group">
         <div className="navbar-brand-link">
           <img 
@@ -50,12 +30,7 @@ export default function TopNavbar({
             alt="Flux" 
             className="navbar-logo-img"
           />
-          <span className="navbar-role-pill">
-            {roleLabel}
-          </span>
         </div>
-
-        <div className="navbar-v-divider" />
 
         <button 
           type="button" 
@@ -65,12 +40,6 @@ export default function TopNavbar({
         >
           <PanelLeft size={16} />
         </button>
-
-        <div className="navbar-breadcrumb">
-          <span className="navbar-breadcrumb-root">Workspace</span>
-          <ChevronRight size={12} className="navbar-breadcrumb-sep" />
-          <span className="navbar-breadcrumb-current">{currentTabName}</span>
-        </div>
       </div>
 
       {/* Center: Search Workspace with ⌘K Badge */}
@@ -88,7 +57,7 @@ export default function TopNavbar({
         </div>
       </div>
 
-      {/* Right: Internal Chat, Quick Call, User Logout */}
+      {/* Right: Internal Chat & User Logout */}
       <div className="navbar-right-group">
         <button 
           type="button" 
@@ -98,15 +67,6 @@ export default function TopNavbar({
         >
           <MessageSquare size={14} />
           <span>Internal Chat</span>
-        </button>
-
-        <button 
-          type="button" 
-          onClick={onOpenQuickCall}
-          className="navbar-quick-call-btn"
-          title="Quick Outbound Call"
-        >
-          <Phone size={14} />
         </button>
 
         <div 
