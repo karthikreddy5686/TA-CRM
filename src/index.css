@@ -2309,8 +2309,8 @@ input[type="checkbox"] {
 
 .app-top-navbar {
   height: 50px;
-  background: #0B1320;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: #154360;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2351,16 +2351,16 @@ input[type="checkbox"] {
   text-transform: uppercase;
   padding: 2px 8px;
   border-radius: 4px;
-  color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.35);
-  background: rgba(16, 185, 129, 0.08);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.4);
+  background: rgba(14, 46, 66, 0.6);
   white-space: nowrap;
 }
 
 .navbar-v-divider {
   width: 1px;
   height: 18px;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.2);
   margin: 0 4px;
   flex-shrink: 0;
 }
@@ -2368,7 +2368,7 @@ input[type="checkbox"] {
 .navbar-panel-btn {
   background: transparent;
   border: none;
-  color: #94a3b8;
+  color: #cbd5e1;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -2381,7 +2381,7 @@ input[type="checkbox"] {
 }
 
 .navbar-panel-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.12);
   color: #ffffff;
 }
 
@@ -2395,12 +2395,12 @@ input[type="checkbox"] {
 }
 
 .navbar-breadcrumb-root {
-  color: #94a3b8;
+  color: #cbd5e1;
   font-weight: 500;
 }
 
 .navbar-breadcrumb-sep {
-  color: #64748b;
+  color: #94a3b8;
   font-size: 0.76rem;
 }
 
@@ -2422,28 +2422,28 @@ input[type="checkbox"] {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(14, 46, 66, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 7px;
   padding: 5px 12px;
   width: 100%;
   max-width: 380px;
   cursor: pointer;
   transition: all 0.15s ease;
-  color: #94a3b8;
+  color: #cbd5e1;
   box-sizing: border-box;
 }
 
 .navbar-search-bar:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
-  color: #e2e8f0;
+  background: rgba(14, 46, 66, 0.9);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #ffffff;
 }
 
 .navbar-search-placeholder {
   font-size: 0.82rem;
   flex: 1;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.65);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2452,11 +2452,11 @@ input[type="checkbox"] {
 .navbar-search-kbd {
   font-size: 0.65rem;
   font-family: inherit;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 4px;
   padding: 2px 6px;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.8);
   font-weight: 600;
 }
 
@@ -2471,13 +2471,13 @@ input[type="checkbox"] {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(14, 46, 66, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 7px;
   padding: 5px 12px;
   font-size: 0.8rem;
   font-weight: 600;
-  color: #e2e8f0;
+  color: #ffffff;
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
@@ -2485,17 +2485,17 @@ input[type="checkbox"] {
 
 .navbar-chat-btn:hover {
   background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.3);
   color: #ffffff;
 }
 
 .navbar-quick-call-btn {
   width: 32px;
   height: 32px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(14, 46, 66, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 7px;
-  color: #10b981;
+  color: #34d399;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2504,16 +2504,17 @@ input[type="checkbox"] {
 }
 
 .navbar-quick-call-btn:hover {
-  background: rgba(16, 185, 129, 0.15);
-  border-color: rgba(16, 185, 129, 0.4);
+  background: rgba(16, 185, 129, 0.2);
+  border-color: rgba(52, 211, 153, 0.5);
+  color: #ffffff;
 }
 
 .navbar-user-btn {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(14, 46, 66, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 7px;
   padding: 3px 8px 3px 4px;
   cursor: pointer;
@@ -2522,21 +2523,22 @@ input[type="checkbox"] {
 }
 
 .navbar-user-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .navbar-avatar {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #154360;
+  background: #0e2e42;
   color: #FFDB58;
   font-size: 0.65rem;
   font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #FFDB58;
+  border: 1.5px solid #FFDB58;
 }
 
 @keyframes slideInRight {

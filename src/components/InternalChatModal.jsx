@@ -101,20 +101,20 @@ export default function InternalChatModal({ isOpen, onClose, currentUser, users 
           width: '100%',
           maxWidth: '440px',
           height: '100%',
-          background: '#0B1320',
+          background: '#0e2e42',
           color: '#ffffff',
           display: 'flex',
           flexDirection: 'column',
           boxShadow: '-8px 0 25px rgba(0, 0, 0, 0.4)',
-          borderLeft: '1px solid rgba(255, 255, 255, 0.1)',
+          borderLeft: '1px solid rgba(255, 255, 255, 0.12)',
           animation: 'slideInRight 0.22s cubic-bezier(0.16, 1, 0.3, 1)'
         }}
       >
         {/* Header */}
         <div style={{
           padding: '16px 20px',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-          background: '#0E1726',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
+          background: '#154360',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
