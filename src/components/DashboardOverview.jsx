@@ -465,60 +465,62 @@ export default function DashboardOverview({
         </div>
 
         <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
-          gap: '8px',
-          alignItems: 'center'
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          flexWrap: 'nowrap',
+          width: '100%',
+          overflowX: 'auto'
         }}>
           {/* Step 1: TPOs */}
-          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '9px 10px', textAlign: 'center' }}>
-            <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>1. TPO Colleges</div>
-            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#154360', margin: '2px 0' }}>{tpoStats.totalTpos}</div>
-            <div style={{ fontSize: '0.66rem', color: '#0284c7', fontWeight: 600 }}>{tpoStats.confirmedTpos} Confirmed</div>
+          <div style={{ flex: 1, minWidth: 0, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px 5px', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.62rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>1. TPO Colleges</div>
+            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#154360', margin: '2px 0' }}>{tpoStats.totalTpos}</div>
+            <div style={{ fontSize: '0.62rem', color: '#0284c7', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tpoStats.confirmedTpos} Confirmed</div>
           </div>
 
-          <div style={{ textAlign: 'center', color: '#475569', fontSize: '0.75rem', fontWeight: 700 }} className="desktop-only">
+          <div style={{ flexShrink: 0, textAlign: 'center', color: '#475569', fontSize: '0.72rem', fontWeight: 700, whiteSpace: 'nowrap', padding: '0 2px' }}>
             → {tpoStats.conversionRate}%
           </div>
 
           {/* Step 2: Drives */}
-          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '9px 10px', textAlign: 'center' }}>
-            <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>2. Campus Drives</div>
-            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0e7490', margin: '2px 0' }}>{driveStats.totalDrives}</div>
-            <div style={{ fontSize: '0.66rem', color: '#10b981', fontWeight: 600 }}>{driveStats.successfulDrives} Successful ({driveStats.successRate}%)</div>
+          <div style={{ flex: 1, minWidth: 0, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px 5px', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.62rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>2. Campus Drives</div>
+            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0e7490', margin: '2px 0' }}>{driveStats.totalDrives}</div>
+            <div style={{ fontSize: '0.62rem', color: '#10b981', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{driveStats.successfulDrives} Successful ({driveStats.successRate}%)</div>
           </div>
 
-          <div style={{ textAlign: 'center', color: '#475569', fontSize: '0.75rem', fontWeight: 700 }} className="desktop-only">
+          <div style={{ flexShrink: 0, textAlign: 'center', color: '#475569', fontSize: '0.72rem', fontWeight: 700, whiteSpace: 'nowrap', padding: '0 2px' }}>
             → {studentStats.selectionRate}%
           </div>
 
           {/* Step 3: Selections */}
-          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '9px 10px', textAlign: 'center' }}>
-            <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>3. Selected Students</div>
-            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#6366f1', margin: '2px 0' }}>{studentStats.selectedCount}</div>
-            <div style={{ fontSize: '0.66rem', color: '#6366f1', fontWeight: 600 }}>Campus Offers</div>
+          <div style={{ flex: 1, minWidth: 0, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px 5px', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.62rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>3. Selected Students</div>
+            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#6366f1', margin: '2px 0' }}>{studentStats.selectedCount}</div>
+            <div style={{ fontSize: '0.62rem', color: '#6366f1', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Campus Offers</div>
           </div>
 
-          <div style={{ textAlign: 'center', color: '#475569', fontSize: '0.75rem', fontWeight: 700 }} className="desktop-only">
+          <div style={{ flexShrink: 0, textAlign: 'center', color: '#475569', fontSize: '0.72rem', fontWeight: 700, whiteSpace: 'nowrap', padding: '0 2px' }}>
             → {studentStats.onboardingRate}%
           </div>
 
           {/* Step 4: Onboarded */}
-          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '9px 10px', textAlign: 'center' }}>
-            <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>4. Day 1 Onboarded</div>
-            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#10b981', margin: '2px 0' }}>{studentStats.onboardedCount}</div>
-            <div style={{ fontSize: '0.66rem', color: '#166534', fontWeight: 600 }}>Joined Workplace</div>
+          <div style={{ flex: 1, minWidth: 0, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px 5px', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.62rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>4. Day 1 Onboarded</div>
+            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#10b981', margin: '2px 0' }}>{studentStats.onboardedCount}</div>
+            <div style={{ fontSize: '0.62rem', color: '#166534', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Joined Workplace</div>
           </div>
 
-          <div style={{ textAlign: 'center', color: '#475569', fontSize: '0.75rem', fontWeight: 700 }} className="desktop-only">
+          <div style={{ flexShrink: 0, textAlign: 'center', color: '#475569', fontSize: '0.72rem', fontWeight: 700, whiteSpace: 'nowrap', padding: '0 2px' }}>
             → {studentStats.retentionRate30}%
           </div>
 
           {/* Step 5: 30+ Days Employed */}
-          <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', padding: '9px 10px', textAlign: 'center' }}>
-            <div style={{ fontSize: '0.68rem', color: '#92400e', fontWeight: 800, textTransform: 'uppercase' }}>5. Min 30 Days Retained</div>
-            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#b45309', margin: '2px 0' }}>{studentStats.retained30Count}</div>
-            <div style={{ fontSize: '0.66rem', color: '#92400e', fontWeight: 700 }}>Milestone Reached</div>
+          <div style={{ flex: 1, minWidth: 0, background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', padding: '8px 5px', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.62rem', color: '#92400e', fontWeight: 800, textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>5. 30+ Days Retained</div>
+            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#b45309', margin: '2px 0' }}>{studentStats.retained30Count}</div>
+            <div style={{ fontSize: '0.62rem', color: '#92400e', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Milestone Reached</div>
           </div>
         </div>
       </div>
