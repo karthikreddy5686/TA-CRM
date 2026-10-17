@@ -361,77 +361,28 @@ export default function DashboardOverview({
         </div>
       )}
 
-      {/* Header Banner */}
+      {/* Header Banner - Only Recruitment & Placement Overview Title */}
       <div style={{
         background: 'linear-gradient(135deg, #154360 0%, #0e2e42 100%)',
         color: '#ffffff',
-        borderRadius: '12px',
-        padding: '20px 24px',
+        borderRadius: '10px',
+        padding: '14px 20px',
         boxShadow: 'var(--shadow-card)',
         display: 'flex',
-        flexWrap: 'wrap',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: '16px'
+        alignItems: 'center'
       }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-            <span style={{ 
-              background: '#FFDB58', 
-              color: '#154360', 
-              fontSize: '0.68rem', 
-              fontWeight: 800, 
-              padding: '2px 8px', 
-              borderRadius: '4px',
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em'
-            }}>
-              Recruitment Pipeline
-            </span>
-            <span style={{ fontSize: '0.78rem', color: '#93c5fd', fontWeight: 600 }}>
-              End-to-End Placement Overview
-            </span>
-          </div>
-          <h1 style={{ margin: 0, fontSize: '1.45rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#ffffff' }}>
-            Recruitment & Placement Overview
-          </h1>
-          <p style={{ margin: '4px 0 0 0', fontSize: '0.82rem', color: '#cbd5e1' }}>
-            Live Funnel: College TPOs → Campus Drives → Candidate Selections → Onboarding → Min 30 Days of Employment
-          </p>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-          {/* Real Range Filter */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.1)', padding: '5px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)' }}>
-            <Calendar size={14} color="#FFDB58" />
-            <select 
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: '#ffffff',
-                fontSize: '0.82rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-                outline: 'none'
-              }}
-            >
-              <option value="ALL" style={{ background: '#154360', color: '#fff' }}>All Time (All Records)</option>
-              <option value="PAST_30" style={{ background: '#154360', color: '#fff' }}>Recent Activity</option>
-            </select>
-          </div>
-        </div>
+        <h1 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#ffffff' }}>
+          Recruitment & Placement Overview
+        </h1>
       </div>
 
-      {/* Top 5 Real Metric Cards (Zero Targets, Zero Hardcoding) */}
+      {/* Top 5 Real Metric Cards (Zero Targets, Zero Hardcoding, Clean without accent lines or icons) */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
         gap: '12px'
       }}>
         {realMetricCards.map(metric => {
-          const IconComp = metric.icon;
           return (
             <div 
               key={metric.id}
@@ -443,48 +394,37 @@ export default function DashboardOverview({
               }}
               style={{ 
                 cursor: 'pointer',
-                borderTop: `3px solid ${metric.accentColor}`,
-                padding: '14px 16px',
+                padding: '12px 14px',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
-                transition: 'all 0.18s ease'
+                transition: 'all 0.18s ease',
+                border: '1px solid #e2e8f0',
+                borderRadius: '10px'
               }}
             >
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <div style={{ marginBottom: '6px' }}>
                   <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569' }}>
                     {metric.title}
                   </span>
-                  <div style={{ 
-                    width: '32px', 
-                    height: '32px', 
-                    borderRadius: '8px', 
-                    background: metric.badgeBg, 
-                    border: `1px solid ${metric.badgeBorder}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <IconComp size={16} color={metric.accentColor} />
-                  </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '1.85rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em', lineHeight: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '3px' }}>
+                  <span style={{ fontSize: '1.75rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em', lineHeight: 1 }}>
                     {metric.value}
                   </span>
                 </div>
 
-                <div style={{ fontSize: '0.74rem', color: '#64748b', marginBottom: '10px' }}>
+                <div style={{ fontSize: '0.72rem', color: '#64748b', marginBottom: '8px' }}>
                   {metric.subtext}
                 </div>
               </div>
 
               <div>
                 <span style={{ 
-                  fontSize: '0.72rem', 
-                  padding: '3px 8px', 
+                  fontSize: '0.7rem', 
+                  padding: '2px 7px', 
                   borderRadius: '5px',
                   background: metric.badgeBg,
                   color: metric.accentColor,
@@ -501,21 +441,21 @@ export default function DashboardOverview({
       </div>
 
       {/* Complete Recruitment Pipeline Funnel Strip */}
-      <div className="content-card" style={{ padding: '16px 20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
+      <div className="content-card" style={{ padding: '14px 18px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
           <div>
-            <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: '#154360' }}>
+            <h3 style={{ margin: 0, fontSize: '0.92rem', fontWeight: 800, color: '#154360' }}>
               Full Funnel Conversion Rate (Outreach → Min 30 Days Retention)
             </h3>
-            <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: '#64748b' }}>
+            <p style={{ margin: '2px 0 0 0', fontSize: '0.73rem', color: '#64748b' }}>
               Stage-by-stage real conversion efficiency from college contact to permanent 30+ day retained employment
             </p>
           </div>
           <span style={{ 
-            fontSize: '0.72rem', 
+            fontSize: '0.7rem', 
             background: '#fffbeb', 
             color: '#92400e', 
-            padding: '4px 10px', 
+            padding: '3px 8px', 
             borderRadius: '6px', 
             fontWeight: 800,
             border: '1px solid #fde68a'
@@ -526,83 +466,78 @@ export default function DashboardOverview({
 
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
           gap: '8px',
           alignItems: 'center'
         }}>
           {/* Step 1: TPOs */}
-          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 12px', textAlign: 'center' }}>
-            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>1. TPO Colleges</div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#154360', margin: '2px 0' }}>{tpoStats.totalTpos}</div>
-            <div style={{ fontSize: '0.68rem', color: '#0284c7', fontWeight: 600 }}>{tpoStats.confirmedTpos} Confirmed</div>
+          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '9px 10px', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>1. TPO Colleges</div>
+            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#154360', margin: '2px 0' }}>{tpoStats.totalTpos}</div>
+            <div style={{ fontSize: '0.66rem', color: '#0284c7', fontWeight: 600 }}>{tpoStats.confirmedTpos} Confirmed</div>
           </div>
 
-          <div style={{ textAlign: 'center', color: '#94a3b8' }} className="desktop-only">
-            <ChevronRight size={18} style={{ margin: '0 auto' }} />
-            <div style={{ fontSize: '0.62rem', fontWeight: 700, color: '#475569' }}>{tpoStats.conversionRate}%</div>
+          <div style={{ textAlign: 'center', color: '#475569', fontSize: '0.75rem', fontWeight: 700 }} className="desktop-only">
+            → {tpoStats.conversionRate}%
           </div>
 
           {/* Step 2: Drives */}
-          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 12px', textAlign: 'center' }}>
-            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>2. Campus Drives</div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0e7490', margin: '2px 0' }}>{driveStats.totalDrives}</div>
-            <div style={{ fontSize: '0.68rem', color: '#10b981', fontWeight: 600 }}>{driveStats.successfulDrives} Successful ({driveStats.successRate}%)</div>
+          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '9px 10px', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>2. Campus Drives</div>
+            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0e7490', margin: '2px 0' }}>{driveStats.totalDrives}</div>
+            <div style={{ fontSize: '0.66rem', color: '#10b981', fontWeight: 600 }}>{driveStats.successfulDrives} Successful ({driveStats.successRate}%)</div>
           </div>
 
-          <div style={{ textAlign: 'center', color: '#94a3b8' }} className="desktop-only">
-            <ChevronRight size={18} style={{ margin: '0 auto' }} />
-            <div style={{ fontSize: '0.62rem', fontWeight: 700, color: '#475569' }}>{studentStats.selectionRate}%</div>
+          <div style={{ textAlign: 'center', color: '#475569', fontSize: '0.75rem', fontWeight: 700 }} className="desktop-only">
+            → {studentStats.selectionRate}%
           </div>
 
           {/* Step 3: Selections */}
-          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 12px', textAlign: 'center' }}>
-            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>3. Selected Students</div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#6366f1', margin: '2px 0' }}>{studentStats.selectedCount}</div>
-            <div style={{ fontSize: '0.68rem', color: '#6366f1', fontWeight: 600 }}>Campus Offers</div>
+          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '9px 10px', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>3. Selected Students</div>
+            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#6366f1', margin: '2px 0' }}>{studentStats.selectedCount}</div>
+            <div style={{ fontSize: '0.66rem', color: '#6366f1', fontWeight: 600 }}>Campus Offers</div>
           </div>
 
-          <div style={{ textAlign: 'center', color: '#94a3b8' }} className="desktop-only">
-            <ChevronRight size={18} style={{ margin: '0 auto' }} />
-            <div style={{ fontSize: '0.62rem', fontWeight: 700, color: '#475569' }}>{studentStats.onboardingRate}%</div>
+          <div style={{ textAlign: 'center', color: '#475569', fontSize: '0.75rem', fontWeight: 700 }} className="desktop-only">
+            → {studentStats.onboardingRate}%
           </div>
 
           {/* Step 4: Onboarded */}
-          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 12px', textAlign: 'center' }}>
-            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>4. Day 1 Onboarded</div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#10b981', margin: '2px 0' }}>{studentStats.onboardedCount}</div>
-            <div style={{ fontSize: '0.68rem', color: '#166534', fontWeight: 600 }}>Joined Workplace</div>
+          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '9px 10px', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>4. Day 1 Onboarded</div>
+            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#10b981', margin: '2px 0' }}>{studentStats.onboardedCount}</div>
+            <div style={{ fontSize: '0.66rem', color: '#166534', fontWeight: 600 }}>Joined Workplace</div>
           </div>
 
-          <div style={{ textAlign: 'center', color: '#94a3b8' }} className="desktop-only">
-            <ChevronRight size={18} style={{ margin: '0 auto' }} />
-            <div style={{ fontSize: '0.62rem', fontWeight: 700, color: '#475569' }}>{studentStats.retentionRate30}%</div>
+          <div style={{ textAlign: 'center', color: '#475569', fontSize: '0.75rem', fontWeight: 700 }} className="desktop-only">
+            → {studentStats.retentionRate30}%
           </div>
 
           {/* Step 5: 30+ Days Employed */}
-          <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', padding: '10px 12px', textAlign: 'center' }}>
-            <div style={{ fontSize: '0.7rem', color: '#92400e', fontWeight: 800, textTransform: 'uppercase' }}>5. Min 30 Days Retained</div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#b45309', margin: '2px 0' }}>{studentStats.retained30Count}</div>
-            <div style={{ fontSize: '0.68rem', color: '#92400e', fontWeight: 700 }}>Milestone Reached 🏆</div>
+          <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', padding: '9px 10px', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.68rem', color: '#92400e', fontWeight: 800, textTransform: 'uppercase' }}>5. Min 30 Days Retained</div>
+            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#b45309', margin: '2px 0' }}>{studentStats.retained30Count}</div>
+            <div style={{ fontSize: '0.66rem', color: '#92400e', fontWeight: 700 }}>Milestone Reached</div>
           </div>
         </div>
       </div>
 
-      {/* Sub-Tabs Navigation for Drill-Down Views */}
+      {/* Sub-Tabs Navigation for Drill-Down Views (Clean without background line) */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         flexWrap: 'wrap',
         gap: '8px',
-        borderBottom: '1px solid #e2e8f0',
-        paddingBottom: '8px'
+        paddingBottom: '4px'
       }}>
         <div style={{ display: 'flex', gap: '6px', overflowX: 'auto' }}>
           {[
-            { id: 'all', label: '📊 All Overview' },
-            { id: 'tpos', label: `🏛️ TPOs & Successful Drives (${tpoStats.totalTpos})` },
-            { id: 'selections', label: `🎓 Selected Students & Onboarding (${studentStats.selectedCount})` },
-            { id: 'retention', label: `🛡️ Min 30 Days Employment Retention (${studentStats.retained30Count})` },
+            { id: 'all', label: 'All Overview' },
+            { id: 'tpos', label: `TPOs & Drives (${tpoStats.totalTpos})` },
+            { id: 'selections', label: `Selected Students (${studentStats.selectedCount})` },
+            { id: 'retention', label: `30-Day Retention (${studentStats.retained30Count})` },
           ].map(tab => {
             const isActive = overviewTab === tab.id;
             return (
@@ -611,9 +546,9 @@ export default function DashboardOverview({
                 type="button"
                 onClick={() => setOverviewTab(tab.id)}
                 style={{
-                  padding: '7px 14px',
-                  borderRadius: '8px',
-                  fontSize: '0.82rem',
+                  padding: '6px 12px',
+                  borderRadius: '7px',
+                  fontSize: '0.78rem',
                   fontWeight: isActive ? 800 : 600,
                   border: '1px solid',
                   borderColor: isActive ? '#154360' : '#e2e8f0',
@@ -633,19 +568,18 @@ export default function DashboardOverview({
         {/* Search and Status Filter */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <div style={{ position: 'relative' }}>
-            <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
             <input 
               type="text" 
-              placeholder="Search candidate, college, roll..." 
+              placeholder="Search candidate, college..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
-                padding: '5px 10px 5px 30px',
+                padding: '4px 10px',
                 borderRadius: '6px',
                 border: '1px solid #cbd5e1',
-                fontSize: '0.8rem',
+                fontSize: '0.76rem',
                 outline: 'none',
-                width: '190px'
+                width: '180px'
               }}
             />
           </div>
@@ -655,10 +589,10 @@ export default function DashboardOverview({
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               style={{
-                padding: '5px 8px',
+                padding: '4px 8px',
                 borderRadius: '6px',
                 border: '1px solid #cbd5e1',
-                fontSize: '0.8rem',
+                fontSize: '0.76rem',
                 fontWeight: 600,
                 color: '#334155'
               }}
@@ -677,37 +611,38 @@ export default function DashboardOverview({
       {/* VIEW 1: ALL OVERVIEW (Executive Real Summary)                  */}
       {/* ============================================================== */}
       {overviewTab === 'all' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* 3 Summary Split Cards */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {/* 3 Summary Split Cards - Small and Compact with zero icons & zero inner lines */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '14px'
+            gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
+            gap: '8px'
           }}>
             {/* TPO & Drive Conversion Card */}
-            <div className="content-card" style={{ padding: '16px 18px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Building2 size={18} color="#154360" />
-                  <h4 style={{ margin: 0, fontSize: '0.92rem', fontWeight: 800, color: '#154360' }}>TPO & Drive Success</h4>
-                </div>
-                <span className="badge badge-blue">{tpoStats.conversionRate}% Conversion</span>
+            <div className="content-card" style={{ padding: '8px 12px', borderRadius: '7px', border: '1px solid #e2e8f0', marginBottom: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <h4 style={{ margin: 0, fontSize: '0.8rem', fontWeight: 800, color: '#154360' }}>
+                  TPO & Drive Success
+                </h4>
+                <span className="badge badge-blue" style={{ fontSize: '0.64rem', padding: '1px 5px' }}>
+                  {tpoStats.conversionRate}% Conversion
+                </span>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.8rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f1f5f9' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '0.72rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 0' }}>
                   <span style={{ color: '#64748b' }}>Total College TPOs Contacted:</span>
                   <span style={{ fontWeight: 700, color: '#0f172a' }}>{tpoStats.contactedTpos} / {tpoStats.totalTpos}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f1f5f9' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 0' }}>
                   <span style={{ color: '#64748b' }}>Drives Confirmed by Colleges:</span>
                   <span style={{ fontWeight: 700, color: '#154360' }}>{tpoStats.confirmedTpos}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f1f5f9' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 0' }}>
                   <span style={{ color: '#64748b' }}>Successful Drives with Offers:</span>
                   <span style={{ fontWeight: 800, color: '#10b981' }}>{driveStats.successfulDrives} ({driveStats.successRate}%)</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 0' }}>
                   <span style={{ color: '#64748b' }}>Average Selections Per Drive:</span>
                   <span style={{ fontWeight: 700, color: '#0f172a' }}>
                     {driveStats.totalDrives > 0 ? (studentStats.selectedCount / driveStats.totalDrives).toFixed(1) : 0} offers/drive
@@ -719,50 +654,48 @@ export default function DashboardOverview({
                 type="button"
                 onClick={() => setOverviewTab('tpos')}
                 style={{
-                  marginTop: '12px',
+                  marginTop: '6px',
                   width: '100%',
-                  padding: '7px',
-                  borderRadius: '6px',
+                  padding: '4px',
+                  borderRadius: '5px',
                   border: '1px solid #e2e8f0',
                   background: '#f8fafc',
-                  fontSize: '0.78rem',
+                  fontSize: '0.7rem',
                   fontWeight: 700,
                   color: '#154360',
                   cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '4px'
+                  textAlign: 'center'
                 }}
               >
-                View TPO & Drive Details <ChevronRight size={13} />
+                View TPO & Drive Details →
               </button>
             </div>
 
             {/* Candidate Selection & Onboarding Card */}
-            <div className="content-card" style={{ padding: '16px 18px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <UserCheck size={18} color="#10b981" />
-                  <h4 style={{ margin: 0, fontSize: '0.92rem', fontWeight: 800, color: '#154360' }}>Selections & Onboarding</h4>
-                </div>
-                <span className="badge badge-green">{studentStats.onboardingRate}% Join Rate</span>
+            <div className="content-card" style={{ padding: '8px 12px', borderRadius: '7px', border: '1px solid #e2e8f0', marginBottom: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <h4 style={{ margin: 0, fontSize: '0.8rem', fontWeight: 800, color: '#154360' }}>
+                  Selections & Onboarding
+                </h4>
+                <span className="badge badge-green" style={{ fontSize: '0.64rem', padding: '1px 5px' }}>
+                  {studentStats.onboardingRate}% Join Rate
+                </span>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.8rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f1f5f9' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '0.72rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 0' }}>
                   <span style={{ color: '#64748b' }}>Total Selected Candidates:</span>
                   <span style={{ fontWeight: 800, color: '#6366f1' }}>{studentStats.selectedCount}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f1f5f9' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 0' }}>
                   <span style={{ color: '#64748b' }}>Successfully Onboarded (Joined):</span>
                   <span style={{ fontWeight: 800, color: '#10b981' }}>{studentStats.onboardedCount}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f1f5f9' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 0' }}>
                   <span style={{ color: '#64748b' }}>Offer Accepted (Awaiting Joining):</span>
                   <span style={{ fontWeight: 700, color: '#0284c7' }}>{studentStats.offerAcceptedCount}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 0' }}>
                   <span style={{ color: '#64748b' }}>Documentation Pending:</span>
                   <span style={{ fontWeight: 700, color: '#f59e0b' }}>{studentStats.docsPendingCount}</span>
                 </div>
@@ -772,56 +705,50 @@ export default function DashboardOverview({
                 type="button"
                 onClick={() => setOverviewTab('selections')}
                 style={{
-                  marginTop: '12px',
+                  marginTop: '6px',
                   width: '100%',
-                  padding: '7px',
-                  borderRadius: '6px',
+                  padding: '4px',
+                  borderRadius: '5px',
                   border: '1px solid #e2e8f0',
                   background: '#f8fafc',
-                  fontSize: '0.78rem',
+                  fontSize: '0.7rem',
                   fontWeight: 700,
                   color: '#154360',
                   cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '4px'
+                  textAlign: 'center'
                 }}
               >
-                View Selected Candidates Roster <ChevronRight size={13} />
+                View Selected Candidates Roster →
               </button>
             </div>
 
             {/* Min 30 Days Retention Milestone Card */}
-            <div className="content-card" style={{ padding: '16px 18px', borderLeft: '4px solid #b45309' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <ShieldCheck size={18} color="#b45309" />
-                  <h4 style={{ margin: 0, fontSize: '0.92rem', fontWeight: 800, color: '#92400e' }}>Min 30 Days Retention</h4>
-                </div>
-                <span className="badge badge-amber" style={{ background: '#fffbeb', color: '#92400e', borderColor: '#fde68a' }}>
+            <div className="content-card" style={{ padding: '8px 12px', borderRadius: '7px', border: '1px solid #e2e8f0', marginBottom: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <h4 style={{ margin: 0, fontSize: '0.8rem', fontWeight: 800, color: '#92400e' }}>
+                  Min 30 Days Retention
+                </h4>
+                <span className="badge badge-amber" style={{ fontSize: '0.64rem', padding: '1px 5px', background: '#fffbeb', color: '#92400e', borderColor: '#fde68a' }}>
                   {studentStats.retentionRate30}% Milestone
                 </span>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.8rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f1f5f9' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '0.72rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 0' }}>
                   <span style={{ color: '#64748b' }}>Completed 30+ Days Employed:</span>
-                  <span style={{ fontWeight: 800, color: '#166534' }}>{studentStats.retained30Count} Retained 🏆</span>
+                  <span style={{ fontWeight: 800, color: '#166534' }}>{studentStats.retained30Count} Retained</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f1f5f9' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 0' }}>
                   <span style={{ color: '#64748b' }}>In 30-Day Probation Window:</span>
                   <span style={{ fontWeight: 700, color: '#b45309' }}>{studentStats.inProgress30Count} active in window</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f1f5f9' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 0' }}>
                   <span style={{ color: '#64748b' }}>Early Attrition (&lt; 30 Days):</span>
                   <span style={{ fontWeight: 700, color: '#dc2626' }}>{studentStats.earlyDropoutsCount} dropped</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 0' }}>
                   <span style={{ color: '#64748b' }}>Total Onboarded Candidates:</span>
-                  <span style={{ fontWeight: 700, color: '#154360' }}>
-                    {studentStats.onboardedCount} candidates
-                  </span>
+                  <span style={{ fontWeight: 700, color: '#0f172a' }}>{studentStats.onboardedCount} candidates</span>
                 </div>
               </div>
 
@@ -829,39 +756,36 @@ export default function DashboardOverview({
                 type="button"
                 onClick={() => setOverviewTab('retention')}
                 style={{
-                  marginTop: '12px',
+                  marginTop: '6px',
                   width: '100%',
-                  padding: '7px',
-                  borderRadius: '6px',
+                  padding: '4px',
+                  borderRadius: '5px',
                   border: '1px solid #fde68a',
                   background: '#fffdf0',
-                  fontSize: '0.78rem',
+                  fontSize: '0.7rem',
                   fontWeight: 800,
                   color: '#92400e',
                   cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '4px'
+                  textAlign: 'center'
                 }}
               >
-                Track 30-Day Employment Roster <ChevronRight size={13} />
+                Track 30-Day Employment Roster →
               </button>
             </div>
           </div>
 
-          {/* Real Colleges & TPOs Contributing to Successful Drives */}
-          <div className="content-card">
-            <div className="card-header-row" style={{ padding: '12px 18px', borderBottom: '1px solid #e2e8f0' }}>
+          {/* Real Colleges & TPOs Contributing to Successful Drives - Small & Compact Table Card */}
+          <div className="content-card" style={{ borderRadius: '7px', border: '1px solid #e2e8f0', marginTop: '4px' }}>
+            <div className="card-header-row" style={{ padding: '8px 12px' }}>
               <div>
-                <h3 className="card-title" style={{ fontSize: '0.95rem' }}>Top TPO Partnerships & Drive Performance</h3>
-                <p className="card-subtitle">Colleges driving real selections, onboardings, and retained placements</p>
+                <h3 className="card-title" style={{ fontSize: '0.85rem' }}>Top TPO Partnerships & Drive Performance</h3>
+                <p className="card-subtitle" style={{ fontSize: '0.7rem', margin: 0 }}>Colleges driving real selections, onboardings, and retained placements</p>
               </div>
               <button 
                 type="button" 
                 onClick={() => setOverviewTab('tpos')}
                 className="btn-secondary btn-black-sm"
-                style={{ fontSize: '0.75rem' }}
+                style={{ fontSize: '0.7rem', padding: '3px 8px' }}
               >
                 View Full TPO Table
               </button>
@@ -937,9 +861,9 @@ export default function DashboardOverview({
                                 type: 'AUDIO'
                               })}
                               className="btn-mustard btn-black-sm"
-                              style={{ padding: '3px 8px', fontSize: '0.72rem', gap: '4px' }}
+                              style={{ padding: '3px 8px', fontSize: '0.72rem' }}
                             >
-                              <PhoneCall size={11} color="#154360" /> Call
+                              Call
                             </button>
                           )}
                         </td>
@@ -1376,27 +1300,13 @@ export default function DashboardOverview({
             justifyContent: 'space-between',
             gap: '14px'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{
-                width: '42px',
-                height: '42px',
-                borderRadius: '10px',
-                background: '#b45309',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#ffffff'
-              }}>
-                <ShieldCheck size={24} />
-              </div>
-              <div>
-                <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#92400e' }}>
-                  Post-Onboarding 30-Day Employment Milestone Tracker
-                </h3>
-                <p style={{ margin: '2px 0 0 0', fontSize: '0.78rem', color: '#78350f' }}>
-                  A candidate placement is considered fully successful and verified after completing a minimum of 30 days of active employment.
-                </p>
-              </div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#92400e' }}>
+                Post-Onboarding 30-Day Employment Milestone Tracker
+              </h3>
+              <p style={{ margin: '2px 0 0 0', fontSize: '0.78rem', color: '#78350f' }}>
+                A candidate placement is considered fully successful and verified after completing a minimum of 30 days of active employment.
+              </p>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -1441,7 +1351,7 @@ export default function DashboardOverview({
                 cursor: 'pointer'
               }}
             >
-              <div style={{ fontSize: '0.72rem', color: '#166534', fontWeight: 700 }}>🏆 30+ Days Retained</div>
+              <div style={{ fontSize: '0.72rem', color: '#166534', fontWeight: 700 }}>30+ Days Retained</div>
               <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#166534' }}>{studentStats.retained30Count}</div>
               <div style={{ fontSize: '0.7rem', color: '#166534' }}>Milestone achieved</div>
             </div>
@@ -1456,7 +1366,7 @@ export default function DashboardOverview({
                 cursor: 'pointer'
               }}
             >
-              <div style={{ fontSize: '0.72rem', color: '#92400e', fontWeight: 700 }}>⏳ In 30-Day Window</div>
+              <div style={{ fontSize: '0.72rem', color: '#92400e', fontWeight: 700 }}>In 30-Day Window</div>
               <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#b45309' }}>{studentStats.inProgress30Count}</div>
               <div style={{ fontSize: '0.7rem', color: '#92400e' }}>Probation in progress</div>
             </div>
@@ -1608,12 +1518,9 @@ export default function DashboardOverview({
                                 padding: '3px 8px', 
                                 borderRadius: '4px',
                                 fontSize: '0.72rem',
-                                fontWeight: 800,
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '4px'
+                                fontWeight: 800
                               }}>
-                                <CheckCircle2 size={12} /> 30+ Days Retained
+                                30+ Days Retained
                               </span>
                             ) : isDropped ? (
                               <span style={{ 
@@ -1625,7 +1532,7 @@ export default function DashboardOverview({
                                 fontSize: '0.72rem',
                                 fontWeight: 700
                               }}>
-                                ✕ Dropped &lt; 30 Days
+                                Dropped &lt; 30 Days
                               </span>
                             ) : student.joiningDate ? (
                               <span style={{ 
@@ -1637,7 +1544,7 @@ export default function DashboardOverview({
                                 fontSize: '0.72rem',
                                 fontWeight: 700
                               }}>
-                                ⏳ Day {days} of 30 Window
+                                Day {days} of 30 Window
                               </span>
                             ) : (
                               <span style={{ 
@@ -1659,12 +1566,9 @@ export default function DashboardOverview({
                               <span style={{ 
                                 fontSize: '0.7rem', 
                                 color: '#166534', 
-                                fontWeight: 700,
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '3px'
+                                fontWeight: 700
                               }}>
-                                <ShieldCheck size={13} color="#166534" /> Verified
+                                Verified
                               </span>
                             ) : is30Retained ? (
                               <button
