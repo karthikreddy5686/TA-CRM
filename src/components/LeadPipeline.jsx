@@ -399,7 +399,7 @@ export default function LeadPipeline({
                             paddingTop: '6px',
                             borderTop: '1px solid #f1f5f9'
                           }}>
-                            {/* Left: Call / WA / Email / Followup */}
+                            {/* Left: Call / WA / Email (icon-only) & Follow-up */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                               <button
                                 type="button"
@@ -415,17 +415,17 @@ export default function LeadPipeline({
                                   }
                                 }}
                                 className="btn-mustard btn-black-sm"
+                                title={`Call ${lead.phone || lead.name}`}
                                 style={{
                                   display: 'inline-flex',
                                   alignItems: 'center',
-                                  gap: '6px',
-                                  padding: '5px 12px',
-                                  fontSize: '0.78rem',
-                                  fontWeight: 800,
-                                  borderRadius: '6px'
+                                  justifyContent: 'center',
+                                  padding: '6px 10px',
+                                  borderRadius: '6px',
+                                  cursor: 'pointer'
                                 }}
                               >
-                                <Phone size={13} color="#154360" /> Call {lead.phone}
+                                <Phone size={14} color="#154360" />
                               </button>
 
                               {lead.phone && (
@@ -433,13 +433,12 @@ export default function LeadPipeline({
                                   href={`https://wa.me/${formatPhoneForWa(lead.phone)}?text=Hello%20${encodeURIComponent(lead.name)},%20reaching%20out%20from%20Flux%20regarding%20campus%20placement%20drives.`}
                                   target="_blank"
                                   rel="noopener noreferrer"
+                                  title="WhatsApp"
                                   style={{
                                     display: 'inline-flex',
                                     alignItems: 'center',
-                                    gap: '4px',
-                                    padding: '5px 9px',
-                                    fontSize: '0.75rem',
-                                    fontWeight: 600,
+                                    justifyContent: 'center',
+                                    padding: '6px 10px',
                                     background: '#ecfdf5',
                                     color: '#065f46',
                                     border: '1px solid #a7f3d0',
@@ -447,20 +446,19 @@ export default function LeadPipeline({
                                     textDecoration: 'none'
                                   }}
                                 >
-                                  <MessageSquare size={13} /> WhatsApp
+                                  <MessageSquare size={14} />
                                 </a>
                               )}
 
                               {lead.email && (
                                 <a
                                   href={`mailto:${lead.email}?subject=Campus%20Recruitment%20Drive%20Collaboration%20-%20Flux&body=Dear%20${encodeURIComponent(lead.name)},%0A%0AWe%20would%20like%20to%20conduct%20a%20campus%20recruitment%20drive%20for%20your%20students.%0A%0ABest%20regards,%0AFlux%20Team`}
+                                  title="Email"
                                   style={{
                                     display: 'inline-flex',
                                     alignItems: 'center',
-                                    gap: '4px',
-                                    padding: '5px 9px',
-                                    fontSize: '0.75rem',
-                                    fontWeight: 600,
+                                    justifyContent: 'center',
+                                    padding: '6px 10px',
                                     background: '#eff6ff',
                                     color: '#1e40af',
                                     border: '1px solid #bfdbfe',
@@ -468,7 +466,7 @@ export default function LeadPipeline({
                                     textDecoration: 'none'
                                   }}
                                 >
-                                  <Mail size={13} /> Email
+                                  <Mail size={14} />
                                 </a>
                               )}
 
@@ -482,8 +480,8 @@ export default function LeadPipeline({
                                 style={{
                                   display: 'inline-flex',
                                   alignItems: 'center',
-                                  gap: '4px',
-                                  padding: '5px 9px',
+                                  gap: '5px',
+                                  padding: '6px 10px',
                                   fontSize: '0.75rem',
                                   fontWeight: 600,
                                   background: '#ffffff',
