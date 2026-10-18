@@ -431,7 +431,7 @@
       "notes": "Verify test environment & send calendar invite for round 2 technical interview."
     }
   ],
-  "updatedAt": "2026-10-18T11:02:43.554Z",
+  "updatedAt": "2026-10-18T12:21:55.283Z",
   "emailDispatchLogs": [
     {
       "id": "email-dispatch-1792158616352",
@@ -611,6 +611,48 @@
       "tag": null,
       "timestamp": "2026-10-18T11:02:43.524Z",
       "formattedTime": "04:32 PM"
+    },
+    {
+      "id": "msg-1792324539331-xh2lqx",
+      "channel": "team",
+      "recipientId": null,
+      "recipientName": null,
+      "senderId": "user-admin",
+      "senderName": "Admin",
+      "senderRole": "HR_INTERN",
+      "avatar": "U",
+      "text": "Testing SSE broadcast",
+      "tag": null,
+      "timestamp": "2026-10-18T11:55:39.331Z",
+      "formattedTime": "05:25 PM"
+    },
+    {
+      "id": "msg-1792326040648-m51iv7",
+      "channel": "team",
+      "recipientId": null,
+      "recipientName": null,
+      "senderId": "user-admin",
+      "senderName": "Geonixa Admin",
+      "senderRole": "ADMIN",
+      "avatar": "AD",
+      "text": "Live test from Admin to Muni: All systems operational!",
+      "tag": null,
+      "timestamp": "2026-10-18T12:20:40.637Z",
+      "formattedTime": "05:50 PM"
+    },
+    {
+      "id": "msg-1792326115262-sh88qp",
+      "channel": "team",
+      "recipientId": null,
+      "recipientName": null,
+      "senderId": "intern-1791972714546",
+      "senderName": "muni",
+      "senderRole": "HR_INTERN",
+      "avatar": "MU",
+      "text": "Live test reply from Muni: Message received instantly!",
+      "tag": null,
+      "timestamp": "2026-10-18T12:21:55.234Z",
+      "formattedTime": "05:51 PM"
     }
   ]
 }

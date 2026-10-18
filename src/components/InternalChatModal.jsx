@@ -23,6 +23,10 @@ export default function InternalChatModal({
   onClose, 
   currentUser, 
   users = [],
+  messages: propMessages,
+  onSendMessage,
+  onDeleteMessage,
+  onSyncMessages,
   initialTarget = null,
   onClearInitialTarget = null
 }) {
@@ -33,8 +37,8 @@ export default function InternalChatModal({
   const [inputMessage, setInputMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
 
-  // All messages store
-  const [messages, setMessages] = useState(() => {
+  // Fallback messages store if propMessages is not supplied
+  const [internalMessages, setInternalMessages] = useState(() => {
     try {
       const saved = localStorage.getItem('flux_crm_chat_messages');
       if (saved) {
@@ -44,6 +48,21 @@ export default function InternalChatModal({
     } catch {}
     return [];
   });
+
+  const messages = Array.isArray(propMessages) ? propMessages : internalMessages;
+
+  const setMessages = (updater) => {
+    if (typeof updater === 'function') {
+      const next = updater(messages);
+      if (onSyncMessages) onSyncMessages(next);
+      else setInternalMessages(next);
+      try { localStorage.setItem('flux_crm_chat_messages', JSON.stringify(next)); } catch {}
+    } else {
+      if (onSyncMessages) onSyncMessages(updater);
+      else setInternalMessages(updater);
+      try { localStorage.setItem('flux_crm_chat_messages', JSON.stringify(updater)); } catch {}
+    }
+  };
 
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -71,19 +90,29 @@ export default function InternalChatModal({
     ? getDmChannelId(currentUser?.id, selectedColleague?.id)
     : 'team';
 
-  // Filter messages for current active view
+  // Filter messages for current active view with dual match (by channel ID & by sender/recipient pairing)
   const currentMessages = messages.filter(m => {
     if (activeChannel === 'team') {
       return !m.channel || m.channel === 'team';
     }
-    return m.channel === currentChannelId;
+    if (activeChannel === 'dm' && selectedColleague) {
+      if (m.channel === currentChannelId) return true;
+      if (
+        (m.recipientId === selectedColleague.id && m.senderId === currentUser?.id) ||
+        (m.recipientId === currentUser?.id && m.senderId === selectedColleague.id)
+      ) {
+        return true;
+      }
+      return false;
+    }
+    return false;
   });
 
   // Route to initial target channel/colleague if passed from alert toast
   useEffect(() => {
     if (isOpen && initialTarget) {
       if (initialTarget.channel === 'dm' && initialTarget.senderId) {
-        const targetUser = users.find(u => u && u.id === initialTarget.senderId);
+        const targetUser = users.find(u => u && (u.id === initialTarget.senderId || (u.email && initialTarget.senderId && u.email.toLowerCase() === initialTarget.senderId.toLowerCase())));
         if (targetUser) {
           setSelectedColleague(targetUser);
           setActiveChannel('dm');
@@ -122,15 +151,12 @@ export default function InternalChatModal({
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data.messages)) {
-          setMessages(prev => {
-            // Merge unique by ID
-            const mSet = new Map();
-            prev.forEach(m => mSet.set(m.id, m));
-            data.messages.forEach(m => mSet.set(m.id, m));
-            const merged = Array.from(mSet.values()).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-            try { localStorage.setItem('flux_crm_chat_messages', JSON.stringify(merged)); } catch {}
-            return merged;
-          });
+          if (onSyncMessages) {
+            onSyncMessages(data.messages);
+          } else {
+            setInternalMessages(data.messages);
+          }
+          try { localStorage.setItem('flux_crm_chat_messages', JSON.stringify(data.messages)); } catch {}
         }
       }
     } catch (e) {
@@ -195,6 +221,18 @@ export default function InternalChatModal({
 
     setIsSending(true);
 
+    if (onSendMessage) {
+      await onSendMessage({
+        channel: currentChannelId,
+        recipientId: activeChannel === 'dm' ? selectedColleague?.id : null,
+        recipientName: activeChannel === 'dm' ? selectedColleague?.name : null,
+        text: cleanText
+      });
+      setInputMessage('');
+      setIsSending(false);
+      return;
+    }
+
     const now = new Date();
     const timeFormatted = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -257,6 +295,10 @@ export default function InternalChatModal({
 
   // Delete a message (Allowed for sender or Admin)
   const handleDeleteMessage = async (msgId) => {
+    if (onDeleteMessage) {
+      await onDeleteMessage(msgId);
+      return;
+    }
     setMessages(prev => {
       const next = prev.filter(m => m.id !== msgId);
       try { localStorage.setItem('flux_crm_chat_messages', JSON.stringify(next)); } catch {}
@@ -308,6 +350,7 @@ export default function InternalChatModal({
 
   // Total unread DMs across all colleagues
   const totalUnreadDms = colleagues.reduce((sum, c) => sum + getColleagueUnreadCount(c.id), 0);
+  const unreadColleagues = colleagues.filter(c => getColleagueUnreadCount(c.id) > 0);
 
   // Sort colleagues: unread messages first, then latest message time, then name
   const sortedColleagues = [...filteredColleagues].sort((a, b) => {
@@ -712,6 +755,41 @@ export default function InternalChatModal({
                     {u.name} {u.id === currentUser?.id ? '(You)' : ''}
                   </span>
                 ))}
+              </div>
+            )}
+
+            {/* Unread Direct Message Alert Banner inside Team Hub */}
+            {activeChannel === 'team' && unreadColleagues.length > 0 && (
+              <div 
+                onClick={() => {
+                  setSelectedColleague(unreadColleagues[0]);
+                  setActiveChannel('dm');
+                  try {
+                    localStorage.setItem(`tacrm_dm_read_${currentUser?.id}_${unreadColleagues[0].id}`, new Date().toISOString());
+                  } catch {}
+                }}
+                style={{
+                  padding: '7px 14px',
+                  background: 'rgba(56, 189, 248, 0.14)',
+                  borderBottom: '1px solid rgba(56, 189, 248, 0.35)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  cursor: 'pointer',
+                  color: '#38bdf8',
+                  fontSize: '0.74rem',
+                  fontWeight: 700,
+                  flexShrink: 0,
+                  transition: 'background 0.15s ease'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>💬</span>
+                  <span>{unreadColleagues[0].name} sent you a direct message</span>
+                </div>
+                <span style={{ textDecoration: 'underline', fontSize: '0.7rem', color: '#7dd3fc' }}>
+                  Open DM →
+                </span>
               </div>
             )}
 

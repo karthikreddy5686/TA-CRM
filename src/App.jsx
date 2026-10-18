@@ -641,46 +641,85 @@ export default function App() {
   const [unreadChatCount, setUnreadChatCount] = useState(0);
   const [chatInitialTarget, setChatInitialTarget] = useState(null);
   const [incomingChatAlert, setIncomingChatAlert] = useState(null);
+  const [chatMessages, setChatMessages] = useState(() => {
+    try {
+      const saved = localStorage.getItem('flux_crm_chat_messages');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch {}
+    return [];
+  });
   const lastAlertedChatMsgIdRef = useRef(null);
 
-  // Real-time synchronization of chat messages and unread counters across employees
+  // Helper to process live incoming message with instant chime & toast
+  const handleIncomingChatMessage = (newMsg) => {
+    if (!newMsg || !newMsg.id) return;
+
+    setChatMessages(prev => {
+      if (prev.some(m => m.id === newMsg.id)) return prev;
+      const next = [...prev, newMsg].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+      try { localStorage.setItem('flux_crm_chat_messages', JSON.stringify(next)); } catch {}
+      return next;
+    });
+
+    if (currentUser?.id && newMsg.senderId !== currentUser.id) {
+      const isRelevant = !newMsg.channel || 
+        newMsg.channel === 'team' || 
+        newMsg.recipientId === currentUser.id || 
+        (newMsg.channel?.startsWith('dm_') && newMsg.channel.includes(String(currentUser.id)));
+
+      if (isRelevant) {
+        // Trigger gentle audio chime
+        try { webAudio.playNotification(); } catch {}
+
+        // Show floating notification banner
+        setIncomingChatAlert({
+          id: newMsg.id,
+          senderId: newMsg.senderId,
+          senderName: newMsg.senderName || 'Staff Member',
+          senderRole: newMsg.senderRole || 'HR',
+          avatar: newMsg.avatar || 'U',
+          text: newMsg.text,
+          channel: newMsg.channel,
+          isDm: Boolean(newMsg.channel?.startsWith('dm_') || newMsg.recipientId)
+        });
+
+        // Increment unread count
+        setUnreadChatCount(prev => prev + 1);
+      }
+    }
+  };
+
+  // Real-time synchronization: SSE (0ms latency) + BroadcastChannel + 1500ms Heartbeat + Window Focus wakeup
   useEffect(() => {
     if (!currentUser) return;
 
     const userLastReadKey = `tacrm_chat_last_read_${currentUser.id}`;
 
-    const updateUnreadCount = async () => {
+    const fetchLatestMessages = async () => {
       try {
-        const lastRead = localStorage.getItem(userLastReadKey) || '1970-01-01T00:00:00.000Z';
         const res = await fetch('/api/chat', { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data.messages)) {
-            // Cache messages to local storage for instant render when modal opens
-            try {
-              localStorage.setItem('flux_crm_chat_messages', JSON.stringify(data.messages));
-            } catch {}
+            setChatMessages(data.messages);
+            try { localStorage.setItem('flux_crm_chat_messages', JSON.stringify(data.messages)); } catch {}
 
-            // Messages relevant to current user:
-            // 1) Team messages (channel === 'team' or !channel)
-            // 2) Direct messages where currentUser is recipient or sender
-            const relevantMessages = data.messages.filter(m => {
+            const lastRead = localStorage.getItem(userLastReadKey) || '1970-01-01T00:00:00.000Z';
+            const relevant = data.messages.filter(m => {
               if (!m.channel || m.channel === 'team') return true;
               if (m.recipientId && m.recipientId === currentUser.id) return true;
               if (m.senderId && m.senderId === currentUser.id) return true;
               if (m.channel?.startsWith('dm_') && m.channel.includes(String(currentUser.id))) return true;
               return false;
             });
-
-            // Calculate unread count for messages sent by others after lastRead
-            const unread = relevantMessages.filter(m => 
-              m.timestamp > lastRead && 
-              m.senderId !== currentUser.id
-            ).length;
+            const unread = relevant.filter(m => m.timestamp > lastRead && m.senderId !== currentUser.id).length;
             setUnreadChatCount(unread);
 
-            // Check if there is a brand new incoming message to trigger toast & chime
-            const latestIncoming = [...relevantMessages]
+            // Check if there is a brand new incoming message to trigger toast & chime (covers mobile & offline polling)
+            const latestIncoming = [...relevant]
               .reverse()
               .find(m => m.senderId !== currentUser.id && m.timestamp > lastRead);
 
@@ -688,7 +727,7 @@ export default function App() {
               lastAlertedChatMsgIdRef.current = latestIncoming.id;
               // Play chime
               try { webAudio.playNotification(); } catch {}
-              // Show floating alert toast if chat is not open
+              // Show floating alert toast
               setIncomingChatAlert({
                 id: latestIncoming.id,
                 senderId: latestIncoming.senderId,
@@ -705,21 +744,78 @@ export default function App() {
       } catch {}
     };
 
-    updateUnreadCount();
-    // Fast 2-second polling for real-time responsiveness across devices
-    const interval = setInterval(updateUnreadCount, 2000);
+    fetchLatestMessages();
 
+    // 1. Server-Sent Events (SSE) Stream for 0ms live message delivery with auto-reconnect
+    let sse = null;
+    let reconnectTimeout = null;
+    let isMounted = true;
+
+    const connectSSE = () => {
+      if (!isMounted) return;
+      try {
+        if (typeof EventSource !== 'undefined') {
+          sse = new EventSource('/api/chat/stream');
+          sse.onmessage = (event) => {
+            try {
+              const data = JSON.parse(event.data);
+              if (data.type === 'NEW_MESSAGE' && data.message) {
+                handleIncomingChatMessage(data.message);
+              } else if (data.type === 'DELETE_MESSAGE' && data.messageId) {
+                setChatMessages(prev => prev.filter(m => m.id !== data.messageId));
+              } else if (data.type === 'CLEAR_MESSAGES') {
+                setChatMessages([]);
+              }
+            } catch {}
+          };
+          sse.onerror = () => {
+            try { sse.close(); } catch {}
+            if (isMounted) {
+              clearTimeout(reconnectTimeout);
+              reconnectTimeout = setTimeout(connectSSE, 3000);
+            }
+          };
+        }
+      } catch {}
+    };
+
+    connectSSE();
+
+    // 2. Cross-tab instant communication via BroadcastChannel
     let bc = null;
     try {
       if (typeof BroadcastChannel !== 'undefined') {
         bc = new BroadcastChannel('flux_crm_chat_bus');
-        bc.onmessage = () => updateUnreadCount();
+        bc.onmessage = (event) => {
+          if (event.data?.type === 'NEW_MESSAGE' && event.data.message) {
+            handleIncomingChatMessage(event.data.message);
+          } else if (event.data?.type === 'DELETE_MESSAGE' && event.data.messageId) {
+            setChatMessages(prev => prev.filter(m => m.id !== event.data.messageId));
+          }
+        };
       }
     } catch {}
 
+    // 3. Fallback fast heartbeat poll (1200ms) for ultra-resilient multi-device sync
+    const pollInterval = setInterval(fetchLatestMessages, 1200);
+
+    // 4. Instant wake-up upon unlocking phone screen or switching browser tabs
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetchLatestMessages();
+      }
+    };
+    window.addEventListener('focus', handleVisibility);
+    document.addEventListener('visibilitychange', handleVisibility);
+
     return () => {
-      clearInterval(interval);
+      isMounted = false;
+      if (sse) sse.close();
+      clearTimeout(reconnectTimeout);
       if (bc) bc.close();
+      clearInterval(pollInterval);
+      window.removeEventListener('focus', handleVisibility);
+      document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, [currentUser]);
 
@@ -732,20 +828,109 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [incomingChatAlert]);
 
-  const handleOpenChat = (target = null) => {
-    if (target && target.channel) {
-      setChatInitialTarget(target);
-    } else {
-      setChatInitialTarget({ channel: 'team' });
-    }
-    setIsInternalChatOpen(true);
-    setUnreadChatCount(0);
-    setIncomingChatAlert(null);
+  // Send message handler with zero-lag optimistic UI & SSE broadcast
+  const handleSendMessage = async (msgData) => {
+    const now = new Date();
+    const timeFormatted = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    const newMsg = {
+      id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+      channel: msgData.channel || 'team',
+      recipientId: msgData.recipientId || null,
+      recipientName: msgData.recipientName || null,
+      senderId: currentUser?.id || 'emp-user',
+      senderName: currentUser?.name || 'Staff Member',
+      senderRole: currentUser?.role || 'MAIN_HR',
+      avatar: currentUser?.role === 'ADMIN' ? 'AD' : (currentUser?.name?.slice(0, 2).toUpperCase() || 'HR'),
+      text: msgData.text,
+      timestamp: now.toISOString(),
+      formattedTime: timeFormatted
+    };
+
+    // Update local state immediately (0ms latency for sender)
+    setChatMessages(prev => {
+      const next = [...prev, newMsg];
+      try { localStorage.setItem('flux_crm_chat_messages', JSON.stringify(next)); } catch {}
+      return next;
+    });
+
+    // Broadcast across tabs
     try {
-      if (currentUser?.id) {
-        localStorage.setItem(`tacrm_chat_last_read_${currentUser.id}`, new Date().toISOString());
+      if (typeof BroadcastChannel !== 'undefined') {
+        const bc = new BroadcastChannel('flux_crm_chat_bus');
+        bc.postMessage({ type: 'NEW_MESSAGE', message: newMsg });
+        setTimeout(() => { try { bc.close(); } catch {} }, 500);
       }
     } catch {}
+
+    // Dispatch to server backend (server immediately pushes to all other devices via SSE)
+    try {
+      fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: newMsg })
+      }).catch(() => {});
+    } catch {}
+  };
+
+  const handleDeleteChatMessage = async (msgId) => {
+    setChatMessages(prev => {
+      const next = prev.filter(m => m.id !== msgId);
+      try { localStorage.setItem('flux_crm_chat_messages', JSON.stringify(next)); } catch {}
+      return next;
+    });
+
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        const bc = new BroadcastChannel('flux_crm_chat_bus');
+        bc.postMessage({ type: 'DELETE_MESSAGE', messageId: msgId });
+        setTimeout(() => { try { bc.close(); } catch {} }, 500);
+      }
+    } catch {}
+
+    try {
+      fetch('/api/chat/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messageId: msgId })
+      }).catch(() => {});
+    } catch {}
+  };
+
+  const handleOpenChat = (target = null) => {
+    let chosenTarget = null;
+    if (target && typeof target === 'object' && target.channel && !target.nativeEvent) {
+      chosenTarget = target;
+    } else {
+      // Check if there are any unread direct messages for current user
+      const unreadDm = chatMessages
+        .slice()
+        .reverse()
+        .find(m => {
+          if (!currentUser?.id || m.senderId === currentUser.id) return false;
+          const isDm = Boolean(
+            m.recipientId === currentUser.id || 
+            (m.channel?.startsWith('dm_') && m.channel.includes(String(currentUser.id)))
+          );
+          if (!isDm) return false;
+          const dmReadTime = localStorage.getItem(`tacrm_dm_read_${currentUser.id}_${m.senderId}`) || '1970-01-01T00:00:00.000Z';
+          return m.timestamp > dmReadTime;
+        });
+
+      if (unreadDm) {
+        chosenTarget = {
+          channel: 'dm',
+          senderId: unreadDm.senderId,
+          senderName: unreadDm.senderName
+        };
+      } else {
+        chosenTarget = { channel: 'team' };
+      }
+    }
+
+    setChatInitialTarget(chosenTarget);
+    setIsInternalChatOpen(true);
+    setIncomingChatAlert(null);
   };
 
   // Global Quick Action Modals & Action Sheet
@@ -2791,6 +2976,10 @@ export default function App() {
         onClose={() => setIsInternalChatOpen(false)}
         currentUser={currentUser}
         users={users}
+        messages={chatMessages}
+        onSendMessage={handleSendMessage}
+        onDeleteMessage={handleDeleteChatMessage}
+        onSyncMessages={(msgs) => setChatMessages(msgs)}
         initialTarget={chatInitialTarget}
         onClearInitialTarget={() => setChatInitialTarget(null)}
       />

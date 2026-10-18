@@ -64,6 +64,8 @@ function crmServerStoragePlugin() {
     }
   }
 
+  const sseChatClients = new Set();
+
   const handler = (req, res, next) => {
     // Enable CORS for mobile browsers and external PCs
     res.setHeader('Access-Control-Allow-Origin', '*')
@@ -283,6 +285,39 @@ function crmServerStoragePlugin() {
       return
     }
 
+    // 3.4 SSE Stream for Instant Real-Time Internal Chat (0ms latency delivery across mobile & desktop)
+    if (cleanUrl === '/api/chat/stream') {
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream; charset=utf-8',
+        'Cache-Control': 'no-cache, no-transform, no-store, must-revalidate',
+        'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no',
+        'Content-Encoding': 'identity',
+        'Access-Control-Allow-Origin': '*'
+      });
+      if (typeof res.flushHeaders === 'function') {
+        res.flushHeaders();
+      }
+      res.write(`data: ${JSON.stringify({ type: 'CONNECTED', timestamp: new Date().toISOString() })}\n\n`);
+      sseChatClients.add(res);
+
+      // Heartbeat comment ping every 10s to keep mobile connections alive
+      const keepAliveTimer = setInterval(() => {
+        try {
+          res.write(': ping\n\n');
+        } catch {
+          clearInterval(keepAliveTimer);
+          sseChatClients.delete(res);
+        }
+      }, 10000);
+
+      req.on('close', () => {
+        clearInterval(keepAliveTimer);
+        sseChatClients.delete(res);
+      });
+      return;
+    }
+
     // 3.5 Real-time Employee Internal Chat
     if (cleanUrl === '/api/chat' || cleanUrl.startsWith('/api/chat/')) {
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
@@ -306,6 +341,13 @@ function crmServerStoragePlugin() {
               current.chatMessages = []
               current.updatedAt = new Date().toISOString()
               writeDb(current)
+
+              // Broadcast to SSE clients
+              const payload = JSON.stringify({ type: 'CLEAR_MESSAGES' });
+              for (const client of sseChatClients) {
+                try { client.write(`data: ${payload}\n\n`); } catch { sseChatClients.delete(client); }
+              }
+
               res.setHeader('Content-Type', 'application/json')
               res.end(JSON.stringify({ success: true, count: 0 }))
               return
@@ -316,6 +358,13 @@ function crmServerStoragePlugin() {
               current.chatMessages = existingMessages.filter(m => m.id !== messageId)
               current.updatedAt = new Date().toISOString()
               writeDb(current)
+
+              // Broadcast to SSE clients
+              const payload = JSON.stringify({ type: 'DELETE_MESSAGE', messageId });
+              for (const client of sseChatClients) {
+                try { client.write(`data: ${payload}\n\n`); } catch { sseChatClients.delete(client); }
+              }
+
               res.setHeader('Content-Type', 'application/json')
               res.end(JSON.stringify({ success: true, remaining: current.chatMessages.length }))
               return
@@ -346,6 +395,16 @@ function crmServerStoragePlugin() {
               current.chatMessages = existingMessages
               current.updatedAt = new Date().toISOString()
               writeDb(current)
+
+              // Broadcast immediately to all connected SSE clients (0ms real-time delivery)
+              const payload = JSON.stringify({ type: 'NEW_MESSAGE', message: fullMsg });
+              for (const client of sseChatClients) {
+                try {
+                  client.write(`data: ${payload}\n\n`);
+                } catch {
+                  sseChatClients.delete(client);
+                }
+              }
 
               res.setHeader('Content-Type', 'application/json')
               res.end(JSON.stringify({ success: true, message: fullMsg, total: existingMessages.length }))

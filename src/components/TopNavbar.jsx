@@ -69,7 +69,7 @@ export default function TopNavbar({
 
         <button 
           type="button" 
-          onClick={onOpenChat}
+          onClick={() => onOpenChat()}
           className="navbar-chat-btn"
           title="Open Internal Team Chat"
           id="navbar-chat-btn"
