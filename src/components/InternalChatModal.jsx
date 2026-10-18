@@ -18,19 +18,11 @@ import {
   Sparkles
 } from 'lucide-react';
 
-const QUICK_TAGS = [
-  { id: 'URGENT', label: '⚡ Urgent', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.15)', border: 'rgba(239, 68, 68, 0.3)' },
-  { id: 'CANDIDATE', label: '📞 Candidate Update', color: '#10b981', bg: 'rgba(16, 185, 129, 0.15)', border: 'rgba(16, 185, 129, 0.3)' },
-  { id: 'DRIVE', label: '🏢 Drive Alert', color: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.15)', border: 'rgba(139, 92, 246, 0.3)' },
-  { id: 'FOLLOWUP', label: '📋 Follow-up', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.15)', border: 'rgba(245, 158, 11, 0.3)' }
-];
-
 export default function InternalChatModal({ isOpen, onClose, currentUser, users = [] }) {
   // Navigation: 'team' (Team Workspace) or 'dm' (Direct Message with a selected employee)
   const [activeChannel, setActiveChannel] = useState('team'); // 'team' | 'dm'
   const [selectedColleague, setSelectedColleague] = useState(null); // User object for 1:1 DM
   const [colleagueSearch, setColleagueSearch] = useState('');
-  const [selectedTag, setSelectedTag] = useState(null);
   const [inputMessage, setInputMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
 
@@ -173,7 +165,6 @@ export default function InternalChatModal({ isOpen, onClose, currentUser, users 
       senderRole: currentUser?.role || 'MAIN_HR',
       avatar: currentUser?.role === 'ADMIN' ? 'AD' : (currentUser?.name?.slice(0, 2).toUpperCase() || 'HR'),
       text: cleanText,
-      tag: selectedTag,
       timestamp: now.toISOString(),
       formattedTime: timeFormatted
     };
@@ -186,7 +177,6 @@ export default function InternalChatModal({ isOpen, onClose, currentUser, users 
     });
 
     setInputMessage('');
-    setSelectedTag(null);
     setIsSending(false);
 
     // Broadcast to other tabs immediately
@@ -352,11 +342,6 @@ export default function InternalChatModal({ isOpen, onClose, currentUser, users 
                   ● LIVE
                 </span>
               </div>
-              <p style={{ margin: '2px 0 0', fontSize: '0.7rem', color: '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {activeChannel === 'dm' && selectedColleague 
-                  ? `Direct employee chat • ${selectedColleague.role === 'ADMIN' ? 'Administrator' : (selectedColleague.title || 'Recruitment Team')}`
-                  : 'Company Workspace • Real-time employee coordination'}
-              </p>
             </div>
           </div>
 
@@ -651,20 +636,14 @@ export default function InternalChatModal({ isOpen, onClose, currentUser, users 
                   }}>
                     <MessageSquare size={20} />
                   </div>
-                  <div style={{ fontSize: '0.86rem', fontWeight: 700, color: '#f1f5f9', marginBottom: '4px' }}>
+                  <div style={{ fontSize: '0.86rem', fontWeight: 700, color: '#f1f5f9' }}>
                     {activeChannel === 'team' ? 'Start Company Team Chat' : `Chat with ${selectedColleague?.name}`}
                   </div>
-                  <p style={{ fontSize: '0.72rem', color: '#94a3b8', margin: 0, lineHeight: 1.45 }}>
-                    {activeChannel === 'team'
-                      ? 'Share real-time candidate interview progress, campus drive updates, and notes with your recruitment colleagues.'
-                      : `Private 1-on-1 thread between you and ${selectedColleague?.name}. Messages persist across all devices.`}
-                  </p>
                 </div>
               ) : (
                 currentMessages.map(msg => {
                   const isMe = msg.senderId === currentUser?.id;
                   const roleBadge = getRoleBadge(msg.senderRole);
-                  const tagInfo = QUICK_TAGS.find(t => t.id === msg.tag);
 
                   return (
                     <div 
@@ -728,25 +707,6 @@ export default function InternalChatModal({ isOpen, onClose, currentUser, users 
                           <span>{msg.formattedTime || 'Just now'}</span>
                         </div>
 
-                        {/* Optional Tag Chip */}
-                        {tagInfo && (
-                          <div style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            fontSize: '0.64rem',
-                            fontWeight: 700,
-                            padding: '2px 6px',
-                            borderRadius: '4px',
-                            background: tagInfo.bg,
-                            color: tagInfo.color,
-                            border: `1px solid ${tagInfo.border}`,
-                            marginBottom: '4px'
-                          }}>
-                            {tagInfo.label}
-                          </div>
-                        )}
-
                         {/* Text Bubble */}
                         <div style={{
                           position: 'relative',
@@ -797,47 +757,6 @@ export default function InternalChatModal({ isOpen, onClose, currentUser, users 
                 })
               )}
               <div ref={messagesEndRef} />
-            </div>
-
-            {/* Quick Priority / Topic Tags Selection */}
-            <div style={{
-              padding: '6px 14px',
-              background: '#091520',
-              borderTop: '1px solid rgba(255, 255, 255, 0.06)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              overflowX: 'auto',
-              flexShrink: 0
-            }}>
-              <span style={{ fontSize: '0.64rem', fontWeight: 600, color: '#64748b', whiteSpace: 'nowrap' }}>Tag:</span>
-              {QUICK_TAGS.map(t => {
-                const isSelected = selectedTag === t.id;
-                return (
-                  <button
-                    key={t.id}
-                    type="button"
-                    onClick={() => setSelectedTag(isSelected ? null : t.id)}
-                    style={{
-                      padding: '2px 7px',
-                      borderRadius: '10px',
-                      background: isSelected ? t.bg : 'rgba(255, 255, 255, 0.04)',
-                      border: `1px solid ${isSelected ? t.color : 'rgba(255, 255, 255, 0.08)'}`,
-                      color: isSelected ? t.color : '#94a3b8',
-                      fontSize: '0.64rem',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      whiteSpace: 'nowrap',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '3px',
-                      transition: 'all 0.12s ease'
-                    }}
-                  >
-                    {t.label}
-                  </button>
-                );
-              })}
             </div>
 
             {/* Message Input Bar */}
