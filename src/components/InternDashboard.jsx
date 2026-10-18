@@ -365,75 +365,88 @@ export default function InternDashboard({
               </tr>
             </thead>
             <tbody>
-              {myTpos.map(tpo => (
-                <tr key={tpo.id}>
-                  <td>
-                    <div style={{ fontWeight: 700, color: '#09090b', fontSize: '0.875rem' }}>
-                      {tpo.name}
-                    </div>
-                    <div style={{ fontSize: '0.75rem', color: '#52525b' }}>
-                      {tpo.collegeName}
-                    </div>
-                  </td>
-
-                  <td style={{ fontFamily: 'monospace', fontWeight: 600, fontSize: '0.825rem' }}>
-                    {tpo.phone}
-                  </td>
-
-                  <td style={{ fontSize: '0.8rem', color: '#52525b' }}>
-                    {tpo.email}
-                  </td>
-
-                  <td>
-                    <span className={`badge ${
-                      tpo.status === 'DRIVE_CONFIRMED' ? 'badge-green' : tpo.status === 'PITCHED' ? 'badge-amber' : 'badge-grey'
-                    }`} style={{ fontSize: '0.72rem' }}>
-                      {tpo.status.replace(/_/g, ' ')}
-                    </span>
-                  </td>
-
-                  <td>
-                    <div style={{ display: 'flex', gap: '6px' }}>
-                      <button 
-                        onClick={() => onStartCall({
-                          recipientType: 'TPO',
-                          recipientName: `${tpo.name} (${tpo.collegeName})`,
-                          recipientDetail: `${tpo.designation} • ${tpo.phone}`,
-                          recipientPhone: tpo.phone,
-                          type: 'AUDIO',
-                          tpoId: tpo.id
-                        })}
-                        className="btn-black btn-black-sm"
-                        style={{ padding: '4px 10px', fontSize: '0.75rem' }}
-                      >
-                        <Phone size={12} /> Call
-                      </button>
-
-                      <button 
-                        onClick={() => onStartCall({
-                          recipientType: 'TPO',
-                          recipientName: `${tpo.name} (${tpo.collegeName})`,
-                          recipientDetail: `${tpo.designation} • ${tpo.phone}`,
-                          recipientPhone: tpo.phone,
-                          type: 'VIDEO',
-                          tpoId: tpo.id
-                        })}
-                        className="btn-secondary btn-black-sm"
-                        style={{ padding: '4px 8px', fontSize: '0.75rem' }}
-                      >
-                        <Video size={12} /> Video
-                      </button>
-                    </div>
+              {myTpos.length === 0 ? (
+                <tr>
+                  <td colSpan={5} style={{ textAlign: 'center', padding: '28px', color: '#71717a', fontSize: '0.8rem' }}>
+                    No college TPOs assigned to you yet. Explore the <strong>TPO Directory</strong> to request assignments or start outreach.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                myTpos.map(tpo => (
+                  <tr key={tpo.id}>
+                    <td>
+                      <div style={{ fontWeight: 700, color: '#09090b', fontSize: '0.875rem' }}>
+                        {tpo.name}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: '#52525b' }}>
+                        {tpo.collegeName}
+                      </div>
+                    </td>
+
+                    <td style={{ fontFamily: 'monospace', fontWeight: 600, fontSize: '0.825rem' }}>
+                      {tpo.phone}
+                    </td>
+
+                    <td style={{ fontSize: '0.8rem', color: '#52525b' }}>
+                      {tpo.email}
+                    </td>
+
+                    <td>
+                      <span className={`badge ${
+                        tpo.status === 'DRIVE_CONFIRMED' ? 'badge-green' : tpo.status === 'PITCHED' ? 'badge-amber' : 'badge-grey'
+                      }`} style={{ fontSize: '0.72rem' }}>
+                        {tpo.status.replace(/_/g, ' ')}
+                      </span>
+                    </td>
+
+                    <td>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button 
+                          onClick={() => onStartCall({
+                            recipientType: 'TPO',
+                            recipientName: `${tpo.name} (${tpo.collegeName})`,
+                            recipientDetail: `${tpo.designation} • ${tpo.phone}`,
+                            recipientPhone: tpo.phone,
+                            type: 'AUDIO',
+                            tpoId: tpo.id
+                          })}
+                          className="btn-black btn-black-sm"
+                          style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                        >
+                          <Phone size={12} /> Call
+                        </button>
+
+                        <button 
+                          onClick={() => onStartCall({
+                            recipientType: 'TPO',
+                            recipientName: `${tpo.name} (${tpo.collegeName})`,
+                            recipientDetail: `${tpo.designation} • ${tpo.phone}`,
+                            recipientPhone: tpo.phone,
+                            type: 'VIDEO',
+                            tpoId: tpo.id
+                          })}
+                          className="btn-secondary btn-black-sm"
+                          style={{ padding: '4px 8px', fontSize: '0.75rem' }}
+                        >
+                          <Video size={12} /> Video
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
 
         {/* Mobile View: Assigned TPOs (Click to expand details) */}
         <div className="mobile-only" style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {myTpos.map(tpo => {
+          {myTpos.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '20px 10px', color: '#71717a', fontSize: '0.8rem' }}>
+              No college TPOs assigned to you yet. Tap "All TPOs" to browse and reach out.
+            </div>
+          ) : (
+            myTpos.map(tpo => {
             const isExpanded = !!expandedTpoIds[tpo.id];
             return (
               <div 
@@ -516,7 +529,7 @@ export default function InternDashboard({
                 )}
               </div>
             );
-          })}
+          }))}
         </div>
       </div>
     </div>

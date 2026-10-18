@@ -185,7 +185,7 @@ export default function AdminDashboard({
       await fetch('/api/storage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ users, drives, students, tpos, followUps })
+        body: JSON.stringify({ users, drives, students, tpos, followUps, callSessions })
       });
       showNotification('Successfully synced all employees and CRM data to central server!');
     } catch {
@@ -200,9 +200,9 @@ export default function AdminDashboard({
   const [driveFormData, setDriveFormData] = useState({
     title: '',
     collegeName: '',
-    jobRole: 'Graduate Software Engineer 2026',
-    ctc: '14.0 LPA',
-    criteria: 'B.Tech/BE with CGPA >= 7.0',
+    jobRole: '',
+    ctc: '',
+    criteria: '',
     driveDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
     status: 'CONFIRMED'
   });
@@ -360,9 +360,9 @@ export default function AdminDashboard({
     setDriveFormData({
       title: '',
       collegeName: '',
-      jobRole: 'Graduate Software Engineer 2026',
-      ctc: '14.0 LPA',
-      criteria: 'B.Tech/BE with CGPA >= 7.0',
+      jobRole: '',
+      ctc: '',
+      criteria: '',
       driveDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
       status: 'CONFIRMED'
     });
@@ -1988,6 +1988,7 @@ export default function AdminDashboard({
                     <input 
                       type="text" 
                       className="form-input" 
+                      placeholder="e.g. Software Engineer (Full Stack)"
                       value={driveFormData.jobRole}
                       onChange={e => setDriveFormData(prev => ({ ...prev, jobRole: e.target.value }))}
                     />
@@ -1997,6 +1998,7 @@ export default function AdminDashboard({
                     <input 
                       type="text" 
                       className="form-input" 
+                      placeholder="e.g. 14.0 LPA"
                       value={driveFormData.ctc}
                       onChange={e => setDriveFormData(prev => ({ ...prev, ctc: e.target.value }))}
                     />

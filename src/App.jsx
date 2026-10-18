@@ -76,6 +76,14 @@ import { fetchSupabaseUsers, upsertSupabaseUser, deleteSupabaseUser, isSupabaseC
 export default function App() {
   // Authentication State - persists login session, supports 1-click mobile invite token
   const [currentUser, setCurrentUser] = useState(() => {
+    if (typeof window !== 'undefined' && (window.location.search.includes('logout=true') || window.location.search.includes('logout=1'))) {
+      try {
+        localStorage.removeItem('tacrm_auth_user');
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } catch (e) {}
+      return null;
+    }
+
     // 1. Check if URL contains 1-click mobile login token (?auth=...)
     const tokenResult = parseUrlTokens();
     if (tokenResult?.type === 'AUTH_USER' && tokenResult.user) {
@@ -253,17 +261,20 @@ export default function App() {
             localStorage.setItem('tacrm_users', JSON.stringify(merged));
           } catch (e) {}
         }
-        if (Array.isArray(data.drives) && data.drives.length > 0) {
-          setDrives(data.drives);
+        if (Array.isArray(data.drives)) {
+          setDrives(sanitizeDrives(data.drives));
         }
-        if (Array.isArray(data.students) && data.students.length > 0) {
-          setStudents(data.students);
+        if (Array.isArray(data.students)) {
+          setStudents(sanitizeStudents(data.students));
         }
-        if (Array.isArray(data.tpos) && data.tpos.length > 0) {
-          setTpos(data.tpos);
+        if (Array.isArray(data.tpos)) {
+          setTpos(sanitizeTpos(data.tpos));
         }
-        if (Array.isArray(data.followUps) && data.followUps.length > 0) {
-          setFollowUps(data.followUps);
+        if (Array.isArray(data.followUps)) {
+          setFollowUps(sanitizeFollowUps(data.followUps));
+        }
+        if (Array.isArray(data.callSessions)) {
+          setCallSessions(sanitizeCalls(data.callSessions));
         }
       })
       .catch(() => {});
@@ -455,70 +466,70 @@ export default function App() {
     });
   };
 
-  // Data State with Local Storage fallback
+  // Data State with Local Storage fallback (clean real defaults)
   const [colleges, setColleges] = useState(() => {
     const saved = localStorage.getItem('tacrm_colleges');
-    if (!saved) return WORKING_DEMO_DATA.colleges || [];
+    if (!saved) return [];
     try {
       const parsed = JSON.parse(saved);
-      return Array.isArray(parsed) && parsed.length > 0 ? parsed : (WORKING_DEMO_DATA.colleges || []);
+      return Array.isArray(parsed) ? parsed : [];
     } catch {
-      return WORKING_DEMO_DATA.colleges || [];
+      return [];
     }
   });
 
   const [tpos, setTpos] = useState(() => {
     const saved = localStorage.getItem('tacrm_tpos');
-    if (!saved) return sanitizeTpos(WORKING_DEMO_DATA.tpos || []);
+    if (!saved) return [];
     try {
       const parsed = JSON.parse(saved);
-      return Array.isArray(parsed) && parsed.length > 0 ? sanitizeTpos(parsed) : sanitizeTpos(WORKING_DEMO_DATA.tpos || []);
+      return Array.isArray(parsed) ? sanitizeTpos(parsed) : [];
     } catch {
-      return sanitizeTpos(WORKING_DEMO_DATA.tpos || []);
+      return [];
     }
   });
 
   const [drives, setDrives] = useState(() => {
     const saved = localStorage.getItem('tacrm_drives');
-    if (!saved) return sanitizeDrives(WORKING_DEMO_DATA.drives || []);
+    if (!saved) return [];
     try {
       const parsed = JSON.parse(saved);
-      return Array.isArray(parsed) && parsed.length > 0 ? sanitizeDrives(parsed) : sanitizeDrives(WORKING_DEMO_DATA.drives || []);
+      return Array.isArray(parsed) ? sanitizeDrives(parsed) : [];
     } catch {
-      return sanitizeDrives(WORKING_DEMO_DATA.drives || []);
+      return [];
     }
   });
 
   const [students, setStudents] = useState(() => {
     const saved = localStorage.getItem('tacrm_students');
-    if (saved === null) return sanitizeStudents(WORKING_DEMO_DATA.students);
+    if (!saved) return [];
     try {
       const parsed = JSON.parse(saved);
-      return Array.isArray(parsed) && parsed.length > 0 ? sanitizeStudents(parsed) : sanitizeStudents(WORKING_DEMO_DATA.students);
+      return Array.isArray(parsed) ? sanitizeStudents(parsed) : [];
     } catch {
-      return sanitizeStudents(WORKING_DEMO_DATA.students);
+      return [];
     }
   });
 
   const [followUps, setFollowUps] = useState(() => {
     const saved = localStorage.getItem('tacrm_followups');
-    if (!saved) return sanitizeFollowUps(WORKING_DEMO_DATA.followUps || []);
+    if (!saved) return [];
     try {
       const parsed = JSON.parse(saved);
-      return Array.isArray(parsed) && parsed.length > 0 ? sanitizeFollowUps(parsed) : sanitizeFollowUps(WORKING_DEMO_DATA.followUps || []);
+      return Array.isArray(parsed) ? sanitizeFollowUps(parsed) : [];
     } catch {
-      return sanitizeFollowUps(WORKING_DEMO_DATA.followUps || []);
+      return [];
     }
   });
 
   const [callSessions, setCallSessions] = useState(() => {
     const saved = localStorage.getItem('tacrm_calls');
-    if (!saved) return sanitizeCalls(WORKING_DEMO_DATA.callSessions || []);
+    if (!saved) return [];
     try {
       const parsed = JSON.parse(saved);
-      return Array.isArray(parsed) && parsed.length > 0 ? sanitizeCalls(parsed) : sanitizeCalls(WORKING_DEMO_DATA.callSessions || []);
+      return Array.isArray(parsed) ? sanitizeCalls(parsed) : [];
     } catch {
-      return sanitizeCalls(WORKING_DEMO_DATA.callSessions || []);
+      return [];
     }
   });
 
@@ -1097,6 +1108,20 @@ export default function App() {
     localStorage.setItem('tacrm_form_responses', JSON.stringify([]));
     localStorage.setItem('tacrm_blast_logs', JSON.stringify([]));
 
+    fetch('/api/storage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        colleges: [],
+        tpos: [],
+        drives: [],
+        students: [],
+        followUps: [],
+        callSessions: [],
+        emailDispatchLogs: []
+      })
+    }).catch(() => {});
+
     addToast('System reset to clean state. Ready for fresh manual input.', 'info');
   };
 
@@ -1571,10 +1596,30 @@ export default function App() {
   };
 
   // General CRM & Admin Handlers
-  const handleAddTpo = (newTpo) => setTpos(prev => [newTpo, ...prev]);
+  const handleAddTpo = (newTpo) => {
+    setTpos(prev => {
+      const next = [newTpo, ...prev];
+      try { localStorage.setItem('tacrm_tpos', JSON.stringify(next)); } catch (e) {}
+      fetch('/api/storage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tpos: next })
+      }).catch(() => {});
+      return next;
+    });
+  };
   const handleAddTposBatch = (newTpos) => {
     if (!newTpos || newTpos.length === 0) return;
-    setTpos(prev => [...newTpos, ...prev]);
+    setTpos(prev => {
+      const next = [...newTpos, ...prev];
+      try { localStorage.setItem('tacrm_tpos', JSON.stringify(next)); } catch (e) {}
+      fetch('/api/storage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tpos: next })
+      }).catch(() => {});
+      return next;
+    });
     addToast(`Successfully imported ${newTpos.length} college TPO records!`, 'success');
   };
   const handleUpdateTpo = (updatedTpo) => {
@@ -1616,14 +1661,56 @@ export default function App() {
     });
     addToast(`Campus drive published: ${newDrive.title} (${newDrive.mode || 'Offline'})`, 'success');
   };
-  const handleUpdateDrive = (updatedDrive) => setDrives(prev => prev.map(d => d.id === updatedDrive.id ? updatedDrive : d));
+  const handleUpdateDrive = (updatedDrive) => {
+    setDrives(prev => {
+      const next = prev.map(d => d.id === updatedDrive.id ? updatedDrive : d);
+      try { localStorage.setItem('tacrm_drives', JSON.stringify(next)); } catch (e) {}
+      fetch('/api/storage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ drives: next })
+      }).catch(() => {});
+      return next;
+    });
+  };
   const handleAddStudentsBatch = (newStudents) => {
     if (!newStudents || !newStudents.length) return;
-    setStudents(prev => [...newStudents, ...prev]);
+    setStudents(prev => {
+      const next = [...newStudents, ...prev];
+      try { localStorage.setItem('tacrm_students', JSON.stringify(next)); } catch (e) {}
+      fetch('/api/storage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ students: next })
+      }).catch(() => {});
+      return next;
+    });
     addToast(`Successfully imported ${newStudents.length} candidate(s) to campus board!`, 'success');
   };
-  const handleUpdateStudent = (updatedStudent) => setStudents(prev => prev.map(s => s.id === updatedStudent.id ? updatedStudent : s));
-  const handleUpdateCandidateStage = (studentId, nextStage) => setStudents(prev => prev.map(s => s.id === studentId ? { ...s, stage: nextStage } : s));
+  const handleUpdateStudent = (updatedStudent) => {
+    setStudents(prev => {
+      const next = prev.map(s => s.id === updatedStudent.id ? updatedStudent : s);
+      try { localStorage.setItem('tacrm_students', JSON.stringify(next)); } catch (e) {}
+      fetch('/api/storage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ students: next })
+      }).catch(() => {});
+      return next;
+    });
+  };
+  const handleUpdateCandidateStage = (studentId, nextStage) => {
+    setStudents(prev => {
+      const next = prev.map(s => s.id === studentId ? { ...s, stage: nextStage } : s);
+      try { localStorage.setItem('tacrm_students', JSON.stringify(next)); } catch (e) {}
+      fetch('/api/storage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ students: next })
+      }).catch(() => {});
+      return next;
+    });
+  };
   const handleBatchUpdateStudents = (updatedStudentsList) => {
     if (!Array.isArray(updatedStudentsList) || !updatedStudentsList.length) return;
     setStudents(prev => {
@@ -1638,12 +1725,56 @@ export default function App() {
       return next;
     });
   };
-  const handleAddFollowUp = (newFup) => setFollowUps(prev => [newFup, ...prev]);
-  const handleUpdateFollowUp = (updatedFup) => setFollowUps(prev => prev.map(f => f.id === updatedFup.id ? updatedFup : f));
+  const handleAddFollowUp = (newFup) => {
+    setFollowUps(prev => {
+      const next = [newFup, ...prev];
+      try { localStorage.setItem('tacrm_followups', JSON.stringify(next)); } catch (e) {}
+      fetch('/api/storage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ followUps: next })
+      }).catch(() => {});
+      return next;
+    });
+  };
+  const handleUpdateFollowUp = (updatedFup) => {
+    setFollowUps(prev => {
+      const next = prev.map(f => f.id === updatedFup.id ? updatedFup : f);
+      try { localStorage.setItem('tacrm_followups', JSON.stringify(next)); } catch (e) {}
+      fetch('/api/storage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ followUps: next })
+      }).catch(() => {});
+      return next;
+    });
+  };
   
   // Call session handlers
-  const handleAddCallSession = (newCall) => setCallSessions(prev => [newCall, ...prev]);
-  const handleUpdateCallSession = (updatedCall) => setCallSessions(prev => prev.map(c => c.id === updatedCall.id ? updatedCall : c));
+  const handleAddCallSession = (newCall) => {
+    setCallSessions(prev => {
+      const next = [newCall, ...prev];
+      try { localStorage.setItem('tacrm_calls', JSON.stringify(next)); } catch (e) {}
+      fetch('/api/storage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ callSessions: next })
+      }).catch(() => {});
+      return next;
+    });
+  };
+  const handleUpdateCallSession = (updatedCall) => {
+    setCallSessions(prev => {
+      const next = prev.map(c => c.id === updatedCall.id ? updatedCall : c);
+      try { localStorage.setItem('tacrm_calls', JSON.stringify(next)); } catch (e) {}
+      fetch('/api/storage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ callSessions: next })
+      }).catch(() => {});
+      return next;
+    });
+  };
 
   // Admin User Provisioning Handlers
   const handleAddUser = async (newUser) => {

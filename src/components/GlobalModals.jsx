@@ -27,9 +27,9 @@ export function GlobalNewDriveModal({
 }) {
   const [title, setTitle] = useState('');
   const [collegeName, setCollegeName] = useState('');
-  const [jobRole, setJobRole] = useState('Graduate Software Engineer 2026');
-  const [ctc, setCtc] = useState('16.0 LPA');
-  const [criteria, setCriteria] = useState('B.Tech/BE with CGPA >= 7.0, zero active backlogs');
+  const [jobRole, setJobRole] = useState('');
+  const [ctc, setCtc] = useState('');
+  const [criteria, setCriteria] = useState('');
   const [driveDate, setDriveDate] = useState(
     new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   );
@@ -105,6 +105,7 @@ export function GlobalNewDriveModal({
                   <input 
                     type="text" 
                     className="form-input" 
+                    placeholder="e.g. Software Engineer (Full Stack)"
                     value={jobRole} 
                     onChange={e => setJobRole(e.target.value)} 
                   />
@@ -114,6 +115,7 @@ export function GlobalNewDriveModal({
                   <input 
                     type="text" 
                     className="form-input" 
+                    placeholder="e.g. 14.5 LPA"
                     value={ctc} 
                     onChange={e => setCtc(e.target.value)} 
                   />
@@ -135,6 +137,7 @@ export function GlobalNewDriveModal({
                   <input 
                     type="text" 
                     className="form-input" 
+                    placeholder="e.g. B.Tech / BE with CGPA >= 7.0"
                     value={criteria} 
                     onChange={e => setCriteria(e.target.value)} 
                   />
