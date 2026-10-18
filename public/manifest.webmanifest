@@ -2,7 +2,9 @@
   "name": "Flux TA CRM",
   "short_name": "Flux CRM",
   "description": "Campus recruitment CRM web application for talent acquisition teams featuring TPO outreach, student data ingestion, drive trackers, and in-app calling.",
+  "id": "/",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#154360",
@@ -10,9 +12,21 @@
   "icons": [
     {
       "src": "/flux-icon.png",
-      "sizes": "any",
+      "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/flux-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/flux-icon.png",
+      "sizes": "192x192 512x512 829x829 any",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "categories": ["business", "productivity", "utilities"],

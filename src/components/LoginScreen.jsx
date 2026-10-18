@@ -8,12 +8,13 @@ import {
   EyeOff,
   Loader2,
   CheckCircle2,
-  Smartphone
+  Smartphone,
+  Download
 } from 'lucide-react';
 import { parseUrlTokens, cleanUrlTokens, persistUserToDevice, persistBulkUsersToDevice } from '../utils/staffSync';
 import { fetchSupabaseUsers, isSupabaseConfigured } from '../services/supabaseSync';
 
-export default function LoginScreen({ onLogin, users = [] }) {
+export default function LoginScreen({ onLogin, users = [], onInstallApp, isAppInstalled = false }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -266,8 +267,24 @@ export default function LoginScreen({ onLogin, users = [] }) {
       justifyContent: 'center',
       padding: '24px 16px',
       fontFamily: "'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-      boxSizing: 'border-box'
+      boxSizing: 'border-box',
+      position: 'relative'
     }}>
+      {/* Top Floating Install App Button for Mobile & Desktop */}
+      {!isAppInstalled && onInstallApp && (
+        <div style={{ position: 'fixed', top: '16px', right: '16px', zIndex: 10 }}>
+          <button
+            type="button"
+            onClick={onInstallApp}
+            className="login-top-install-btn"
+            title="Install Flux TA CRM as an App"
+          >
+            <Smartphone size={14} />
+            <span>Install App</span>
+          </button>
+        </div>
+      )}
+
       <div style={{
         maxWidth: '420px',
         width: '100%',
@@ -469,6 +486,21 @@ export default function LoginScreen({ onLogin, users = [] }) {
             )}
           </button>
         </form>
+
+        {/* 1-Tap Mobile App Install Button */}
+        {!isAppInstalled && onInstallApp && (
+          <div style={{ marginTop: '16px', textAlign: 'center' }}>
+            <button
+              type="button"
+              onClick={onInstallApp}
+              className="login-install-card-btn"
+              title="Install Flux TA CRM on your Mobile Device"
+            >
+              <Smartphone size={15} color="#154360" />
+              <span>Install App</span>
+            </button>
+          </div>
+        )}
 
         <div style={{
           marginTop: '24px',

@@ -2,7 +2,9 @@ import React from 'react';
 import { 
   Search, 
   MessageSquare, 
-  LogOut 
+  LogOut,
+  Smartphone,
+  Download
 } from 'lucide-react';
 
 export default function TopNavbar({
@@ -11,7 +13,9 @@ export default function TopNavbar({
   onToggleSidebar,
   onOpenSearch,
   onOpenChat,
-  onOpenLogout
+  onOpenLogout,
+  onInstallApp,
+  isAppInstalled = false
 }) {
   const roleLabel = currentUser?.role === 'ADMIN'
     ? 'Super Admin'
@@ -47,8 +51,21 @@ export default function TopNavbar({
         </div>
       </div>
 
-      {/* Right: Internal Chat & User Logout */}
+      {/* Right: Install App, Internal Chat & User Logout */}
       <div className="navbar-right-group">
+        {!isAppInstalled && (
+          <button 
+            type="button" 
+            onClick={onInstallApp}
+            className="navbar-install-btn"
+            title="Install Flux TA CRM on your Mobile or Desktop"
+            id="navbar-install-btn"
+          >
+            <Smartphone size={14} className="navbar-install-icon" />
+            <span className="navbar-install-text">Install App</span>
+          </button>
+        )}
+
         <button 
           type="button" 
           onClick={onOpenChat}

@@ -59,6 +59,7 @@ import InstallAppModal from './components/InstallAppModal';
 import LogoutConfirmModal from './components/LogoutConfirmModal';
 import TopNavbar from './components/TopNavbar';
 import InternalChatModal from './components/InternalChatModal';
+import MobileCallingHub from './components/MobileCallingHub';
 import {
   GlobalNewDriveModal,
   GlobalNewTpoModal,
@@ -600,9 +601,45 @@ export default function App() {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [toasts, setToasts] = useState([]);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [isFullscreen, setIsFullscreen] = useState(Boolean(document.fullscreenElement));
+  const [isFullscreen, setIsFullscreen] = useState(Boolean(typeof document !== 'undefined' && document.fullscreenElement));
   const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [isAppInstalled, setIsAppInstalled] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth <= 768;
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const [isAppInstalled, setIsAppInstalled] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('tacrm_app_installed') === 'true';
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      return saved || isStandalone;
+    }
+    return false;
+  });
+  const [showMobileInstallBanner, setShowMobileInstallBanner] = useState(() => {
+    try {
+      return !sessionStorage.getItem('tacrm_dismiss_install_banner');
+    } catch {
+      return true;
+    }
+  });
+
+  const handleDismissInstallBanner = () => {
+    setShowMobileInstallBanner(false);
+    try {
+      sessionStorage.setItem('tacrm_dismiss_install_banner', 'true');
+    } catch {}
+  };
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isInternalChatOpen, setIsInternalChatOpen] = useState(false);
@@ -651,6 +688,7 @@ export default function App() {
     };
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
     window.addEventListener('appinstalled', () => {
+      try { localStorage.setItem('tacrm_app_installed', 'true'); } catch (e) {}
       setIsAppInstalled(true);
       setDeferredPrompt(null);
       addToast('Flux TA CRM installed successfully as native Web App!', 'success');
@@ -659,7 +697,23 @@ export default function App() {
   }, []);
 
   const handleInstallApp = () => {
-    setIsInstallModalOpen(true);
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(({ outcome }) => {
+        if (outcome === 'accepted') {
+          try { localStorage.setItem('tacrm_app_installed', 'true'); } catch (e) {}
+          setDeferredPrompt(null);
+          setIsAppInstalled(true);
+          addToast('Flux TA CRM installed successfully as native Web App!', 'success');
+        } else {
+          setIsInstallModalOpen(true);
+        }
+      }).catch(() => {
+        setIsInstallModalOpen(true);
+      });
+    } else {
+      setIsInstallModalOpen(true);
+    }
   };
 
   // 2. Fullscreen Toggle
@@ -1443,14 +1497,37 @@ export default function App() {
       )
     : [];
 
-  // If user is not authenticated, render Login Screen
+  // If user is not authenticated, render Login Screen with direct Install capability
   if (!currentUser) {
-    return <LoginScreen onLogin={handleLogin} users={users} />;
+    return (
+      <>
+        <LoginScreen onLogin={handleLogin} users={users} onInstallApp={handleInstallApp} isAppInstalled={isAppInstalled} />
+        <InstallAppModal 
+          isOpen={isInstallModalOpen}
+          onClose={() => setIsInstallModalOpen(false)}
+          deferredPrompt={deferredPrompt}
+          onNativeInstall={() => {
+            if (deferredPrompt) {
+              deferredPrompt.prompt();
+              deferredPrompt.userChoice.then(({ outcome }) => {
+                if (outcome === 'accepted') {
+                  try { localStorage.setItem('tacrm_app_installed', 'true'); } catch (e) {}
+                  setDeferredPrompt(null);
+                  setIsAppInstalled(true);
+                  addToast('Flux TA CRM installed as native app!', 'success');
+                }
+                setIsInstallModalOpen(false);
+              });
+            }
+          }}
+        />
+      </>
+    );
   }
 
   return (
     <div className="app-container">
-      {/* Sleek Top Navbar (matching reference design) */}
+      {/* Sleek Top Navbar with Install App Button */}
       <TopNavbar 
         currentUser={currentUser}
         isSidebarCollapsed={isSidebarCollapsed}
@@ -1464,7 +1541,42 @@ export default function App() {
         onOpenSearch={() => setIsCommandPaletteOpen(true)}
         onOpenChat={() => setIsInternalChatOpen(true)}
         onOpenLogout={() => setIsLogoutModalOpen(true)}
+        onInstallApp={handleInstallApp}
+        isAppInstalled={isAppInstalled}
       />
+
+      {/* Mobile Smart Install Banner for Mobile Browsers */}
+      {showMobileInstallBanner && !isAppInstalled && (
+        <div className="mobile-smart-install-banner">
+          <div className="mobile-smart-install-left">
+            <img src="/flux-icon.png" alt="Flux CRM" className="mobile-smart-install-icon" />
+            <div className="mobile-smart-install-info">
+              <div className="mobile-smart-install-title">Flux TA CRM</div>
+              <div className="mobile-smart-install-sub">Install Web App on your phone</div>
+            </div>
+          </div>
+          <div className="mobile-smart-install-actions">
+            <button 
+              type="button" 
+              onClick={handleInstallApp}
+              className="btn-mobile-smart-install"
+              id="btn-mobile-smart-install"
+              title="Install Flux TA CRM on your Mobile Phone"
+            >
+              <Download size={13} />
+              <span>Install</span>
+            </button>
+            <button 
+              type="button" 
+              onClick={handleDismissInstallBanner}
+              className="btn-mobile-smart-dismiss"
+              aria-label="Dismiss banner"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Main Layout Container */}
       <div className="app-main-layout">
@@ -1477,18 +1589,43 @@ export default function App() {
 
         {/* Sidebar Navigation (Desktop and Off-Canvas Mobile Drawer) */}
         <aside className={`sidebar ${isSidebarCollapsed && !isMobileSidebarOpen ? 'collapsed' : ''} ${isMobileSidebarOpen ? 'mobile-open' : ''}`}>
-          {/* Mobile drawer header (visible only in mobile off-canvas drawer) */}
+          {/* Mobile drawer header & Install Mobile Card (visible only in mobile off-canvas drawer) */}
           {isMobileSidebarOpen && (
-            <div style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', background: '#ffffff' }}>
-              <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#154360' }}>Navigation Menu</span>
-              <button 
-                type="button"
-                className="btn-icon"
-                onClick={() => setIsMobileSidebarOpen(false)}
-                title="Close navigation menu"
-              >
-                <X size={15} />
-              </button>
+            <div>
+              <div style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', background: '#ffffff' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#154360' }}>Navigation Menu</span>
+                <button 
+                  type="button"
+                  className="btn-icon"
+                  onClick={() => setIsMobileSidebarOpen(false)}
+                  title="Close navigation menu"
+                >
+                  <X size={15} />
+                </button>
+              </div>
+
+              {/* Install Mobile Web App Card */}
+              {!isAppInstalled && (
+                <div className="mobile-drawer-install-card">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div className="drawer-install-icon-wrap">
+                      <Smartphone size={18} color="#154360" />
+                    </div>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontWeight: 800, fontSize: '0.82rem', color: '#154360' }}>Install Mobile App</div>
+                      <div style={{ fontSize: '0.7rem', color: '#64748b' }}>1-Tap Home Screen & Offline Mode</div>
+                    </div>
+                  </div>
+                  <button 
+                    type="button" 
+                    onClick={() => { setIsMobileSidebarOpen(false); handleInstallApp(); }}
+                    className="btn-mustard"
+                    style={{ padding: '7px 12px', fontSize: '0.76rem', fontWeight: 800, width: '100%', marginTop: '10px', justifyContent: 'center' }}
+                  >
+                    <Download size={13} /> Install App
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -1584,6 +1721,21 @@ export default function App() {
               <span style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', background: '#FFDB58' }} />
             )}
           </button>
+
+          {!isAppInstalled && (
+            <>
+              <div className="nav-section-title">App Installation</div>
+
+              <button 
+                onClick={() => { setIsMobileSidebarOpen(false); handleInstallApp(); }}
+                className="nav-item"
+                title="Install Flux TA CRM as an App"
+              >
+                <Smartphone size={15} color="#10b981" />
+                <span className="nav-label" style={{ color: '#10b981', fontWeight: 700 }}>Install App</span>
+              </button>
+            </>
+          )}
         </nav>
 
         {/* Current User Card in Sidebar with Logout */}
@@ -1627,7 +1779,22 @@ export default function App() {
             </div>
           }>
           {activeTab === 'dashboard' && (
-            currentUser.role === 'ADMIN' ? (
+            isMobile ? (
+              <MobileCallingHub 
+                currentUser={currentUser}
+                students={students}
+                tpos={tpos}
+                drives={drives}
+                followUps={followUps}
+                callSessions={callSessions}
+                onSelectTab={setActiveTab}
+                onStartCall={handleStartCall}
+                onOpenQuickCall={() => setIsGlobalQuickCallModalOpen(true)}
+                onOpenChat={() => setIsInternalChatOpen(true)}
+                onOpenPhoneConnect={() => setIsPhoneConnectModalOpen(true)}
+                hrPhoneNumber={hrPhoneNumber}
+              />
+            ) : currentUser.role === 'ADMIN' ? (
               <AdminDashboard 
                 users={users}
                 drives={drives}
@@ -2075,20 +2242,21 @@ export default function App() {
                 <span style={{ fontSize: '0.72rem', color: '#71717a' }}>Backup</span>
               </button>
 
-              <button
-                type="button"
-                className="command-item"
-                onClick={() => {
-                  handleInstallApp();
-                  setIsCommandPaletteOpen(false);
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Smartphone size={15} color="#16a34a" />
-                  <span style={{ fontWeight: 600 }}>Install Flux TA CRM Web App</span>
-                </div>
-                <span className="badge badge-green" style={{ fontSize: '0.68rem' }}>PWA</span>
-              </button>
+              {!isAppInstalled && (
+                <button
+                  type="button"
+                  className="command-item"
+                  onClick={() => {
+                    handleInstallApp();
+                    setIsCommandPaletteOpen(false);
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <Smartphone size={15} color="#16a34a" />
+                    <span style={{ fontWeight: 600 }}>Install App</span>
+                  </div>
+                </button>
+              )}
 
               {/* Module Navigation */}
               <div className="command-group-title">Navigation Modules</div>
