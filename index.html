@@ -21,7 +21,20 @@
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div id="flux-initial-splash" style="position:fixed;inset:0;background:#0f172a;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999999;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased;">
+        <div style="display:flex;align-items:center;margin-bottom:12px;">
+          <span style="font-size:2.4rem;font-weight:900;color:#ffffff;letter-spacing:-0.04em;">flu<span style="color:#facc15;">X</span></span>
+        </div>
+        <div style="font-size:0.75rem;font-weight:700;color:#94a3b8;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:24px;">
+          Talent Acquisition CRM
+        </div>
+        <div style="width:28px;height:28px;border:3px solid rgba(255,255,255,0.12);border-top-color:#facc15;border-radius:50%;animation:fluxSplashSpin 0.7s linear infinite;"></div>
+        <style>
+          @keyframes fluxSplashSpin { to { transform: rotate(360deg); } }
+        </style>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

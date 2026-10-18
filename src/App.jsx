@@ -533,8 +533,12 @@ export default function App() {
   });
 
   const [blastLogs, setBlastLogs] = useState(() => {
-    const saved = localStorage.getItem('tacrm_blast_logs');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('tacrm_blast_logs');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
   const [expandedCallIds, setExpandedCallIds] = useState({});
   const toggleCallExpand = (id) => {
