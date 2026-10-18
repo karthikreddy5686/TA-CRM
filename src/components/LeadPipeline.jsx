@@ -1,11 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import { 
-  GitFork, 
-  Search, 
-  Calendar, 
-  GraduationCap, 
-  BookOpen, 
-  Layers, 
   Phone, 
   MessageSquare, 
   Mail, 
@@ -13,14 +7,9 @@ import {
   User, 
   Clock, 
   Building2, 
-  CheckCircle2, 
-  ExternalLink, 
-  ChevronRight,
   ChevronDown,
-  Filter,
-  X,
-  Sparkles,
-  ArrowRight
+  ChevronUp,
+  X
 } from 'lucide-react';
 
 export const PIPELINE_STAGES = [
@@ -58,11 +47,12 @@ export default function LeadPipeline({
   onAddTpo
 }) {
   const [activeStageId, setActiveStageId] = useState('NEW');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [timeFilter, setTimeFilter] = useState('ALL');
-  const [collegeFilter, setCollegeFilter] = useState('ALL');
-  const [recruiterFilter, setRecruiterFilter] = useState('ALL');
-  
+  const [expandedLeadIds, setExpandedLeadIds] = useState({});
+
+  const toggleLeadExpand = (id) => {
+    setExpandedLeadIds(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
   // Quick Add Lead Modal
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newName, setNewName] = useState('');
@@ -73,72 +63,20 @@ export default function LeadPipeline({
   const [newStage, setNewStage] = useState('NEW');
   const [newNotes, setNewNotes] = useState('');
 
-  // Extract unique colleges
-  const uniqueColleges = useMemo(() => {
-    const list = Array.from(new Set(tpos.map(t => t.collegeName))).filter(Boolean);
-    return list.sort();
-  }, [tpos]);
-
-  // Extract unique recruiters
-  const uniqueRecruiters = useMemo(() => {
-    const list = Array.from(new Set(tpos.map(t => t.assignedInternName || t.assignedInternId))).filter(Boolean);
-    return list.sort();
-  }, [tpos]);
-
-  // Filter leads based on search and filters
-  const filteredTpos = useMemo(() => {
-    return tpos.filter(t => {
-      // Search query filter
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase().trim();
-        const matchesName = t.name && t.name.toLowerCase().includes(q);
-        const matchesCollege = t.collegeName && t.collegeName.toLowerCase().includes(q);
-        const matchesEmail = t.email && t.email.toLowerCase().includes(q);
-        const matchesPhone = t.phone && t.phone.toLowerCase().includes(q);
-        if (!matchesName && !matchesCollege && !matchesEmail && !matchesPhone) {
-          return false;
-        }
-      }
-
-      // College filter
-      if (collegeFilter !== 'ALL' && t.collegeName !== collegeFilter) {
-        return false;
-      }
-
-      // Recruiter filter
-      if (recruiterFilter !== 'ALL') {
-        const recruiter = t.assignedInternName || t.assignedInternId;
-        if (recruiter !== recruiterFilter) return false;
-      }
-
-      // Time filter
-      if (timeFilter !== 'ALL' && t.lastContacted) {
-        const contactDate = new Date(t.lastContacted);
-        const now = new Date();
-        const diffDays = Math.floor((now - contactDate) / (1000 * 60 * 60 * 24));
-        if (timeFilter === 'TODAY' && diffDays > 0) return false;
-        if (timeFilter === 'WEEK' && diffDays > 7) return false;
-        if (timeFilter === 'MONTH' && diffDays > 30) return false;
-      }
-
-      return true;
-    });
-  }, [tpos, searchQuery, collegeFilter, recruiterFilter, timeFilter]);
-
-  // Calculate counts per stage
+  // Calculate counts per stage directly from tpos
   const stageCounts = useMemo(() => {
     const counts = {};
     PIPELINE_STAGES.forEach(s => {
       counts[s.id] = 0;
     });
 
-    filteredTpos.forEach(t => {
+    tpos.forEach(t => {
       const stage = normalizeStage(t.status);
       counts[stage] = (counts[stage] || 0) + 1;
     });
 
     return counts;
-  }, [filteredTpos]);
+  }, [tpos]);
 
   // Current active stage object
   const activeStage = useMemo(() => {
@@ -147,8 +85,8 @@ export default function LeadPipeline({
 
   // Leads in the active stage
   const activeStageLeads = useMemo(() => {
-    return filteredTpos.filter(t => normalizeStage(t.status) === activeStageId);
-  }, [filteredTpos, activeStageId]);
+    return tpos.filter(t => normalizeStage(t.status) === activeStageId);
+  }, [tpos, activeStageId]);
 
   // Clean phone for WhatsApp/Calling
   const formatPhoneForWa = (phone) => {
@@ -222,236 +160,12 @@ export default function LeadPipeline({
         flexDirection: 'column',
         gap: '14px'
       }}>
-        {/* Filters Row */}
+        {/* Stage Pills Grid - 4 Aside and 4 Aside (2 columns: 4 rows) */}
         <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '10px'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-            <span style={{
-              fontSize: '0.68rem',
-              fontWeight: 800,
-              color: '#154360',
-              letterSpacing: '0.06em',
-              textTransform: 'uppercase',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px',
-              background: '#ebf5fb',
-              padding: '4px 8px',
-              borderRadius: '6px',
-              border: '1px solid #aed6f1'
-            }}>
-              <Filter size={11} color="#154360" /> FILTERS
-            </span>
-
-            {/* Filter 1: Time */}
-            <div style={{ position: 'relative' }}>
-              <select
-                value={timeFilter}
-                onChange={(e) => setTimeFilter(e.target.value)}
-                style={{
-                  appearance: 'none',
-                  padding: '6px 26px 6px 28px',
-                  fontSize: '0.78rem',
-                  fontWeight: 600,
-                  color: '#154360',
-                  background: '#ffffff',
-                  border: '1px solid #cbd5e1',
-                  borderRadius: '8px',
-                  cursor: 'pointer'
-                }}
-              >
-                <option value="ALL">Any time</option>
-                <option value="TODAY">Today</option>
-                <option value="WEEK">This week</option>
-                <option value="MONTH">This month</option>
-              </select>
-              <Calendar 
-                size={13} 
-                color="#154360" 
-                style={{ position: 'absolute', left: '9px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} 
-              />
-              <ChevronDown 
-                size={13} 
-                color="#154360" 
-                style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} 
-              />
-            </div>
-
-            {/* Filter 2: Colleges */}
-            <div style={{ position: 'relative' }}>
-              <select
-                value={collegeFilter}
-                onChange={(e) => setCollegeFilter(e.target.value)}
-                style={{
-                  appearance: 'none',
-                  padding: '6px 26px 6px 28px',
-                  fontSize: '0.78rem',
-                  fontWeight: 600,
-                  color: '#154360',
-                  background: '#ffffff',
-                  border: '1px solid #cbd5e1',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  maxWidth: '220px'
-                }}
-              >
-                <option value="ALL">All colleges</option>
-                {uniqueColleges.map(c => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-              <GraduationCap 
-                size={13} 
-                color="#154360" 
-                style={{ position: 'absolute', left: '9px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} 
-              />
-              <ChevronDown 
-                size={13} 
-                color="#154360" 
-                style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} 
-              />
-            </div>
-
-            {/* Filter 3: Recruiters */}
-            <div style={{ position: 'relative' }}>
-              <select
-                value={recruiterFilter}
-                onChange={(e) => setRecruiterFilter(e.target.value)}
-                style={{
-                  appearance: 'none',
-                  padding: '6px 26px 6px 28px',
-                  fontSize: '0.78rem',
-                  fontWeight: 600,
-                  color: '#154360',
-                  background: '#ffffff',
-                  border: '1px solid #cbd5e1',
-                  borderRadius: '8px',
-                  cursor: 'pointer'
-                }}
-              >
-                <option value="ALL">All recruiters</option>
-                {uniqueRecruiters.map(r => (
-                  <option key={r} value={r}>{r}</option>
-                ))}
-              </select>
-              <BookOpen 
-                size={13} 
-                color="#154360" 
-                style={{ position: 'absolute', left: '9px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} 
-              />
-              <ChevronDown 
-                size={13} 
-                color="#154360" 
-                style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} 
-              />
-            </div>
-
-            {/* Search Input */}
-            <div style={{ position: 'relative' }}>
-              <Search 
-                size={13} 
-                color="#94a3b8" 
-                style={{
-                  position: 'absolute',
-                  left: '10px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  pointerEvents: 'none'
-                }}
-              />
-              <input 
-                type="text"
-                placeholder="Search name, email, WhatsApp..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{
-                  padding: '5px 26px 5px 28px',
-                  fontSize: '0.78rem',
-                  border: '1px solid #cbd5e1',
-                  borderRadius: '8px',
-                  background: '#ffffff',
-                  color: '#154360',
-                  outline: 'none',
-                  width: '210px'
-                }}
-              />
-              {searchQuery && (
-                <button 
-                  type="button" 
-                  onClick={() => setSearchQuery('')}
-                  style={{
-                    position: 'absolute',
-                    right: '8px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: '#94a3b8',
-                    padding: 0
-                  }}
-                >
-                  <X size={12} />
-                </button>
-              )}
-            </div>
-
-            {/* Reset Filters if active */}
-            {(searchQuery || timeFilter !== 'ALL' || collegeFilter !== 'ALL' || recruiterFilter !== 'ALL') && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchQuery('');
-                  setTimeFilter('ALL');
-                  setCollegeFilter('ALL');
-                  setRecruiterFilter('ALL');
-                }}
-                style={{
-                  background: '#fee2e2',
-                  border: '1px solid #fca5a5',
-                  color: '#b91c1c',
-                  fontSize: '0.72rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  padding: '4px 8px',
-                  borderRadius: '6px'
-                }}
-              >
-                Clear filters
-              </button>
-            )}
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setIsAddModalOpen(true)}
-            className="btn-mustard btn-black-sm"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '5px',
-              padding: '5px 12px',
-              fontSize: '0.78rem',
-              fontWeight: 800,
-              boxShadow: '0 1px 3px rgba(255, 219, 88, 0.4)'
-            }}
-          >
-            <Plus size={13} color="#154360" /> + Add Lead
-          </button>
-        </div>
-
-        {/* Stage Pills Row */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, 1fr)',
           gap: '8px',
-          flexWrap: 'wrap',
-          paddingTop: '2px'
+          width: '100%'
         }}>
           {PIPELINE_STAGES.map(stage => {
             const count = stageCounts[stage.id] || 0;
@@ -463,10 +177,10 @@ export default function LeadPipeline({
                 type="button"
                 onClick={() => setActiveStageId(stage.id)}
                 style={{
-                  display: 'inline-flex',
+                  display: 'flex',
                   alignItems: 'center',
-                  gap: '7px',
-                  padding: '6px 14px',
+                  justifyContent: 'space-between',
+                  padding: '8px 12px',
                   borderRadius: '9999px',
                   fontSize: '0.8rem',
                   fontWeight: isActive ? 800 : 600,
@@ -475,19 +189,28 @@ export default function LeadPipeline({
                   border: isActive ? '1px solid #154360' : '1px solid #e2e8f0',
                   boxShadow: isActive ? '0 2px 6px rgba(21, 67, 96, 0.28)' : 'none',
                   cursor: 'pointer',
-                  transition: 'all 150ms ease'
+                  transition: 'all 150ms ease',
+                  width: '100%',
+                  boxSizing: 'border-box'
                 }}
               >
-                {/* Stage Colored Dot */}
-                <span style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: isActive ? '#FFDB58' : stage.dotColor,
-                  flexShrink: 0
-                }} />
-
-                <span>{stage.label}</span>
+                {/* Stage Colored Dot & Label */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, overflow: 'hidden' }}>
+                  <span style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: isActive ? '#FFDB58' : stage.dotColor,
+                    flexShrink: 0
+                  }} />
+                  <span style={{ 
+                    whiteSpace: 'nowrap', 
+                    textOverflow: 'ellipsis', 
+                    overflow: 'hidden' 
+                  }}>
+                    {stage.label}
+                  </span>
+                </div>
 
                 {/* Count Badge */}
                 <span style={{
@@ -497,7 +220,8 @@ export default function LeadPipeline({
                   background: isActive ? '#FFDB58' : '#e2e8f0',
                   padding: '1px 7px',
                   borderRadius: '9999px',
-                  marginLeft: '2px'
+                  flexShrink: 0,
+                  marginLeft: '4px'
                 }}>
                   {count}
                 </span>
@@ -514,67 +238,8 @@ export default function LeadPipeline({
           overflow: 'hidden',
           marginTop: '4px'
         }}>
-          {/* Active Stage Card Header */}
-          <div style={{
-            padding: '12px 18px',
-            background: '#f8fafc',
-            borderBottom: '1px solid #e2e8f0',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '10px'
-          }}>
-            {/* Left: Active Stage Name & Count */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Layers size={16} color="#154360" />
-              <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#154360' }}>
-                {activeStage.label}
-              </span>
-              <span style={{
-                background: '#ebf5fb',
-                color: '#154360',
-                fontSize: '0.72rem',
-                fontWeight: 800,
-                padding: '2px 8px',
-                borderRadius: '9999px',
-                border: '1px solid #aed6f1'
-              }}>
-                {activeStageLeads.length} {activeStageLeads.length === 1 ? 'lead' : 'leads'}
-              </span>
-            </div>
-
-            {/* Right: Keyboard Shortcuts & Leads summary */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              fontSize: '0.72rem',
-              color: '#64748b'
-            }}>
-              <div style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                background: '#ffffff',
-                border: '1px solid #cbd5e1',
-                padding: '3px 10px',
-                borderRadius: '6px'
-              }}>
-                <span>← / → stage</span>
-                <span style={{ color: '#cbd5e1' }}>•</span>
-                <span>↑ / ↓ lead</span>
-                <span style={{ color: '#cbd5e1' }}>•</span>
-                <span>↵ action</span>
-              </div>
-              <span style={{ fontWeight: 700, color: '#154360' }}>
-                {activeStageLeads.length} {activeStageLeads.length === 1 ? 'lead' : 'leads'}
-              </span>
-            </div>
-          </div>
-
           {/* Active Stage Content Area */}
-          <div style={{ padding: activeStageLeads.length === 0 ? '50px 20px' : '16px' }}>
+          <div style={{ padding: activeStageLeads.length === 0 ? '50px 20px' : '12px' }}>
             {activeStageLeads.length === 0 ? (
               /* Empty State */
               <div style={{
@@ -602,268 +267,272 @@ export default function LeadPipeline({
                   No leads in {activeStage.label}
                 </div>
                 <div style={{ fontSize: '0.78rem', color: '#64748b', maxWidth: '380px' }}>
-                  Placement officers in this outreach category will appear here. Dial TPOs or change their disposition to advance them through the pipeline.
+                  Placement officers in this outreach category will appear here.
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setIsAddModalOpen(true)}
-                  className="btn-mustard btn-black-sm"
-                  style={{
-                    marginTop: '8px',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '6px 14px',
-                    fontSize: '0.8rem',
-                    fontWeight: 800,
-                    borderRadius: '8px'
-                  }}
-                >
-                  <Plus size={14} color="#154360" /> Add New TPO Lead
-                </button>
               </div>
             ) : (
-              /* Leads List Cards */
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {activeStageLeads.map(lead => (
-                  <div
-                    key={lead.id}
-                    style={{
-                      background: '#ffffff',
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '10px',
-                      padding: '14px 18px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '10px',
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
-                      transition: 'border-color 150ms ease, box-shadow 150ms ease'
-                    }}
-                  >
-                    {/* Top Lead Info Row */}
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      flexWrap: 'wrap',
-                      gap: '10px'
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                        {/* Avatar */}
-                        <div style={{
-                          width: '42px',
-                          height: '42px',
-                          borderRadius: '10px',
-                          background: '#154360',
-                          border: '1px solid #0e2e42',
-                          color: '#FFDB58',
-                          fontWeight: 800,
-                          fontSize: '0.9rem',
+              /* Leads List Cards with Accordion: Name & College first, details on click */
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {activeStageLeads.map(lead => {
+                  const isExpanded = !!expandedLeadIds[lead.id];
+
+                  return (
+                    <div
+                      key={lead.id}
+                      style={{
+                        background: '#ffffff',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '10px',
+                        boxShadow: isExpanded ? '0 2px 6px rgba(0,0,0,0.05)' : '0 1px 2px rgba(0,0,0,0.02)',
+                        transition: 'all 150ms ease',
+                        overflow: 'hidden'
+                      }}
+                    >
+                      {/* Clickable Header: Shows Individual Name & College first */}
+                      <div
+                        onClick={() => toggleLeadExpand(lead.id)}
+                        style={{
+                          padding: '12px 14px',
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: 'center',
-                          boxShadow: '0 2px 4px rgba(21, 67, 96, 0.2)',
-                          flexShrink: 0
-                        }}>
-                          {lead.name ? lead.name.split(' ').map(n => n[0]).slice(0, 2).join('') : 'TP'}
-                        </div>
-
-                        <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                            <span style={{ fontWeight: 800, fontSize: '0.98rem', color: '#154360' }}>
-                              {lead.name}
-                            </span>
+                          justifyContent: 'space-between',
+                          gap: '10px',
+                          cursor: 'pointer',
+                          background: isExpanded ? '#f8fafc' : '#ffffff',
+                          borderBottom: isExpanded ? '1px solid #f1f5f9' : 'none',
+                          userSelect: 'none'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                          {/* Avatar */}
+                          <div style={{
+                            width: '36px',
+                            height: '36px',
+                            borderRadius: '8px',
+                            background: '#154360',
+                            color: '#FFDB58',
+                            fontWeight: 800,
+                            fontSize: '0.85rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0
+                          }}>
+                            {lead.name ? lead.name.split(' ').map(n => n[0]).slice(0, 2).join('') : 'TP'}
                           </div>
 
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontWeight: 800, fontSize: '0.92rem', color: '#154360', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {lead.name}
+                            </div>
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                              fontSize: '0.78rem',
+                              color: '#64748b',
+                              marginTop: '1px',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis'
+                            }}>
+                              <Building2 size={12} color="#154360" />
+                              <span style={{ fontWeight: 600, color: '#334155' }}>{lead.collegeName}</span>
+                              {lead.city && <span>• {lead.city}</span>}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                          {isExpanded ? <ChevronUp size={16} color="#154360" /> : <ChevronDown size={16} color="#64748b" />}
+                        </div>
+                      </div>
+
+                      {/* Expanded Details: Phone, Call, WhatsApp, Email, Follow-up, Notes & Stage Mover */}
+                      {isExpanded && (
+                        <div style={{
+                          padding: '12px 14px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '10px'
+                        }}>
+                          {/* Recruiter & Last Contact info */}
+                          <div style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            fontSize: '0.72rem',
+                            color: '#64748b',
+                            flexWrap: 'wrap',
+                            gap: '4px'
+                          }}>
+                            <div>
+                              Assigned: <strong style={{ color: '#154360' }}>{lead.assignedInternName || 'karthik'}</strong>
+                            </div>
+                            {lead.lastContacted && (
+                              <div>Last contact: {lead.lastContacted}</div>
+                            )}
+                          </div>
+
+                          {/* Notes if present */}
+                          {lead.notes && (
+                            <div style={{
+                              background: '#f8fafc',
+                              border: '1px solid #f1f5f9',
+                              borderRadius: '6px',
+                              padding: '6px 10px',
+                              fontSize: '0.78rem',
+                              color: '#475569',
+                              lineHeight: 1.4
+                            }}>
+                              {lead.notes}
+                            </div>
+                          )}
+
+                          {/* Actions: Call, WhatsApp, Email, Follow-up & Move Stage */}
                           <div style={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '6px',
-                            fontSize: '0.8rem',
-                            color: '#52525b',
-                            marginTop: '2px'
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap',
+                            gap: '8px',
+                            paddingTop: '6px',
+                            borderTop: '1px solid #f1f5f9'
                           }}>
-                            <Building2 size={13} color="#154360" />
-                            <strong style={{ color: '#09090b' }}>{lead.collegeName}</strong>
-                            {lead.city && <span>• {lead.city}</span>}
+                            {/* Left: Call / WA / Email / Followup */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (onStartCall) {
+                                    onStartCall({
+                                      ...lead,
+                                      recipientName: lead.name,
+                                      recipientPhone: lead.phone,
+                                      recipientType: 'TPO',
+                                      type: 'AUDIO'
+                                    });
+                                  }
+                                }}
+                                className="btn-mustard btn-black-sm"
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '6px',
+                                  padding: '5px 12px',
+                                  fontSize: '0.78rem',
+                                  fontWeight: 800,
+                                  borderRadius: '6px'
+                                }}
+                              >
+                                <Phone size={13} color="#154360" /> Call {lead.phone}
+                              </button>
+
+                              {lead.phone && (
+                                <a
+                                  href={`https://wa.me/${formatPhoneForWa(lead.phone)}?text=Hello%20${encodeURIComponent(lead.name)},%20reaching%20out%20from%20Flux%20regarding%20campus%20placement%20drives.`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    padding: '5px 9px',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 600,
+                                    background: '#ecfdf5',
+                                    color: '#065f46',
+                                    border: '1px solid #a7f3d0',
+                                    borderRadius: '6px',
+                                    textDecoration: 'none'
+                                  }}
+                                >
+                                  <MessageSquare size={13} /> WhatsApp
+                                </a>
+                              )}
+
+                              {lead.email && (
+                                <a
+                                  href={`mailto:${lead.email}?subject=Campus%20Recruitment%20Drive%20Collaboration%20-%20Flux&body=Dear%20${encodeURIComponent(lead.name)},%0A%0AWe%20would%20like%20to%20conduct%20a%20campus%20recruitment%20drive%20for%20your%20students.%0A%0ABest%20regards,%0AFlux%20Team`}
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    padding: '5px 9px',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 600,
+                                    background: '#eff6ff',
+                                    color: '#1e40af',
+                                    border: '1px solid #bfdbfe',
+                                    borderRadius: '6px',
+                                    textDecoration: 'none'
+                                  }}
+                                >
+                                  <Mail size={13} /> Email
+                                </a>
+                              )}
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (onScheduleFollowUp) {
+                                    onScheduleFollowUp(lead);
+                                  }
+                                }}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  padding: '5px 9px',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 600,
+                                  background: '#ffffff',
+                                  color: '#154360',
+                                  border: '1px solid #cbd5e1',
+                                  borderRadius: '6px',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                <Clock size={13} color="#154360" /> Follow-up
+                              </button>
+                            </div>
+
+                            {/* Right: Stage Mover Dropdown */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span style={{ fontSize: '0.72rem', color: '#154360', fontWeight: 700 }}>
+                                Move to:
+                              </span>
+                              <select
+                                value={normalizeStage(lead.status)}
+                                onChange={(e) => {
+                                  if (onUpdateTpoStatus) {
+                                    onUpdateTpoStatus(lead.id, e.target.value);
+                                  }
+                                }}
+                                style={{
+                                  padding: '4px 8px',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 700,
+                                  background: '#ffffff',
+                                  border: '1px solid #154360',
+                                  borderRadius: '6px',
+                                  color: '#154360',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                {PIPELINE_STAGES.map(s => (
+                                  <option key={s.id} value={s.id}>
+                                    {s.label}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
                           </div>
                         </div>
-                      </div>
-
-                      {/* Recruiter & Last Contact */}
-                      <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                        <div style={{ fontSize: '0.72rem', color: '#71717a' }}>
-                          Assigned: <strong style={{ color: '#154360' }}>{lead.assignedInternName || 'karthik'}</strong>
-                        </div>
-                        {lead.lastContacted && (
-                          <div style={{ fontSize: '0.7rem', color: '#a1a1aa' }}>
-                            Last contact: {lead.lastContacted}
-                          </div>
-                        )}
-                      </div>
+                      )}
                     </div>
-
-                    {/* Middle: Notes & Remarks */}
-                    {lead.notes && (
-                      <div style={{
-                        background: '#f8fafc',
-                        border: '1px solid #f1f5f9',
-                        borderRadius: '6px',
-                        padding: '6px 10px',
-                        fontSize: '0.78rem',
-                        color: '#475569',
-                        lineHeight: 1.4
-                      }}>
-                        {lead.notes}
-                      </div>
-                    )}
-
-                    {/* Bottom Action Bar */}
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      flexWrap: 'wrap',
-                      gap: '8px',
-                      paddingTop: '6px',
-                      borderTop: '1px solid #f1f5f9'
-                    }}>
-                      {/* Left: Communication Buttons */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                        {/* Call Button */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (onStartCall) {
-                              onStartCall({
-                                ...lead,
-                                recipientName: lead.name,
-                                recipientPhone: lead.phone,
-                                recipientType: 'TPO',
-                                type: 'AUDIO'
-                              });
-                            }
-                          }}
-                          className="btn-mustard btn-black-sm"
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            padding: '5px 12px',
-                            fontSize: '0.78rem',
-                            fontWeight: 800,
-                            borderRadius: '6px',
-                            boxShadow: '0 1px 3px rgba(255, 219, 88, 0.4)'
-                          }}
-                        >
-                          <Phone size={13} color="#154360" /> Call {lead.phone}
-                        </button>
-
-                        {/* WhatsApp Button */}
-                        {lead.phone && (
-                          <a
-                            href={`https://wa.me/${formatPhoneForWa(lead.phone)}?text=Hello%20${encodeURIComponent(lead.name)},%20reaching%20out%20from%20Flux%20regarding%20campus%20placement%20drives.`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              padding: '5px 9px',
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                              background: '#ecfdf5',
-                              color: '#065f46',
-                              border: '1px solid #a7f3d0',
-                              borderRadius: '6px',
-                              textDecoration: 'none'
-                            }}
-                          >
-                            <MessageSquare size={13} /> WhatsApp
-                          </a>
-                        )}
-
-                        {/* Email Button */}
-                        {lead.email && (
-                          <a
-                            href={`mailto:${lead.email}?subject=Campus%20Recruitment%20Drive%20Collaboration%20-%20Flux&body=Dear%20${encodeURIComponent(lead.name)},%0A%0AWe%20would%20like%20to%20conduct%20a%20campus%20recruitment%20drive%20for%20your%20students.%0A%0ABest%20regards,%0AFlux%20Team`}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              padding: '5px 9px',
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                              background: '#eff6ff',
-                              color: '#1e40af',
-                              border: '1px solid #bfdbfe',
-                              borderRadius: '6px',
-                              textDecoration: 'none'
-                            }}
-                          >
-                            <Mail size={13} /> Email
-                          </a>
-                        )}
-
-                        {/* Schedule Follow-up */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (onScheduleFollowUp) {
-                              onScheduleFollowUp(lead);
-                            }
-                          }}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            padding: '5px 9px',
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            background: '#ffffff',
-                            color: '#154360',
-                            border: '1px solid #cbd5e1',
-                            borderRadius: '6px',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          <Clock size={13} color="#154360" /> Follow-up
-                        </button>
-                      </div>
-
-                      {/* Right: Stage Mover Dropdown */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '0.72rem', color: '#154360', fontWeight: 700 }}>
-                          Move to:
-                        </span>
-                        <select
-                          value={normalizeStage(lead.status)}
-                          onChange={(e) => {
-                            if (onUpdateTpoStatus) {
-                              onUpdateTpoStatus(lead.id, e.target.value);
-                            }
-                          }}
-                          style={{
-                            padding: '4px 8px',
-                            fontSize: '0.75rem',
-                            fontWeight: 700,
-                            background: '#ffffff',
-                            border: '1px solid #154360',
-                            borderRadius: '6px',
-                            color: '#154360',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          {PIPELINE_STAGES.map(s => (
-                            <option key={s.id} value={s.id}>
-                              {s.label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
