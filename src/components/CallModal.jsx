@@ -27,6 +27,7 @@ import {
   CheckCircle2,
   Settings
 } from 'lucide-react';
+import WhatsAppIcon from './WhatsAppIcon';
 import { formatTimeDigital } from '../data/mockData';
 import { webAudio } from '../utils/audio';
 import { normalizePhoneNumber } from '../utils/phone';
@@ -628,7 +629,7 @@ export default function CallModal({
                       gap: '6px'
                     }}
                   >
-                    <MessageSquare size={13} /> Send Meet Link via WhatsApp to Candidate
+                    <WhatsAppIcon size={14} color="#25D366" /> Send Meet Link via WhatsApp to Candidate
                   </button>
                 </div>
 

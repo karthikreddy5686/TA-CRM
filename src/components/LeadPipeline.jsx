@@ -1,16 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import { 
   Phone, 
-  MessageSquare, 
   Mail, 
   Plus, 
   User, 
   Clock, 
   Building2, 
-  ChevronDown,
-  ChevronUp,
-  X
+  ChevronDown, 
+  ChevronUp, 
+  X 
 } from 'lucide-react';
+import WhatsAppIcon from './WhatsAppIcon';
 
 export const PIPELINE_STAGES = [
   { id: 'NEW', label: 'New', dotColor: '#94a3b8', bgLight: '#f1f5f9', textColor: '#475569' },
@@ -440,13 +440,13 @@ export default function LeadPipeline({
                                     justifyContent: 'center',
                                     padding: '6px 10px',
                                     background: '#ecfdf5',
-                                    color: '#065f46',
+                                    color: '#25D366',
                                     border: '1px solid #a7f3d0',
                                     borderRadius: '6px',
                                     textDecoration: 'none'
                                   }}
                                 >
-                                  <MessageSquare size={14} />
+                                  <WhatsAppIcon size={16} color="#25D366" />
                                 </a>
                               )}
 
