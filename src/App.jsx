@@ -639,28 +639,75 @@ export default function App() {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isInternalChatOpen, setIsInternalChatOpen] = useState(false);
   const [unreadChatCount, setUnreadChatCount] = useState(0);
+  const [chatInitialTarget, setChatInitialTarget] = useState(null);
+  const [incomingChatAlert, setIncomingChatAlert] = useState(null);
+  const lastAlertedChatMsgIdRef = useRef(null);
 
-  // Sync unread chat count across employees
+  // Real-time synchronization of chat messages and unread counters across employees
   useEffect(() => {
+    if (!currentUser) return;
+
+    const userLastReadKey = `tacrm_chat_last_read_${currentUser.id}`;
+
     const updateUnreadCount = async () => {
       try {
-        const lastRead = localStorage.getItem('tacrm_chat_last_read') || '1970-01-01T00:00:00.000Z';
-        const res = await fetch('/api/chat');
+        const lastRead = localStorage.getItem(userLastReadKey) || '1970-01-01T00:00:00.000Z';
+        const res = await fetch('/api/chat', { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data.messages)) {
-            const unread = data.messages.filter(m => 
+            // Cache messages to local storage for instant render when modal opens
+            try {
+              localStorage.setItem('flux_crm_chat_messages', JSON.stringify(data.messages));
+            } catch {}
+
+            // Messages relevant to current user:
+            // 1) Team messages (channel === 'team' or !channel)
+            // 2) Direct messages where currentUser is recipient or sender
+            const relevantMessages = data.messages.filter(m => {
+              if (!m.channel || m.channel === 'team') return true;
+              if (m.recipientId && m.recipientId === currentUser.id) return true;
+              if (m.senderId && m.senderId === currentUser.id) return true;
+              if (m.channel?.startsWith('dm_') && m.channel.includes(String(currentUser.id))) return true;
+              return false;
+            });
+
+            // Calculate unread count for messages sent by others after lastRead
+            const unread = relevantMessages.filter(m => 
               m.timestamp > lastRead && 
-              m.senderId !== currentUser?.id
+              m.senderId !== currentUser.id
             ).length;
             setUnreadChatCount(unread);
+
+            // Check if there is a brand new incoming message to trigger toast & chime
+            const latestIncoming = [...relevantMessages]
+              .reverse()
+              .find(m => m.senderId !== currentUser.id && m.timestamp > lastRead);
+
+            if (latestIncoming && latestIncoming.id !== lastAlertedChatMsgIdRef.current) {
+              lastAlertedChatMsgIdRef.current = latestIncoming.id;
+              // Play chime
+              try { webAudio.playNotification(); } catch {}
+              // Show floating alert toast if chat is not open
+              setIncomingChatAlert({
+                id: latestIncoming.id,
+                senderId: latestIncoming.senderId,
+                senderName: latestIncoming.senderName || 'Staff Member',
+                senderRole: latestIncoming.senderRole || 'HR',
+                avatar: latestIncoming.avatar || 'U',
+                text: latestIncoming.text,
+                channel: latestIncoming.channel,
+                isDm: Boolean(latestIncoming.channel?.startsWith('dm_') || latestIncoming.recipientId)
+              });
+            }
           }
         }
       } catch {}
     };
 
     updateUnreadCount();
-    const interval = setInterval(updateUnreadCount, 15000);
+    // Fast 2-second polling for real-time responsiveness across devices
+    const interval = setInterval(updateUnreadCount, 2000);
 
     let bc = null;
     try {
@@ -676,11 +723,28 @@ export default function App() {
     };
   }, [currentUser]);
 
-  const handleOpenChat = () => {
+  // Auto-dismiss chat alert after 6 seconds
+  useEffect(() => {
+    if (!incomingChatAlert) return;
+    const timer = setTimeout(() => {
+      setIncomingChatAlert(null);
+    }, 6000);
+    return () => clearTimeout(timer);
+  }, [incomingChatAlert]);
+
+  const handleOpenChat = (target = null) => {
+    if (target && target.channel) {
+      setChatInitialTarget(target);
+    } else {
+      setChatInitialTarget({ channel: 'team' });
+    }
     setIsInternalChatOpen(true);
     setUnreadChatCount(0);
+    setIncomingChatAlert(null);
     try {
-      localStorage.setItem('tacrm_chat_last_read', new Date().toISOString());
+      if (currentUser?.id) {
+        localStorage.setItem(`tacrm_chat_last_read_${currentUser.id}`, new Date().toISOString());
+      }
     } catch {}
   };
 
@@ -2605,12 +2669,130 @@ export default function App() {
         currentUser={currentUser}
       />
 
+      {/* Real-time Incoming Chat Alert Toast Banner */}
+      {incomingChatAlert && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: '64px',
+            right: '16px',
+            zIndex: 99999,
+            maxWidth: '380px',
+            width: 'calc(100vw - 32px)',
+            background: 'linear-gradient(135deg, #0d1f2d 0%, #154360 100%)',
+            border: '1.5px solid #FFDB58',
+            borderRadius: '12px',
+            padding: '10px 14px',
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 0 15px rgba(255, 219, 88, 0.25)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            animation: 'slideInRight 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
+            color: '#ffffff'
+          }}
+        >
+          <div style={{
+            width: '36px',
+            height: '36px',
+            borderRadius: '50%',
+            background: '#1b557a',
+            color: '#FFDB58',
+            fontWeight: 800,
+            fontSize: '0.82rem',
+            border: '1.5px solid #FFDB58',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0
+          }}>
+            {incomingChatAlert.avatar || 'U'}
+          </div>
+
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+              <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#ffffff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {incomingChatAlert.senderName}
+              </span>
+              <span style={{
+                fontSize: '0.58rem',
+                fontWeight: 700,
+                padding: '1px 5px',
+                borderRadius: '4px',
+                background: incomingChatAlert.isDm ? 'rgba(56, 189, 248, 0.2)' : 'rgba(250, 204, 21, 0.2)',
+                color: incomingChatAlert.isDm ? '#38bdf8' : '#facc15',
+                border: incomingChatAlert.isDm ? '1px solid rgba(56, 189, 248, 0.4)' : '1px solid rgba(250, 204, 21, 0.4)'
+              }}>
+                {incomingChatAlert.isDm ? 'Direct Message' : 'Team Hub'}
+              </span>
+            </div>
+            <div style={{
+              fontSize: '0.78rem',
+              color: '#cbd5e1',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}>
+              "{incomingChatAlert.text}"
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+            <button
+              type="button"
+              onClick={() => {
+                handleOpenChat({
+                  channel: incomingChatAlert.isDm ? 'dm' : 'team',
+                  senderId: incomingChatAlert.senderId,
+                  senderName: incomingChatAlert.senderName
+                });
+                setIncomingChatAlert(null);
+              }}
+              style={{
+                background: '#10b981',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '6px',
+                padding: '5px 10px',
+                fontSize: '0.74rem',
+                fontWeight: 800,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+            >
+              Reply
+            </button>
+            <button
+              type="button"
+              onClick={() => setIncomingChatAlert(null)}
+              style={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                border: 'none',
+                borderRadius: '6px',
+                padding: '5px',
+                color: '#94a3b8',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              title="Dismiss"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Internal Team Chat Drawer Modal */}
       <InternalChatModal 
         isOpen={isInternalChatOpen}
         onClose={() => setIsInternalChatOpen(false)}
         currentUser={currentUser}
         users={users}
+        initialTarget={chatInitialTarget}
+        onClearInitialTarget={() => setChatInitialTarget(null)}
       />
     </div>
   );

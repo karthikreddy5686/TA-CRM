@@ -431,7 +431,7 @@
       "notes": "Verify test environment & send calendar invite for round 2 technical interview."
     }
   ],
-  "updatedAt": "2026-10-18T09:16:55.242Z",
+  "updatedAt": "2026-10-18T11:02:43.554Z",
   "emailDispatchLogs": [
     {
       "id": "email-dispatch-1792158616352",
@@ -542,6 +542,75 @@
       "tag": null,
       "timestamp": "2026-10-18T09:16:55.225Z",
       "formattedTime": "02:46 PM"
+    },
+    {
+      "id": "msg-node-1",
+      "channel": "team",
+      "recipientId": null,
+      "recipientName": null,
+      "senderId": "user-admin",
+      "senderRole": "HR_INTERN",
+      "avatar": "U",
+      "text": "Hi from test",
+      "tag": null,
+      "timestamp": "2026-10-18T10:14:41.102Z",
+      "formattedTime": "03:44 PM"
+    },
+    {
+      "id": "msg-1792318669285-41hh1b",
+      "channel": "team",
+      "recipientId": null,
+      "recipientName": null,
+      "senderId": "user-admin",
+      "senderName": "Geonixa Admin",
+      "senderRole": "ADMIN",
+      "avatar": "AD",
+      "text": "hi",
+      "tag": null,
+      "timestamp": "2026-10-18T10:17:49.284Z",
+      "formattedTime": "03:47 PM"
+    },
+    {
+      "id": "msg-1792320475124-aminuc",
+      "channel": "team",
+      "recipientId": null,
+      "recipientName": null,
+      "senderId": "user-admin",
+      "senderName": "Geonixa Admin",
+      "senderRole": "ADMIN",
+      "avatar": "AD",
+      "text": "Hello team, testing real-time internal chat delivery!",
+      "tag": null,
+      "timestamp": "2026-10-18T10:47:55.110Z",
+      "formattedTime": "04:17 PM"
+    },
+    {
+      "id": "msg-1792321133244-s0l38d",
+      "channel": "team",
+      "recipientId": null,
+      "recipientName": null,
+      "senderId": "user-admin",
+      "senderName": "Geonixa Admin",
+      "senderRole": "ADMIN",
+      "avatar": "AD",
+      "text": "fetch('/api/chat', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ message: { text: 'Hi Admin, I received your message loud and clear!', senderId: 'intern-1791972714546', senderName: 'muni', senderRole: 'HR_INTERN', avatar: 'IN', channel: 'team' } }) })",
+      "tag": null,
+      "timestamp": "2026-10-18T10:58:53.228Z",
+      "formattedTime": "04:28 PM"
+    },
+    {
+      "id": "msg-1792321363525-u7kr9r",
+      "channel": "team",
+      "recipientId": null,
+      "recipientName": null,
+      "senderId": "intern-1791972714546",
+      "senderName": "muni",
+      "senderRole": "HR_INTERN",
+      "avatar": "MU",
+      "text": "Hi Admin, I received your message loud and clear!",
+      "tag": null,
+      "timestamp": "2026-10-18T11:02:43.524Z",
+      "formattedTime": "04:32 PM"
     }
   ]
 }

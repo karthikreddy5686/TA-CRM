@@ -2528,6 +2528,28 @@ input[type="checkbox"] {
   color: #ffffff;
 }
 
+.navbar-chat-badge {
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 10px;
+  line-height: 1.2;
+  margin-left: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.7);
+  animation: pulseBadge 2s infinite ease-in-out;
+}
+
+@keyframes pulseBadge {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
 .navbar-quick-call-btn {
   width: 32px;
   height: 32px;
@@ -2597,11 +2619,26 @@ input[type="checkbox"] {
   .navbar-search-kbd {
     display: none !important;
   }
-  .navbar-chat-btn span {
+  .navbar-chat-btn .navbar-chat-label {
     display: none !important;
   }
   .navbar-chat-btn {
-    padding: 6px;
+    padding: 6px 8px !important;
+    position: relative !important;
+  }
+  .navbar-chat-badge {
+    position: absolute !important;
+    top: -5px !important;
+    right: -5px !important;
+    min-width: 17px !important;
+    height: 17px !important;
+    border-radius: 9px !important;
+    padding: 0 4px !important;
+    font-size: 0.6rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 1.5px solid #0d1f2d !important;
   }
   .navbar-user-btn span {
     display: none !important;

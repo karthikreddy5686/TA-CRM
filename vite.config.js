@@ -285,6 +285,7 @@ function crmServerStoragePlugin() {
 
     // 3.5 Real-time Employee Internal Chat
     if (cleanUrl === '/api/chat' || cleanUrl.startsWith('/api/chat/')) {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
       if (req.method === 'GET') {
         const db = readDb()
         const messages = Array.isArray(db.chatMessages) ? db.chatMessages : []

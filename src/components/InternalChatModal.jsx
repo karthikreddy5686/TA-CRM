@@ -18,7 +18,14 @@ import {
   Sparkles
 } from 'lucide-react';
 
-export default function InternalChatModal({ isOpen, onClose, currentUser, users = [] }) {
+export default function InternalChatModal({ 
+  isOpen, 
+  onClose, 
+  currentUser, 
+  users = [],
+  initialTarget = null,
+  onClearInitialTarget = null
+}) {
   // Navigation: 'team' (Team Workspace) or 'dm' (Direct Message with a selected employee)
   const [activeChannel, setActiveChannel] = useState('team'); // 'team' | 'dm'
   const [selectedColleague, setSelectedColleague] = useState(null); // User object for 1:1 DM
@@ -72,10 +79,46 @@ export default function InternalChatModal({ isOpen, onClose, currentUser, users 
     return m.channel === currentChannelId;
   });
 
+  // Route to initial target channel/colleague if passed from alert toast
+  useEffect(() => {
+    if (isOpen && initialTarget) {
+      if (initialTarget.channel === 'dm' && initialTarget.senderId) {
+        const targetUser = users.find(u => u && u.id === initialTarget.senderId);
+        if (targetUser) {
+          setSelectedColleague(targetUser);
+          setActiveChannel('dm');
+          try {
+            localStorage.setItem(`tacrm_dm_read_${currentUser?.id}_${targetUser.id}`, new Date().toISOString());
+          } catch {}
+        }
+      } else if (initialTarget.channel === 'team') {
+        setActiveChannel('team');
+        setSelectedColleague(null);
+      }
+      onClearInitialTarget?.();
+    }
+  }, [isOpen, initialTarget, users, currentUser]);
+
+  // Keep read cursor updated in real-time when viewing an active channel
+  useEffect(() => {
+    if (!isOpen || !currentUser?.id) return;
+    const nowIso = new Date().toISOString();
+    if (activeChannel === 'team') {
+      try {
+        localStorage.setItem(`tacrm_chat_last_read_${currentUser.id}`, nowIso);
+      } catch {}
+    } else if (activeChannel === 'dm' && selectedColleague?.id) {
+      try {
+        localStorage.setItem(`tacrm_dm_read_${currentUser.id}_${selectedColleague.id}`, nowIso);
+        localStorage.setItem(`tacrm_chat_last_read_${currentUser.id}`, nowIso);
+      } catch {}
+    }
+  }, [isOpen, activeChannel, selectedColleague, messages.length, currentUser]);
+
   // Fetch messages from central server database
   const fetchServerMessages = async () => {
     try {
-      const res = await fetch('/api/chat');
+      const res = await fetch('/api/chat', { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data.messages)) {
@@ -101,8 +144,8 @@ export default function InternalChatModal({ isOpen, onClose, currentUser, users 
 
     if (!isOpen) return;
 
-    // Fast polling while chat drawer is open
-    const interval = setInterval(fetchServerMessages, 2500);
+    // Fast 1000ms polling while chat drawer is open for instant real-time conversations
+    const interval = setInterval(fetchServerMessages, 1000);
 
     // Cross-tab instant synchronization via BroadcastChannel
     let bc = null;
@@ -179,12 +222,19 @@ export default function InternalChatModal({ isOpen, onClose, currentUser, users 
     setInputMessage('');
     setIsSending(false);
 
+    // Keep own read cursor updated
+    if (activeChannel === 'team') {
+      try { localStorage.setItem(`tacrm_chat_last_read_${currentUser?.id}`, now.toISOString()); } catch {}
+    } else if (activeChannel === 'dm' && selectedColleague?.id) {
+      try { localStorage.setItem(`tacrm_dm_read_${currentUser?.id}_${selectedColleague.id}`, now.toISOString()); } catch {}
+    }
+
     // Broadcast to other tabs immediately
     try {
       if (typeof BroadcastChannel !== 'undefined') {
         const bc = new BroadcastChannel('flux_crm_chat_bus');
         bc.postMessage({ type: 'NEW_MESSAGE', message: newMsg });
-        bc.close();
+        setTimeout(() => { try { bc.close(); } catch {} }, 500);
       }
     } catch {}
 
@@ -194,7 +244,14 @@ export default function InternalChatModal({ isOpen, onClose, currentUser, users 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: newMsg })
-      }).catch(() => {});
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data?.message) {
+          fetchServerMessages();
+        }
+      })
+      .catch(() => {});
     } catch {}
   };
 
@@ -235,10 +292,37 @@ export default function InternalChatModal({ isOpen, onClose, currentUser, users 
   };
 
   // Count unread direct messages per colleague
-  const getColleagueDmCount = (colleagueId) => {
+  const getColleagueUnreadCount = (colleagueId) => {
     const dmId = getDmChannelId(currentUser?.id, colleagueId);
-    return messages.filter(m => m.channel === dmId && m.senderId === colleagueId).length;
+    const dmLastRead = localStorage.getItem(`tacrm_dm_read_${currentUser?.id}_${colleagueId}`) || '1970-01-01T00:00:00.000Z';
+    return messages.filter(m => m.channel === dmId && m.senderId === colleagueId && m.timestamp > dmLastRead).length;
   };
+
+  // Get last message in a direct message channel
+  const getColleagueLastMessage = (colleagueId) => {
+    const dmId = getDmChannelId(currentUser?.id, colleagueId);
+    const dmMessages = messages.filter(m => m.channel === dmId);
+    if (!dmMessages.length) return null;
+    return dmMessages[dmMessages.length - 1];
+  };
+
+  // Total unread DMs across all colleagues
+  const totalUnreadDms = colleagues.reduce((sum, c) => sum + getColleagueUnreadCount(c.id), 0);
+
+  // Sort colleagues: unread messages first, then latest message time, then name
+  const sortedColleagues = [...filteredColleagues].sort((a, b) => {
+    const unreadA = getColleagueUnreadCount(a.id);
+    const unreadB = getColleagueUnreadCount(b.id);
+    if (unreadA !== unreadB) return unreadB - unreadA;
+
+    const lastA = getColleagueLastMessage(a.id);
+    const lastB = getColleagueLastMessage(b.id);
+    const timeA = lastA ? new Date(lastA.timestamp).getTime() : 0;
+    const timeB = lastB ? new Date(lastB.timestamp).getTime() : 0;
+    if (timeA !== timeB) return timeB - timeA;
+
+    return (a.name || '').localeCompare(b.name || '');
+  });
 
   return (
     <div 
@@ -422,6 +506,19 @@ export default function InternalChatModal({ isOpen, onClose, currentUser, users 
             }}
           >
             <User size={13} /> Direct Messages ({colleagues.length})
+            {totalUnreadDms > 0 && (
+              <span style={{
+                background: '#ef4444',
+                color: '#ffffff',
+                fontSize: '0.62rem',
+                fontWeight: 800,
+                padding: '1px 6px',
+                borderRadius: '10px',
+                lineHeight: 1.2
+              }}>
+                {totalUnreadDms} new
+              </span>
+            )}
           </button>
         </div>
 
@@ -458,24 +555,30 @@ export default function InternalChatModal({ isOpen, onClose, currentUser, users 
                 Select an employee to start a private chat:
               </div>
 
-              {filteredColleagues.length === 0 ? (
+              {sortedColleagues.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '30px 10px', color: '#64748b', fontSize: '0.78rem' }}>
                   No other employees found. Add staff members in the Admin Dashboard.
                 </div>
               ) : (
-                filteredColleagues.map(colleague => {
+                sortedColleagues.map(colleague => {
                   const roleBadge = getRoleBadge(colleague.role);
-                  const msgCount = getColleagueDmCount(colleague.id);
+                  const unreadCount = getColleagueUnreadCount(colleague.id);
+                  const lastMsg = getColleagueLastMessage(colleague.id);
 
                   return (
                     <div
                       key={colleague.id}
-                      onClick={() => setSelectedColleague(colleague)}
+                      onClick={() => {
+                        setSelectedColleague(colleague);
+                        try {
+                          localStorage.setItem(`tacrm_dm_read_${currentUser?.id}_${colleague.id}`, new Date().toISOString());
+                        } catch {}
+                      }}
                       role="button"
                       tabIndex={0}
                       style={{
-                        background: 'rgba(255, 255, 255, 0.04)',
-                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        background: unreadCount > 0 ? 'rgba(56, 189, 248, 0.1)' : 'rgba(255, 255, 255, 0.04)',
+                        border: unreadCount > 0 ? '1px solid rgba(56, 189, 248, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)',
                         borderRadius: '10px',
                         padding: '10px 12px',
                         display: 'flex',
@@ -485,7 +588,7 @@ export default function InternalChatModal({ isOpen, onClose, currentUser, users 
                         transition: 'all 0.15s ease'
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
                         <div style={{
                           width: '36px',
                           height: '36px',
@@ -514,39 +617,47 @@ export default function InternalChatModal({ isOpen, onClose, currentUser, users 
                           }} />
                         </div>
 
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: '0.84rem', fontWeight: 700, color: '#f1f5f9', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {colleague.name}
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ fontSize: '0.84rem', fontWeight: 700, color: '#f1f5f9', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {colleague.name}
+                            </span>
+                            <span style={{
+                              fontSize: '0.58rem',
+                              fontWeight: 700,
+                              padding: '1px 5px',
+                              borderRadius: '4px',
+                              background: roleBadge.bg,
+                              color: roleBadge.color,
+                              border: `1px solid ${roleBadge.border}`,
+                              flexShrink: 0
+                            }}>
+                              {roleBadge.text}
+                            </span>
                           </div>
-                          <div style={{ fontSize: '0.68rem', color: '#94a3b8', marginTop: '2px' }}>
-                            {colleague.email}
+                          <div style={{ fontSize: '0.72rem', color: unreadCount > 0 ? '#38bdf8' : '#94a3b8', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <span style={{ fontWeight: unreadCount > 0 ? 700 : 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '210px' }}>
+                              {lastMsg ? `${lastMsg.senderId === currentUser?.id ? 'You: ' : ''}${lastMsg.text}` : colleague.email}
+                            </span>
+                            {lastMsg && (
+                              <span style={{ fontSize: '0.62rem', opacity: 0.7, flexShrink: 0 }}>• {lastMsg.formattedTime}</span>
+                            )}
                           </div>
                         </div>
                       </div>
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                        <span style={{
-                          fontSize: '0.6rem',
-                          fontWeight: 700,
-                          padding: '2px 6px',
-                          borderRadius: '4px',
-                          background: roleBadge.bg,
-                          color: roleBadge.color,
-                          border: `1px solid ${roleBadge.border}`
-                        }}>
-                          {roleBadge.text}
-                        </span>
-
-                        {msgCount > 0 && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, marginLeft: '8px' }}>
+                        {unreadCount > 0 && (
                           <span style={{
-                            background: '#10b981',
+                            background: '#ef4444',
                             color: '#ffffff',
                             fontSize: '0.65rem',
                             fontWeight: 800,
-                            padding: '1px 6px',
-                            borderRadius: '10px'
+                            padding: '2px 7px',
+                            borderRadius: '10px',
+                            boxShadow: '0 0 6px rgba(239, 68, 68, 0.6)'
                           }}>
-                            {msgCount}
+                            {unreadCount} new
                           </span>
                         )}
                       </div>

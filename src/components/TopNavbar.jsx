@@ -72,22 +72,14 @@ export default function TopNavbar({
           onClick={onOpenChat}
           className="navbar-chat-btn"
           title="Open Internal Team Chat"
+          id="navbar-chat-btn"
           style={{ position: 'relative' }}
         >
           <MessageSquare size={14} />
-          <span>Internal Chat</span>
+          <span className="navbar-chat-label">Internal Chat</span>
           {unreadChatCount > 0 && (
-            <span style={{
-              background: '#ef4444',
-              color: '#ffffff',
-              fontSize: '0.62rem',
-              fontWeight: 800,
-              padding: '1px 5px',
-              borderRadius: '10px',
-              lineHeight: 1.2,
-              marginLeft: '4px'
-            }}>
-              {unreadChatCount}
+            <span className="navbar-chat-badge">
+              {unreadChatCount > 99 ? '99+' : unreadChatCount}
             </span>
           )}
         </button>
