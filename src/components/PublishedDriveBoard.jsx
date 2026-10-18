@@ -1395,24 +1395,25 @@ export default function PublishedDriveBoard({
                   justifyContent: 'space-between', 
                   gap: '6px', 
                   background: '#ffffff', 
-                  padding: '6px 8px', 
+                  padding: '5px 8px', 
                   borderRadius: 'var(--radius-sm)', 
                   border: '1px solid #e2e8f0',
-                  flexWrap: 'wrap'
+                  flexWrap: 'nowrap'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <span style={{ fontSize: 'var(--font-10)', color: '#154360', fontWeight: 700 }}>Stage:</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', minWidth: 0, flexShrink: 1 }}>
+                    <span style={{ fontSize: '0.72rem', color: '#154360', fontWeight: 700, flexShrink: 0 }}>Stage:</span>
                     <select
                       className="form-select"
                       value={student.stage || 'ONLINE_ASSESSMENT'}
                       onChange={(e) => onUpdateCandidateStage && onUpdateCandidateStage(student.id, e.target.value)}
                       style={{
-                        fontSize: 'var(--font-10)',
-                        lineHeight: 'var(--lh-10)',
+                        fontSize: '0.72rem',
+                        lineHeight: 1.2,
                         padding: '2px 4px',
                         fontWeight: 700,
                         borderRadius: '4px',
-                        width: 'auto',
+                        minWidth: 0,
+                        maxWidth: '120px',
                         background: student.stage === 'OFFERED' ? '#FFDB58' : student.stage === 'TECH_INTERVIEW' ? '#ebf5fb' : '#f8fafc',
                         color: student.stage === 'OFFERED' ? '#154360' : student.stage === 'TECH_INTERVIEW' ? '#154360' : '#09090b',
                         border: student.stage === 'OFFERED' ? '1px solid #fae27a' : student.stage === 'TECH_INTERVIEW' ? '1px solid #aed6f1' : '1px solid #cbd5e1'
@@ -1425,7 +1426,7 @@ export default function PublishedDriveBoard({
                     </select>
                   </div>
 
-                  <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexShrink: 0 }}>
                     <button
                       onClick={() => onStartCall({
                         recipientType: 'STUDENT',
@@ -1437,7 +1438,7 @@ export default function PublishedDriveBoard({
                         student
                       })}
                       className="btn-mustard btn-black-sm"
-                      style={{ padding: '3px 8px', fontSize: 'var(--font-xs)', gap: '4px' }}
+                      style={{ padding: '3px 8px', fontSize: '0.72rem', gap: '3px', whiteSpace: 'nowrap' }}
                       title="Direct Phone Call"
                     >
                       <Phone size={11} color="#154360" /> Call
@@ -1462,8 +1463,9 @@ export default function PublishedDriveBoard({
                       className="btn-navy btn-black-sm"
                       style={{ 
                         padding: '3px 8px', 
-                        fontSize: 'var(--font-xs)', 
-                        gap: '4px',
+                        fontSize: '0.72rem', 
+                        gap: '3px',
+                        whiteSpace: 'nowrap',
                         background: student.meetLink ? '#0f766e' : '#154360',
                         borderColor: student.meetLink ? '#2dd4bf' : undefined
                       }}
@@ -1476,7 +1478,7 @@ export default function PublishedDriveBoard({
                       <button
                         onClick={() => onDeleteStudent(student.id)}
                         className="btn-icon"
-                        style={{ width: '24px', height: '24px', color: '#ef4444' }}
+                        style={{ width: '22px', height: '22px', color: '#ef4444', flexShrink: 0 }}
                         title="Delete candidate"
                       >
                         <Trash2 size={11} />

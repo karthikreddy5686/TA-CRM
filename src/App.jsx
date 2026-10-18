@@ -626,20 +626,6 @@ export default function App() {
     }
     return false;
   });
-  const [showMobileInstallBanner, setShowMobileInstallBanner] = useState(() => {
-    try {
-      return !sessionStorage.getItem('tacrm_dismiss_install_banner');
-    } catch {
-      return true;
-    }
-  });
-
-  const handleDismissInstallBanner = () => {
-    setShowMobileInstallBanner(false);
-    try {
-      sessionStorage.setItem('tacrm_dismiss_install_banner', 'true');
-    } catch {}
-  };
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isInternalChatOpen, setIsInternalChatOpen] = useState(false);
@@ -1545,38 +1531,6 @@ export default function App() {
         isAppInstalled={isAppInstalled}
       />
 
-      {/* Mobile Smart Install Banner for Mobile Browsers */}
-      {showMobileInstallBanner && !isAppInstalled && (
-        <div className="mobile-smart-install-banner">
-          <div className="mobile-smart-install-left">
-            <img src="/flux-icon.png" alt="Flux CRM" className="mobile-smart-install-icon" />
-            <div className="mobile-smart-install-info">
-              <div className="mobile-smart-install-title">Flux TA CRM</div>
-              <div className="mobile-smart-install-sub">Install Web App on your phone</div>
-            </div>
-          </div>
-          <div className="mobile-smart-install-actions">
-            <button 
-              type="button" 
-              onClick={handleInstallApp}
-              className="btn-mobile-smart-install"
-              id="btn-mobile-smart-install"
-              title="Install Flux TA CRM on your Mobile Phone"
-            >
-              <Download size={13} />
-              <span>Install</span>
-            </button>
-            <button 
-              type="button" 
-              onClick={handleDismissInstallBanner}
-              className="btn-mobile-smart-dismiss"
-              aria-label="Dismiss banner"
-            >
-              <X size={14} />
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Main Layout Container */}
       <div className="app-main-layout">
