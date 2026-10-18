@@ -15,7 +15,8 @@ export default function TopNavbar({
   onOpenChat,
   onOpenLogout,
   onInstallApp,
-  isAppInstalled = false
+  isAppInstalled = false,
+  unreadChatCount = 0
 }) {
   const roleLabel = currentUser?.role === 'ADMIN'
     ? 'Super Admin'
@@ -71,9 +72,24 @@ export default function TopNavbar({
           onClick={onOpenChat}
           className="navbar-chat-btn"
           title="Open Internal Team Chat"
+          style={{ position: 'relative' }}
         >
           <MessageSquare size={14} />
           <span>Internal Chat</span>
+          {unreadChatCount > 0 && (
+            <span style={{
+              background: '#ef4444',
+              color: '#ffffff',
+              fontSize: '0.62rem',
+              fontWeight: 800,
+              padding: '1px 5px',
+              borderRadius: '10px',
+              lineHeight: 1.2,
+              marginLeft: '4px'
+            }}>
+              {unreadChatCount}
+            </span>
+          )}
         </button>
 
         <div 

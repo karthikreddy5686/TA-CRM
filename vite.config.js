@@ -283,6 +283,87 @@ function crmServerStoragePlugin() {
       return
     }
 
+    // 3.5 Real-time Employee Internal Chat
+    if (cleanUrl === '/api/chat' || cleanUrl.startsWith('/api/chat/')) {
+      if (req.method === 'GET') {
+        const db = readDb()
+        const messages = Array.isArray(db.chatMessages) ? db.chatMessages : []
+        res.setHeader('Content-Type', 'application/json')
+        res.end(JSON.stringify({ success: true, messages }))
+        return
+      }
+
+      if (req.method === 'POST') {
+        let body = ''
+        req.on('data', chunk => { body += chunk })
+        req.on('end', () => {
+          try {
+            const current = readDb()
+            const existingMessages = Array.isArray(current.chatMessages) ? current.chatMessages : []
+
+            if (cleanUrl === '/api/chat/clear') {
+              current.chatMessages = []
+              current.updatedAt = new Date().toISOString()
+              writeDb(current)
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({ success: true, count: 0 }))
+              return
+            }
+
+            if (cleanUrl === '/api/chat/delete') {
+              const { messageId } = JSON.parse(body || '{}')
+              current.chatMessages = existingMessages.filter(m => m.id !== messageId)
+              current.updatedAt = new Date().toISOString()
+              writeDb(current)
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({ success: true, remaining: current.chatMessages.length }))
+              return
+            }
+
+            const { message } = JSON.parse(body || '{}')
+            if (message && message.text) {
+              const fullMsg = {
+                id: message.id || `msg-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+                channel: message.channel || 'team', // 'team' or 'dm_<userA>_<userB>'
+                recipientId: message.recipientId || null,
+                recipientName: message.recipientName || null,
+                senderId: message.senderId,
+                senderName: message.senderName,
+                senderRole: message.senderRole || 'HR_INTERN',
+                avatar: message.avatar || 'U',
+                text: String(message.text).trim(),
+                tag: message.tag || null,
+                timestamp: message.timestamp || new Date().toISOString(),
+                formattedTime: message.formattedTime || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              }
+
+              existingMessages.push(fullMsg)
+              if (existingMessages.length > 1000) {
+                existingMessages.splice(0, existingMessages.length - 1000)
+              }
+
+              current.chatMessages = existingMessages
+              current.updatedAt = new Date().toISOString()
+              writeDb(current)
+
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({ success: true, message: fullMsg, total: existingMessages.length }))
+              return
+            }
+
+            res.statusCode = 400
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ error: 'Valid message object required' }))
+          } catch (err) {
+            res.statusCode = 500
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ error: err.message }))
+          }
+        })
+        return
+      }
+    }
+
     // 4. GET & POST full storage database
     if (cleanUrl === '/api/storage') {
       if (req.method === 'GET') {

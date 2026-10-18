@@ -638,6 +638,51 @@ export default function App() {
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isInternalChatOpen, setIsInternalChatOpen] = useState(false);
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
+
+  // Sync unread chat count across employees
+  useEffect(() => {
+    const updateUnreadCount = async () => {
+      try {
+        const lastRead = localStorage.getItem('tacrm_chat_last_read') || '1970-01-01T00:00:00.000Z';
+        const res = await fetch('/api/chat');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.messages)) {
+            const unread = data.messages.filter(m => 
+              m.timestamp > lastRead && 
+              m.senderId !== currentUser?.id
+            ).length;
+            setUnreadChatCount(unread);
+          }
+        }
+      } catch {}
+    };
+
+    updateUnreadCount();
+    const interval = setInterval(updateUnreadCount, 15000);
+
+    let bc = null;
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        bc = new BroadcastChannel('flux_crm_chat_bus');
+        bc.onmessage = () => updateUnreadCount();
+      }
+    } catch {}
+
+    return () => {
+      clearInterval(interval);
+      if (bc) bc.close();
+    };
+  }, [currentUser]);
+
+  const handleOpenChat = () => {
+    setIsInternalChatOpen(true);
+    setUnreadChatCount(0);
+    try {
+      localStorage.setItem('tacrm_chat_last_read', new Date().toISOString());
+    } catch {}
+  };
 
   // Global Quick Action Modals & Action Sheet
   const [isGlobalNewMenuOpen, setIsGlobalNewMenuOpen] = useState(false);
@@ -1534,10 +1579,11 @@ export default function App() {
           }
         }}
         onOpenSearch={() => setIsCommandPaletteOpen(true)}
-        onOpenChat={() => setIsInternalChatOpen(true)}
+        onOpenChat={handleOpenChat}
         onOpenLogout={() => setIsLogoutModalOpen(true)}
         onInstallApp={handleInstallApp}
         isAppInstalled={isAppInstalled}
+        unreadChatCount={unreadChatCount}
       />
 
 
@@ -1753,9 +1799,10 @@ export default function App() {
                 onSelectTab={setActiveTab}
                 onStartCall={handleStartCall}
                 onOpenQuickCall={() => setIsGlobalQuickCallModalOpen(true)}
-                onOpenChat={() => setIsInternalChatOpen(true)}
+                onOpenChat={handleOpenChat}
                 onOpenPhoneConnect={() => setIsPhoneConnectModalOpen(true)}
                 hrPhoneNumber={hrPhoneNumber}
+                unreadChatCount={unreadChatCount}
               />
             ) : currentUser.role === 'ADMIN' ? (
               <AdminDashboard 

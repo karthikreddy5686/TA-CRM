@@ -33,7 +33,8 @@ export default function MobileCallingHub({
   onOpenQuickCall,
   onOpenChat,
   onOpenPhoneConnect,
-  hrPhoneNumber = ''
+  hrPhoneNumber = '',
+  unreadChatCount = 0
 }) {
   const [activeCallListTab, setActiveCallListTab] = useState('students'); // 'students' | 'tpos'
   const [searchQuery, setSearchQuery] = useState('');
@@ -125,7 +126,8 @@ export default function MobileCallingHub({
       label: 'Team Chat',
       icon: <MessageSquare size={22} color="#ea580c" />,
       bg: '#ffedd5',
-      onClick: () => onOpenChat()
+      onClick: () => onOpenChat(),
+      badge: unreadChatCount > 0 ? unreadChatCount : null
     },
     {
       id: 'targets',
