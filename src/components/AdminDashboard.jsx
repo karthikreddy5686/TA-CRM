@@ -1117,7 +1117,6 @@ export default function AdminDashboard({
                   style={{ 
                     background: '#f8fafc', 
                     border: '1px solid #e2e8f0', 
-                    borderLeft: '4px solid #154360',
                     borderRadius: '8px', 
                     padding: '10px 12px',
                     display: 'flex',

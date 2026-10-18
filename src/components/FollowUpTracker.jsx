@@ -364,7 +364,6 @@ export default function FollowUpTracker({
                   style={{
                     background: fup.status === 'COMPLETED' ? '#f1f5f9' : '#f8fafc',
                     border: '1px solid #e2e8f0',
-                    borderLeft: fup.status === 'COMPLETED' ? '4px solid #cbd5e1' : '4px solid #154360',
                     borderRadius: '8px',
                     padding: '8px 10px',
                     display: 'flex',

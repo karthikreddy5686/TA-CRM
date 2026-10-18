@@ -871,7 +871,6 @@ Columns accepted: Full Name, Roll Number, Email, Phone/WhatsApp, Branch, CGPA"
                   style={{
                     background: isSelected ? '#ebf5fb' : '#f8fafc',
                     border: isSelected ? '1px solid #154360' : '1px solid #e2e8f0',
-                    borderLeft: '4px solid #154360',
                     borderRadius: '10px',
                     padding: '10px 12px',
                     display: 'flex',

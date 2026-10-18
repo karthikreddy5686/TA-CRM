@@ -68,28 +68,21 @@ export default function MobileCallingHub({
   const totalCallsToday = callSessions.length;
   const pendingFollowupsCount = followUps.filter(f => f.status === 'SCHEDULED' || f.status === 'PENDING').length;
 
-  // 12-Icon Grid Items mapped exactly to Reference Image 2 Style
+  // Quick Tiles mapped to mobile calling grid (9 clean tiles)
   const hubTiles = [
     {
       id: 'students',
-      label: 'Call Students',
+      label: 'Students',
       icon: <Users size={22} color="#0284c7" />,
       bg: '#e0f2fe',
       onClick: () => onSelectTab('liveBoard')
     },
     {
       id: 'tpos',
-      label: 'Call TPOs',
+      label: 'TPOs',
       icon: <Building2 size={22} color="#16a34a" />,
       bg: '#dcfce7',
       onClick: () => onSelectTab('tpos')
-    },
-    {
-      id: 'dialer',
-      label: 'Keypad Dial',
-      icon: <PhoneCall size={22} color="#e11d48" />,
-      bg: '#ffe4e6',
-      onClick: () => onOpenQuickCall()
     },
     {
       id: 'followups',
@@ -140,20 +133,6 @@ export default function MobileCallingHub({
       icon: <Target size={22} color="#e11d48" />,
       bg: '#ffe4e6',
       onClick: () => onSelectTab('calls')
-    },
-    {
-      id: 'phoneline',
-      label: 'Calling Line',
-      icon: <Smartphone size={22} color="#0284c7" />,
-      bg: '#e0f2fe',
-      onClick: () => onOpenPhoneConnect()
-    },
-    {
-      id: 'team',
-      label: 'Staff Team',
-      icon: <Users size={22} color="#d97706" />,
-      bg: '#fef3c7',
-      onClick: () => onSelectTab('overview')
     }
   ];
 
@@ -384,9 +363,6 @@ export default function MobileCallingHub({
               Direct in-app dialer & candidate phone outreach
             </p>
           </div>
-          <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#10b981', background: '#ecfdf5', padding: '2px 8px', borderRadius: '12px' }}>
-            ● Ready
-          </span>
         </div>
 
         {/* List Toggle: Students vs TPOs */}

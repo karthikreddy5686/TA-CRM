@@ -1340,7 +1340,6 @@ export default function PublishedDriveBoard({
                   style={{
                     background: '#f8fafc',
                     border: '1px solid #e2e8f0',
-                    borderLeft: '4px solid #154360',
                     borderRadius: 'var(--radius-sm)',
                     padding: '8px 10px',
                     display: 'flex',
