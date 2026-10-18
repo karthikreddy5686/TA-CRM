@@ -2592,8 +2592,7 @@ input[type="checkbox"] {
     display: none !important;
   }
   .navbar-center-group {
-    max-width: 140px;
-    margin: 0 6px;
+    display: none !important;
   }
   .navbar-search-kbd {
     display: none !important;

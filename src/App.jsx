@@ -26,6 +26,7 @@ import {
   Download,
   Upload,
   ChevronDown,
+  ChevronUp,
   Menu,
   ShieldCheck,
   Key,
@@ -535,6 +536,10 @@ export default function App() {
     const saved = localStorage.getItem('tacrm_blast_logs');
     return saved ? JSON.parse(saved) : [];
   });
+  const [expandedCallIds, setExpandedCallIds] = useState({});
+  const toggleCallExpand = (id) => {
+    setExpandedCallIds(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
   // Data is cleanly sanitized upon lazy state initialization
 
@@ -2023,80 +2028,107 @@ export default function App() {
                 </table>
               </div>
 
-              {/* Mobile Card View - Clean, compact, small font, NO horizontal scroll */}
+              {/* Mobile Card View - Clean, compact, expandable accordion */}
               <div className="mobile-only" style={{ padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: '6px', width: '100%', boxSizing: 'border-box' }}>
                 {callSessions.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '20px 10px', color: '#71717a', fontSize: '0.78rem' }}>
                     No calls recorded yet.
                   </div>
                 ) : (
-                  callSessions.map(c => (
-                    <div key={c.id} style={{
-                      background: '#f8fafc',
-                      border: '1px solid #e2e8f0',
-                      borderLeft: '4px solid #154360',
-                      borderRadius: '8px',
-                      padding: '8px 10px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '4px',
-                      width: '100%',
-                      boxSizing: 'border-box'
-                    }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#154360', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                            {c.callType === 'VIDEO' ? <Video size={12} color="#154360" /> : <Phone size={12} color="#154360" />}
-                            {c.recipientName}
-                          </span>
-                          <span className="badge badge-grey" style={{ fontSize: '0.62rem', padding: '1px 4px' }}>
-                            {c.recipientType}
-                          </span>
-                        </div>
-                        <span style={{
-                          fontFamily: 'monospace',
-                          fontWeight: 700,
-                          fontSize: '0.72rem',
-                          background: '#ebf5fb',
-                          color: '#154360',
-                          border: '1px solid #aed6f1',
-                          padding: '2px 6px',
-                          borderRadius: '4px'
-                        }}>
-                          {formatDuration(c.durationSeconds)}
-                        </span>
-                      </div>
-
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.68rem', color: '#71717a' }}>
-                        <span>Caller: <strong style={{ color: '#154360' }}>{c.internName}</strong></span>
-                        <span>{new Date(c.startedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                      </div>
-
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
-                        <span className={`badge ${
-                          c.disposition === 'DRIVE_CONFIRMED' || c.disposition === 'SCREENING_PASSED'
-                            ? 'badge-green'
-                            : 'badge-amber'
-                        }`} style={{ fontSize: '0.62rem', padding: '1px 5px' }}>
-                          {c.disposition ? c.disposition.replace(/_/g, ' ') : 'COMPLETED'}
-                        </span>
-                        <button 
-                          onClick={() => handleDeleteCallSession(c.id)}
-                          className="btn-icon"
-                          style={{ width: '22px', height: '22px', color: '#ef4444' }}
-                          title="Delete call log"
+                  callSessions.map(c => {
+                    const isExpanded = !!expandedCallIds[c.id];
+                    return (
+                      <div 
+                        key={c.id} 
+                        style={{
+                          background: '#f8fafc',
+                          border: '1px solid #e2e8f0',
+                          borderLeft: '4px solid #154360',
+                          borderRadius: '8px',
+                          padding: '8px 10px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: isExpanded ? '4px' : '0px',
+                          width: '100%',
+                          boxSizing: 'border-box',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        {/* Row 1: Clickable Recipient Name, duration badge & chevron */}
+                        <div 
+                          onClick={() => toggleCallExpand(c.id)}
+                          role="button"
+                          tabIndex={0}
+                          style={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between', 
+                            alignItems: 'center',
+                            cursor: 'pointer',
+                            userSelect: 'none'
+                          }}
                         >
-                          <Trash2 size={11} />
-                        </button>
-                      </div>
-
-                      {c.notes && (
-                        <div style={{ fontSize: '0.7rem', color: '#475569', background: '#ffffff', padding: '4px 6px', borderRadius: '4px', border: '1px solid #f1f5f9', wordBreak: 'break-word', marginTop: '2px' }}>
-                          {c.notes}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#154360', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              {c.callType === 'VIDEO' ? <Video size={12} color="#154360" /> : <Phone size={12} color="#154360" />}
+                              {c.recipientName}
+                            </span>
+                            <span className="badge badge-grey" style={{ fontSize: '0.62rem', padding: '1px 4px' }}>
+                              {c.recipientType}
+                            </span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{
+                              fontFamily: 'monospace',
+                              fontWeight: 700,
+                              fontSize: '0.72rem',
+                              background: '#ebf5fb',
+                              color: '#154360',
+                              border: '1px solid #aed6f1',
+                              padding: '2px 6px',
+                              borderRadius: '4px'
+                            }}>
+                              {formatDuration(c.durationSeconds)}
+                            </span>
+                            {isExpanded ? <ChevronUp size={14} color="#154360" /> : <ChevronDown size={14} color="#64748b" />}
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  ))
+
+                        {/* Expanded details */}
+                        {isExpanded && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', borderTop: '1px dashed #e2e8f0', paddingTop: '6px', marginTop: '4px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.68rem', color: '#71717a' }}>
+                              <span>Caller: <strong style={{ color: '#154360' }}>{c.internName}</strong></span>
+                              <span>{new Date(c.startedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
+                              <span className={`badge ${
+                                c.disposition === 'DRIVE_CONFIRMED' || c.disposition === 'SCREENING_PASSED'
+                                  ? 'badge-green'
+                                  : 'badge-amber'
+                              }`} style={{ fontSize: '0.62rem', padding: '1px 5px' }}>
+                                {c.disposition ? c.disposition.replace(/_/g, ' ') : 'COMPLETED'}
+                              </span>
+                              <button 
+                                onClick={() => handleDeleteCallSession(c.id)}
+                                className="btn-icon"
+                                style={{ width: '22px', height: '22px', color: '#ef4444' }}
+                                title="Delete call log"
+                              >
+                                <Trash2 size={11} />
+                              </button>
+                            </div>
+
+                            {c.notes && (
+                              <div style={{ fontSize: '0.7rem', color: '#475569', background: '#ffffff', padding: '4px 6px', borderRadius: '4px', border: '1px solid #f1f5f9', wordBreak: 'break-word', marginTop: '2px' }}>
+                                {c.notes}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
                 )}
               </div>
             </div>

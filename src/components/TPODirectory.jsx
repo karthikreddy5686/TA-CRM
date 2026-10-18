@@ -20,7 +20,9 @@ import {
   RefreshCw,
   Upload,
   Sparkles,
-  AlertCircle
+  AlertCircle,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 const getStatusBadgeStyle = (status) => {
@@ -58,6 +60,10 @@ export default function TPODirectory({
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [internFilter, setInternFilter] = useState('ALL');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [expandedTpos, setExpandedTpos] = useState({});
+  const toggleTpoExpand = (id) => {
+    setExpandedTpos(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
   // Edit TPO state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -782,95 +788,159 @@ export default function TPODirectory({
           </table>
         </div>
 
-        {/* Mobile View: Clean TPO Cards */}
+        {/* Mobile View: Clean TPO Cards (Click to expand details) */}
         <div className="mobile-only" style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {filteredTpos.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '24px 12px', color: '#71717a', fontSize: '0.8rem' }}>
               No matching placement officers found. Tap "+ Add College TPO" to add one.
             </div>
           ) : (
-            filteredTpos.map(tpo => (
-              <div key={tpo.id} style={{
-                background: '#f8fafc',
-                border: '1px solid #e2e8f0',
-                borderLeft: '4px solid #154360',
-                borderRadius: '10px',
-                padding: '12px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div>
-                    <div style={{ fontWeight: 800, fontSize: '0.925rem', color: '#154360', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                      <Building2 size={15} color="#154360" />
-                      {tpo.collegeName}
-                    </div>
-                    <div style={{ fontSize: '0.75rem', color: '#71717a', marginLeft: '20px' }}>
-                      {tpo.city || 'Campus'} • Assigned: {tpo.assignedInternName || 'Team'}
-                    </div>
-                  </div>
-                  <select 
-                    value={tpo.status || 'NEW_LEAD'}
-                    onChange={(e) => onUpdateTpoStatus(tpo.id, e.target.value)}
-                    style={{
-                      fontSize: '0.7rem',
-                      fontWeight: 700,
-                      padding: '2px 6px',
-                      borderRadius: '6px',
+            filteredTpos.map(tpo => {
+              const isExpanded = !!expandedTpos[tpo.id];
+              const formatStatusText = (s) => {
+                if (!s) return 'New Lead';
+                if (s === 'DRIVE_CONFIRMED') return 'Confirmed';
+                if (s === 'DETAILS_SENT') return 'Details Sent';
+                if (s === 'FOLLOW_UP_NEEDED') return 'Call Again';
+                if (s === 'NOT_ANSWERED') return 'Not Answered';
+                if (s === 'NOT_INTERESTED') return 'Not Interested';
+                return s.replace(/_/g, ' ');
+              };
+
+              return (
+                <div 
+                  key={tpo.id} 
+                  style={{
+                    background: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    borderLeft: '4px solid #154360',
+                    borderRadius: '10px',
+                    padding: '10px 12px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: isExpanded ? '8px' : '0px',
+                    boxShadow: isExpanded ? '0 2px 4px rgba(0,0,0,0.04)' : 'none',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  {/* Row 1: Clickable Name, College & Status Badge + Chevron */}
+                  <div 
+                    onClick={() => toggleTpoExpand(tpo.id)}
+                    role="button"
+                    tabIndex={0}
+                    style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center', 
                       cursor: 'pointer',
-                      ...getStatusBadgeStyle(tpo.status)
+                      userSelect: 'none'
                     }}
                   >
-                    <option value="NOT_ANSWERED">1) Not Answered</option>
-                    <option value="NOT_INTERESTED">2) Not Interested</option>
-                    <option value="DRIVE_CONFIRMED">3) Confirmed</option>
-                    <option value="DETAILS_SENT">4) Details Sent</option>
-                    <option value="FOLLOW_UP_NEEDED">5) Call Again</option>
-                    <option value="NEW_LEAD">New Lead</option>
-                    {tpo.status === 'CONTACTED' && <option value="CONTACTED">Contacted</option>}
-                    {tpo.status === 'PITCHED' && <option value="PITCHED">Pitched</option>}
-                  </select>
-                </div>
+                    <div>
+                      <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#154360' }}>
+                        {tpo.name}
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '1px' }}>
+                        <Building2 size={12} color="#64748b" />
+                        <span>{tpo.collegeName}</span>
+                      </div>
+                    </div>
 
-                <div style={{ background: '#ffffff', padding: '8px 10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#09090b' }}>{tpo.name}</div>
-                  <div style={{ fontSize: '0.72rem', color: '#71717a' }}>{tpo.designation}</div>
-                  <div style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: '#52525b', marginTop: '2px' }}>
-                    {tpo.phone} • {tpo.email}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span 
+                        style={{
+                          fontSize: '0.68rem',
+                          fontWeight: 700,
+                          padding: '2px 7px',
+                          borderRadius: '6px',
+                          ...getStatusBadgeStyle(tpo.status)
+                        }}
+                      >
+                        {formatStatusText(tpo.status)}
+                      </span>
+                      {isExpanded ? <ChevronUp size={15} color="#154360" /> : <ChevronDown size={15} color="#64748b" />}
+                    </div>
                   </div>
-                </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px', alignItems: 'center' }}>
-                  <button 
-                    onClick={() => onStartCall({
-                      recipientType: 'TPO',
-                      recipientName: `${tpo.name} (${tpo.collegeName})`,
-                      recipientDetail: `${tpo.designation} • ${tpo.phone}`,
-                      recipientPhone: tpo.phone,
-                      type: 'AUDIO',
-                      tpoId: tpo.id
-                    })}
-                    className="btn-mustard"
-                    style={{ width: '28px', height: '28px', padding: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '6px' }}
-                    title="Call TPO"
-                    aria-label="Call TPO"
-                  >
-                    <Phone size={13} color="#154360" />
-                  </button>
+                  {/* Expanded Body: Only shown after clicking on individual name */}
+                  {isExpanded && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderTop: '1px dashed #e2e8f0', paddingTop: '8px', marginTop: '4px' }}>
+                      <div style={{ background: '#ffffff', padding: '8px 10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ fontSize: '0.74rem', color: '#71717a' }}>{tpo.designation || 'Placement Officer'} • {tpo.city || 'Campus'}</div>
+                        <div style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: '#154360', fontWeight: 600, marginTop: '2px' }}>
+                          📞 {tpo.phone || 'No phone'}
+                        </div>
+                        {tpo.email && (
+                          <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px' }}>
+                            ✉️ {tpo.email}
+                          </div>
+                        )}
+                        <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '2px' }}>
+                          Assigned: {tpo.assignedInternName || 'Team'}
+                        </div>
+                      </div>
 
-                  <button 
-                    onClick={() => handleOpenEditTpo(tpo)}
-                    className="btn-icon"
-                    style={{ width: '28px', height: '28px', color: '#154360' }}
-                    title="Edit TPO details"
-                    aria-label="Edit TPO details"
-                  >
-                    <Edit3 size={13} />
-                  </button>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1, minWidth: 0 }}>
+                          <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#154360', flexShrink: 0 }}>Status:</span>
+                          <select 
+                            value={tpo.status || 'NEW_LEAD'}
+                            onChange={(e) => onUpdateTpoStatus(tpo.id, e.target.value)}
+                            style={{
+                              fontSize: '0.72rem',
+                              fontWeight: 700,
+                              padding: '3px 6px',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              flex: 1,
+                              minWidth: 0,
+                              ...getStatusBadgeStyle(tpo.status)
+                            }}
+                          >
+                            <option value="NOT_ANSWERED">1) Not Answered</option>
+                            <option value="NOT_INTERESTED">2) Not Interested</option>
+                            <option value="DRIVE_CONFIRMED">3) Confirmed</option>
+                            <option value="DETAILS_SENT">4) Details Sent</option>
+                            <option value="FOLLOW_UP_NEEDED">5) Call Again</option>
+                            <option value="NEW_LEAD">New Lead</option>
+                            {tpo.status === 'CONTACTED' && <option value="CONTACTED">Contacted</option>}
+                            {tpo.status === 'PITCHED' && <option value="PITCHED">Pitched</option>}
+                          </select>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
+                          <button 
+                            onClick={() => onStartCall({
+                              recipientType: 'TPO',
+                              recipientName: `${tpo.name} (${tpo.collegeName})`,
+                              recipientDetail: `${tpo.designation} • ${tpo.phone}`,
+                              recipientPhone: tpo.phone,
+                              type: 'AUDIO',
+                              tpoId: tpo.id
+                            })}
+                            className="btn-mustard btn-black-sm"
+                            style={{ padding: '4px 10px', fontSize: '0.75rem', gap: '4px', whiteSpace: 'nowrap' }}
+                            title="Call TPO"
+                          >
+                            <Phone size={12} color="#154360" /> Call
+                          </button>
+
+                          <button 
+                            onClick={() => handleOpenEditTpo(tpo)}
+                            className="btn-icon"
+                            style={{ width: '28px', height: '28px', color: '#154360' }}
+                            title="Edit TPO details"
+                            aria-label="Edit TPO details"
+                          >
+                            <Edit3 size={13} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>

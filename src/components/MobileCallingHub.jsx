@@ -16,7 +16,9 @@ import {
   CheckCircle2,
   ChevronRight,
   ExternalLink,
-  Sparkles
+  Sparkles,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 export default function MobileCallingHub({
@@ -35,6 +37,10 @@ export default function MobileCallingHub({
 }) {
   const [activeCallListTab, setActiveCallListTab] = useState('students'); // 'students' | 'tpos'
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedDeskItems, setExpandedDeskItems] = useState({});
+  const toggleItemExpand = (id) => {
+    setExpandedDeskItems(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
   // Filter students and TPOs for immediate calling
   const filteredStudents = students.filter(s => {
@@ -454,60 +460,92 @@ export default function MobileCallingHub({
           />
         </div>
 
-        {/* Calling Cards List */}
+        {/* Calling Cards List (Click to expand details & call) */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '340px', overflowY: 'auto' }}>
           {activeCallListTab === 'students' ? (
             filteredStudents.length > 0 ? (
-              filteredStudents.slice(0, 15).map((student) => (
-                <div
-                  key={student.id}
-                  style={{
-                    background: '#f8fafc',
-                    border: '1px solid #eef2f6',
-                    borderRadius: '10px',
-                    padding: '10px 12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '10px'
-                  }}
-                >
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontSize: '0.84rem', fontWeight: 700, color: '#1e293b', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {student.name}
-                    </div>
-                    <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {student.collegeName || 'Campus Candidate'} • {student.branch || student.jobRole || 'Engineering'}
-                    </div>
-                    <div style={{ fontSize: '0.7rem', color: '#0284c7', marginTop: '2px', fontWeight: 600 }}>
-                      📞 {student.phone || 'No phone'}
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => onStartCall(student)}
+              filteredStudents.slice(0, 20).map((student) => {
+                const isExpanded = !!expandedDeskItems[`std_${student.id}`];
+                return (
+                  <div
+                    key={student.id}
                     style={{
-                      background: '#16a34a',
-                      color: '#ffffff',
-                      border: 'none',
-                      borderRadius: '8px',
-                      padding: '7px 12px',
-                      fontSize: '0.76rem',
-                      fontWeight: 700,
+                      background: '#f8fafc',
+                      border: '1px solid #eef2f6',
+                      borderRadius: '10px',
+                      padding: '10px 12px',
                       display: 'flex',
-                      alignItems: 'center',
-                      gap: '5px',
-                      cursor: 'pointer',
-                      flexShrink: 0,
-                      boxShadow: '0 2px 4px rgba(22, 163, 74, 0.25)'
+                      flexDirection: 'column',
+                      gap: isExpanded ? '8px' : '0px',
+                      transition: 'all 0.15s ease'
                     }}
                   >
-                    <Phone size={13} fill="#ffffff" />
-                    <span>Call</span>
-                  </button>
-                </div>
-              ))
+                    {/* Row 1: Clickable Name & Expand Chevron */}
+                    <div 
+                      onClick={() => toggleItemExpand(`std_${student.id}`)}
+                      role="button"
+                      tabIndex={0}
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'space-between', 
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                    >
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ fontSize: '0.84rem', fontWeight: 700, color: '#1e293b', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {student.name}
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {student.collegeName || 'Campus Candidate'} • {student.branch || student.jobRole || 'Engineering'}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, marginLeft: '8px' }}>
+                        {isExpanded ? <ChevronUp size={15} color="#154360" /> : <ChevronDown size={15} color="#64748b" />}
+                      </div>
+                    </div>
+
+                    {/* Expanded Body: Phone & Call Button */}
+                    {isExpanded && (
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'space-between', 
+                        borderTop: '1px dashed #e2e8f0', 
+                        paddingTop: '8px', 
+                        marginTop: '4px' 
+                      }}>
+                        <div style={{ fontSize: '0.74rem', color: '#0284c7', fontWeight: 600 }}>
+                          📞 {student.phone || 'No phone'}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => onStartCall(student)}
+                          style={{
+                            background: '#16a34a',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: '8px',
+                            padding: '6px 12px',
+                            fontSize: '0.74rem',
+                            fontWeight: 700,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            cursor: 'pointer',
+                            flexShrink: 0,
+                            boxShadow: '0 2px 4px rgba(22, 163, 74, 0.25)'
+                          }}
+                        >
+                          <Phone size={12} fill="#ffffff" />
+                          <span>Call</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
             ) : (
               <div style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '0.78rem' }}>
                 No students match your search.
@@ -515,56 +553,88 @@ export default function MobileCallingHub({
             )
           ) : (
             filteredTpos.length > 0 ? (
-              filteredTpos.slice(0, 15).map((tpo) => (
-                <div
-                  key={tpo.id}
-                  style={{
-                    background: '#f8fafc',
-                    border: '1px solid #eef2f6',
-                    borderRadius: '10px',
-                    padding: '10px 12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '10px'
-                  }}
-                >
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontSize: '0.84rem', fontWeight: 700, color: '#1e293b', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {tpo.name}
-                    </div>
-                    <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {tpo.collegeName} • {tpo.designation || 'Placement Officer'}
-                    </div>
-                    <div style={{ fontSize: '0.7rem', color: '#16a34a', marginTop: '2px', fontWeight: 600 }}>
-                      📞 {tpo.phone || 'No phone'}
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => onStartCall({ ...tpo, role: 'TPO' })}
+              filteredTpos.slice(0, 20).map((tpo) => {
+                const isExpanded = !!expandedDeskItems[`tpo_${tpo.id}`];
+                return (
+                  <div
+                    key={tpo.id}
                     style={{
-                      background: '#16a34a',
-                      color: '#ffffff',
-                      border: 'none',
-                      borderRadius: '8px',
-                      padding: '7px 12px',
-                      fontSize: '0.76rem',
-                      fontWeight: 700,
+                      background: '#f8fafc',
+                      border: '1px solid #eef2f6',
+                      borderRadius: '10px',
+                      padding: '10px 12px',
                       display: 'flex',
-                      alignItems: 'center',
-                      gap: '5px',
-                      cursor: 'pointer',
-                      flexShrink: 0,
-                      boxShadow: '0 2px 4px rgba(22, 163, 74, 0.25)'
+                      flexDirection: 'column',
+                      gap: isExpanded ? '8px' : '0px',
+                      transition: 'all 0.15s ease'
                     }}
                   >
-                    <Phone size={13} fill="#ffffff" />
-                    <span>Call</span>
-                  </button>
-                </div>
-              ))
+                    {/* Row 1: Clickable Name & Expand Chevron */}
+                    <div 
+                      onClick={() => toggleItemExpand(`tpo_${tpo.id}`)}
+                      role="button"
+                      tabIndex={0}
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'space-between', 
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                    >
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ fontSize: '0.84rem', fontWeight: 700, color: '#1e293b', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {tpo.name}
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {tpo.collegeName} • {tpo.designation || 'Placement Officer'}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, marginLeft: '8px' }}>
+                        {isExpanded ? <ChevronUp size={15} color="#154360" /> : <ChevronDown size={15} color="#64748b" />}
+                      </div>
+                    </div>
+
+                    {/* Expanded Body: Phone & Call Button */}
+                    {isExpanded && (
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'space-between', 
+                        borderTop: '1px dashed #e2e8f0', 
+                        paddingTop: '8px', 
+                        marginTop: '4px' 
+                      }}>
+                        <div style={{ fontSize: '0.74rem', color: '#16a34a', fontWeight: 600 }}>
+                          📞 {tpo.phone || 'No phone'}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => onStartCall({ ...tpo, role: 'TPO' })}
+                          style={{
+                            background: '#16a34a',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: '8px',
+                            padding: '6px 12px',
+                            fontSize: '0.74rem',
+                            fontWeight: 700,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            cursor: 'pointer',
+                            flexShrink: 0,
+                            boxShadow: '0 2px 4px rgba(22, 163, 74, 0.25)'
+                          }}
+                        >
+                          <Phone size={12} fill="#ffffff" />
+                          <span>Call</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
             ) : (
               <div style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '0.78rem' }}>
                 No TPO contacts match your search.

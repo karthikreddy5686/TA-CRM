@@ -35,7 +35,9 @@ import {
   Send,
   Database,
   Cloud,
-  MessageCircle
+  MessageCircle,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { formatDuration } from '../data/mockData';
 import { normalizePhoneNumber } from '../utils/phone';
@@ -95,6 +97,10 @@ export default function AdminDashboard({
   const [copiedKey, setCopiedKey] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [feedbackMsg, setFeedbackMsg] = useState(null);
+  const [expandedStaffIds, setExpandedStaffIds] = useState({});
+  const toggleStaffExpand = (id) => {
+    setExpandedStaffIds(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
   // Modals state
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
@@ -1099,44 +1105,79 @@ export default function AdminDashboard({
             </table>
           </div>
 
-          {/* Mobile view for Staff Credentials */}
+          {/* Mobile view for Staff Credentials (Click to expand details) */}
           <div className="mobile-only" style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {hrStaffList.map(user => {
               const isPassVisible = showPasswordMap[user.id];
               const userPassword = user.password || 'admin';
+              const isExpanded = !!expandedStaffIds[user.id];
               return (
-                <div key={user.id} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <div style={{ fontWeight: 700, color: '#154360' }}>{user.name}</div>
-                    <span className={user.role === 'MAIN_HR' ? 'badge badge-navy-subtle' : 'badge badge-mustard'}>
-                      {user.role === 'MAIN_HR' ? 'HR Manager' : 'HR Intern'}
-                    </span>
+                <div 
+                  key={user.id} 
+                  style={{ 
+                    background: '#f8fafc', 
+                    border: '1px solid #e2e8f0', 
+                    borderLeft: '4px solid #154360',
+                    borderRadius: '8px', 
+                    padding: '10px 12px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: isExpanded ? '8px' : '0px',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  {/* Row 1: Clickable Name, Role Badge & Chevron */}
+                  <div 
+                    onClick={() => toggleStaffExpand(user.id)}
+                    role="button"
+                    tabIndex={0}
+                    style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                      userSelect: 'none'
+                    }}
+                  >
+                    <div style={{ fontWeight: 700, color: '#154360', fontSize: '0.88rem' }}>{user.name}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span className={user.role === 'MAIN_HR' ? 'badge badge-navy-subtle' : 'badge badge-mustard'}>
+                        {user.role === 'MAIN_HR' ? 'HR Manager' : 'HR Intern'}
+                      </span>
+                      {isExpanded ? <ChevronUp size={14} color="#154360" /> : <ChevronDown size={14} color="#64748b" />}
+                    </div>
                   </div>
-                  <div style={{ fontSize: '0.75rem', marginBottom: '4px' }}>
-                    <strong>Email:</strong> <code>{user.email}</code>
-                  </div>
-                  <div style={{ fontSize: '0.75rem', marginBottom: '10px' }}>
-                    <strong>Password:</strong> <code>{isPassVisible ? userPassword : '••••••••'}</code>
-                  </div>
-                  <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                    <button 
-                      type="button" 
-                      onClick={() => handleOpenStaffInviteModal(user)} 
-                      className="btn-secondary btn-black-sm" 
-                      style={{ padding: '2px 8px', fontSize: '0.7rem', color: '#0284c7', borderColor: '#bae6fd' }}
-                    >
-                      <Smartphone size={11} color="#0284c7" /> Mobile QR
-                    </button>
-                    <button onClick={() => toggleShowPassword(user.id)} className="btn-secondary btn-black-sm" style={{ padding: '2px 6px', fontSize: '0.7rem' }}>
-                      {isPassVisible ? 'Hide Pass' : 'Show Pass'}
-                    </button>
-                    <button onClick={() => handleCopyText(`${user.email} / ${userPassword}`, `card-${user.id}`)} className="btn-secondary btn-black-sm" style={{ padding: '2px 6px', fontSize: '0.7rem' }}>
-                      Copy Credentials
-                    </button>
-                    <button onClick={() => handleOpenEditUser(user)} className="btn-secondary btn-black-sm" style={{ padding: '2px 6px', fontSize: '0.7rem' }}>
-                      Edit
-                    </button>
-                  </div>
+
+                  {/* Expanded Body: Email, Password & Actions */}
+                  {isExpanded && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', borderTop: '1px dashed #e2e8f0', paddingTop: '8px', marginTop: '4px' }}>
+                      <div style={{ fontSize: '0.75rem' }}>
+                        <strong>Email:</strong> <code>{user.email}</code>
+                      </div>
+                      <div style={{ fontSize: '0.75rem', marginBottom: '4px' }}>
+                        <strong>Password:</strong> <code>{isPassVisible ? userPassword : '••••••••'}</code>
+                      </div>
+                      <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                        <button 
+                          type="button" 
+                          onClick={() => handleOpenStaffInviteModal(user)} 
+                          className="btn-secondary btn-black-sm" 
+                          style={{ padding: '2px 8px', fontSize: '0.7rem', color: '#0284c7', borderColor: '#bae6fd' }}
+                        >
+                          <Smartphone size={11} color="#0284c7" /> Mobile QR
+                        </button>
+                        <button onClick={() => toggleShowPassword(user.id)} className="btn-secondary btn-black-sm" style={{ padding: '2px 6px', fontSize: '0.7rem' }}>
+                          {isPassVisible ? 'Hide Pass' : 'Show Pass'}
+                        </button>
+                        <button onClick={() => handleCopyText(`${user.email} / ${userPassword}`, `card-${user.id}`)} className="btn-secondary btn-black-sm" style={{ padding: '2px 6px', fontSize: '0.7rem' }}>
+                          Copy Credentials
+                        </button>
+                        <button onClick={() => handleOpenEditUser(user)} className="btn-secondary btn-black-sm" style={{ padding: '2px 6px', fontSize: '0.7rem' }}>
+                          Edit
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}

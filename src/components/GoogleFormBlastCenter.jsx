@@ -15,7 +15,9 @@ import {
   Plus,
   UserPlus,
   Building2,
-  Trash2
+  Trash2,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 // Intelligent parser for Google Sheet or WhatsApp pasted table text
@@ -106,6 +108,10 @@ export default function GoogleFormBlastCenter({
   const [isBlastModalOpen, setIsBlastModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [expandedResponseIds, setExpandedResponseIds] = useState({});
+  const toggleResponseExpand = (id) => {
+    setExpandedResponseIds(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
   // Inline Quick Drive Setup
   const [inlineDriveTitle, setInlineDriveTitle] = useState('');
@@ -849,7 +855,7 @@ Columns accepted: Full Name, Roll Number, Email, Phone/WhatsApp, Branch, CGPA"
           </table>
         </div>
 
-        {/* Mobile View: Clean Candidate Intake Cards */}
+        {/* Mobile View: Clean Candidate Intake Cards (Click to expand details) */}
         <div className="mobile-only" style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {filteredResponses.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '24px 12px', color: '#71717a', fontSize: '0.8rem' }}>
@@ -858,93 +864,128 @@ Columns accepted: Full Name, Roll Number, Email, Phone/WhatsApp, Branch, CGPA"
           ) : (
             filteredResponses.map(resp => {
               const isSelected = selectedIds.includes(resp.id);
+              const isExpanded = !!expandedResponseIds[resp.id];
               return (
-                <div key={resp.id} style={{
-                  background: isSelected ? '#ebf5fb' : '#f8fafc',
-                  border: isSelected ? '1px solid #154360' : '1px solid #e2e8f0',
-                  borderLeft: '4px solid #154360',
-                  borderRadius: '10px',
-                  padding: '12px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '8px'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                <div 
+                  key={resp.id} 
+                  style={{
+                    background: isSelected ? '#ebf5fb' : '#f8fafc',
+                    border: isSelected ? '1px solid #154360' : '1px solid #e2e8f0',
+                    borderLeft: '4px solid #154360',
+                    borderRadius: '10px',
+                    padding: '10px 12px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: isExpanded ? '8px' : '0px',
+                    boxShadow: isExpanded ? '0 2px 4px rgba(0,0,0,0.04)' : 'none',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  {/* Row 1: Checkbox, Clickable Name, CGPA badge & Chevron */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
                       <input 
                         type="checkbox" 
                         checked={isSelected}
                         onChange={() => handleToggleSelect(resp.id)}
-                        style={{ cursor: 'pointer', width: '16px', height: '16px', marginTop: '2px', accentColor: '#154360' }}
+                        style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: '#154360', flexShrink: 0 }}
                       />
-                      <div>
-                        <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#154360' }}>
-                          {resp.name}
-                        </div>
-                        <div style={{ fontSize: '0.72rem', color: '#71717a' }}>
-                          {resp.rollNumber} • {resp.branch}
-                        </div>
-                        <div style={{ fontSize: '0.72rem', color: '#52525b', fontFamily: 'monospace' }}>
-                          {resp.phone}
-                        </div>
+                      <div 
+                        onClick={() => toggleResponseExpand(resp.id)}
+                        role="button"
+                        tabIndex={0}
+                        style={{ 
+                          fontWeight: 800, 
+                          fontSize: '0.9rem', 
+                          color: '#154360', 
+                          cursor: 'pointer',
+                          userSelect: 'none',
+                          minWidth: 0,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        {resp.name}
                       </div>
                     </div>
 
-                    <span style={{
-                      fontWeight: 700,
-                      background: '#FFDB58',
-                      border: '1px solid #fae27a',
-                      padding: '2px 7px',
-                      borderRadius: '6px',
-                      fontSize: '0.75rem',
-                      color: '#154360',
-                      whiteSpace: 'nowrap'
-                    }}>
-                      ⭐ {resp.cgpa} CGPA
-                    </span>
-                  </div>
-
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'space-between', 
-                    borderTop: '1px solid #e2e8f0',
-                    paddingTop: '8px'
-                  }}>
-                    {resp.isBlasted ? (
-                      <span className="badge badge-green" style={{ fontSize: '0.68rem', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                        <CheckCircle2 size={11} /> Posted on Site
+                    <div 
+                      onClick={() => toggleResponseExpand(resp.id)}
+                      role="button"
+                      tabIndex={0}
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, cursor: 'pointer' }}
+                    >
+                      <span style={{
+                        fontWeight: 700,
+                        background: '#FFDB58',
+                        border: '1px solid #fae27a',
+                        padding: '2px 7px',
+                        borderRadius: '6px',
+                        fontSize: '0.72rem',
+                        color: '#154360',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        ⭐ {resp.cgpa} CGPA
                       </span>
-                    ) : (
-                      <span className="badge badge-amber" style={{ fontSize: '0.68rem' }}>
-                        Ready to Invite
-                      </span>
-                    )}
-
-                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                      <button 
-                        onClick={() => {
-                          setSelectedIds([resp.id]);
-                          setIsBlastModalOpen(true);
-                        }}
-                        className="btn-mustard btn-black-sm"
-                        style={{ fontSize: '0.72rem', padding: '3px 9px' }}
-                      >
-                        Invite
-                      </button>
-
-                      {onDeleteFormResponse && (
-                        <button 
-                          onClick={() => onDeleteFormResponse(resp.id)}
-                          className="btn-icon"
-                          style={{ width: '26px', height: '26px', color: '#ef4444' }}
-                          title="Delete candidate row"
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      )}
+                      {isExpanded ? <ChevronUp size={15} color="#154360" /> : <ChevronDown size={15} color="#64748b" />}
                     </div>
                   </div>
+
+                  {/* Expanded Body: Only shown after clicking */}
+                  {isExpanded && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', borderTop: '1px dashed #e2e8f0', paddingTop: '8px', marginTop: '4px' }}>
+                      <div style={{ fontSize: '0.72rem', color: '#71717a' }}>
+                        {resp.rollNumber} • {resp.branch}
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: '#52525b', fontFamily: 'monospace' }}>
+                        📞 {resp.phone || 'No phone'}
+                      </div>
+
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'space-between', 
+                        borderTop: '1px solid #e2e8f0',
+                        paddingTop: '6px',
+                        marginTop: '2px'
+                      }}>
+                        {resp.isBlasted ? (
+                          <span className="badge badge-green" style={{ fontSize: '0.68rem', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                            <CheckCircle2 size={11} /> Posted on Site
+                          </span>
+                        ) : (
+                          <span className="badge badge-amber" style={{ fontSize: '0.68rem' }}>
+                            Ready to Invite
+                          </span>
+                        )}
+
+                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                          <button 
+                            onClick={() => {
+                              setSelectedIds([resp.id]);
+                              setIsBlastModalOpen(true);
+                            }}
+                            className="btn-mustard btn-black-sm"
+                            style={{ fontSize: '0.72rem', padding: '3px 9px' }}
+                          >
+                            Invite
+                          </button>
+
+                          {onDeleteFormResponse && (
+                            <button 
+                              onClick={() => onDeleteFormResponse(resp.id)}
+                              className="btn-icon"
+                              style={{ width: '26px', height: '26px', color: '#ef4444' }}
+                              title="Delete candidate row"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })

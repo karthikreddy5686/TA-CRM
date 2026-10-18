@@ -12,7 +12,9 @@ import {
   Plus,
   UserPlus,
   FileSpreadsheet,
-  ChevronRight
+  ChevronRight,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { formatDuration } from '../data/mockData';
 
@@ -36,6 +38,14 @@ export default function MainHRDashboard({
 }) {
   const [internFilter, setInternFilter] = useState('ALL');
   const [callTypeFilter, setCallTypeFilter] = useState('ALL');
+  const [expandedInternIds, setExpandedInternIds] = useState({});
+  const toggleInternExpand = (id) => {
+    setExpandedInternIds(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+  const [expandedCallRecordIds, setExpandedCallRecordIds] = useState({});
+  const toggleCallRecordExpand = (id) => {
+    setExpandedCallRecordIds(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
   const interns = users.filter(u => u.role === 'HR_INTERN');
 
@@ -325,74 +335,100 @@ export default function MainHRDashboard({
           </table>
         </div>
 
-        {/* Mobile View: Clean, Simple Intern Cards */}
+        {/* Mobile View: Clean, Simple Intern Cards (Click to expand details) */}
         <div className="mobile-only" style={{ padding: '6px 10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          {internStats.map((intern, index) => (
-            <div key={intern.id} style={{
-              background: '#f8fafc',
-              border: '1px solid #e2e8f0',
-              borderLeft: '4px solid #154360',
-              borderRadius: 'var(--radius-sm)',
-              padding: '8px 10px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '6px'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <div className={`rank-badge ${index === 0 ? 'top-1' : ''}`} style={{ width: '20px', height: '20px', fontSize: 'var(--font-10)' }}>
-                    #{index + 1}
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: 'var(--font-sm)', color: '#154360' }}>{intern.name}</div>
-                    <div style={{ fontSize: 'var(--font-10)', color: '#71717a', lineHeight: 'var(--lh-10)' }}>{intern.title}</div>
-                  </div>
-                </div>
-                <span className={`badge ${intern.status === 'on-call' ? 'badge-amber' : 'badge-green'}`} style={{ fontSize: 'var(--font-10)' }}>
-                  {intern.status === 'on-call' ? 'On Call' : 'Available'}
-                </span>
-              </div>
-
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center', 
-                background: '#ffffff', 
-                padding: '6px 8px', 
-                borderRadius: 'var(--radius-sm)', 
-                border: '1px solid #e2e8f0' 
-              }}>
-                <div>
-                  <div style={{ fontSize: 'var(--font-10)', color: '#71717a', fontWeight: 600 }}>Talk Time</div>
-                  <div style={{ fontFamily: "'Public Sans', sans-serif", fontWeight: 800, fontSize: 'var(--font-sm)', color: '#154360' }}>
-                    {formatDuration(intern.totalSeconds)}
-                  </div>
-                </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 'var(--font-10)', color: '#71717a', fontWeight: 600 }}>Calls</div>
-                  <div style={{ fontWeight: 800, fontSize: 'var(--font-xs)', color: '#154360' }}>{intern.callCount}</div>
-                </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 'var(--font-10)', color: '#71717a', fontWeight: 600 }}>Goal</div>
-                  <div style={{ fontWeight: 700, fontSize: 'var(--font-xs)' }}>{intern.targetProgress}%</div>
-                </div>
-                <button 
-                  onClick={() => {
-                    onStartCall({
-                      recipientType: 'INTERN_SYNC',
-                      recipientName: intern.name,
-                      recipientDetail: intern.title,
-                      type: 'AUDIO'
-                    });
+          {internStats.map((intern, index) => {
+            const isExpanded = !!expandedInternIds[intern.id];
+            return (
+              <div 
+                key={intern.id} 
+                style={{
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderLeft: '4px solid #154360',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '8px 10px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: isExpanded ? '6px' : '0px',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                {/* Row 1: Clickable Name & Chevron */}
+                <div 
+                  onClick={() => toggleInternExpand(intern.id)}
+                  role="button"
+                  tabIndex={0}
+                  style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                    userSelect: 'none'
                   }}
-                  className="btn-mustard btn-black-sm"
-                  style={{ padding: '3px 8px', fontSize: 'var(--font-xs)', gap: '4px' }}
                 >
-                  <Phone size={11} color="#154360" /> Call
-                </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div className={`rank-badge ${index === 0 ? 'top-1' : ''}`} style={{ width: '20px', height: '20px', fontSize: 'var(--font-10)' }}>
+                      #{index + 1}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 'var(--font-sm)', color: '#154360' }}>{intern.name}</div>
+                      <div style={{ fontSize: 'var(--font-10)', color: '#71717a', lineHeight: 'var(--lh-10)' }}>{intern.title}</div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span className={`badge ${intern.status === 'on-call' ? 'badge-amber' : 'badge-green'}`} style={{ fontSize: 'var(--font-10)' }}>
+                      {intern.status === 'on-call' ? 'On Call' : 'Available'}
+                    </span>
+                    {isExpanded ? <ChevronUp size={14} color="#154360" /> : <ChevronDown size={14} color="#64748b" />}
+                  </div>
+                </div>
+
+                {/* Expanded Body: Stats & Call Button */}
+                {isExpanded && (
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    background: '#ffffff', 
+                    padding: '6px 8px', 
+                    borderRadius: 'var(--radius-sm)', 
+                    border: '1px solid #e2e8f0',
+                    marginTop: '4px'
+                  }}>
+                    <div>
+                      <div style={{ fontSize: 'var(--font-10)', color: '#71717a', fontWeight: 600 }}>Talk Time</div>
+                      <div style={{ fontFamily: "'Public Sans', sans-serif", fontWeight: 800, fontSize: 'var(--font-sm)', color: '#154360' }}>
+                        {formatDuration(intern.totalSeconds)}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: 'var(--font-10)', color: '#71717a', fontWeight: 600 }}>Calls</div>
+                      <div style={{ fontWeight: 800, fontSize: 'var(--font-xs)', color: '#154360' }}>{intern.callCount}</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: 'var(--font-10)', color: '#71717a', fontWeight: 600 }}>Goal</div>
+                      <div style={{ fontWeight: 700, fontSize: 'var(--font-xs)' }}>{intern.targetProgress}%</div>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        onStartCall({
+                          recipientType: 'INTERN_SYNC',
+                          recipientName: intern.name,
+                          recipientDetail: intern.title,
+                          type: 'AUDIO'
+                        });
+                      }}
+                      className="btn-mustard btn-black-sm"
+                      style={{ padding: '3px 8px', fontSize: 'var(--font-xs)', gap: '4px' }}
+                    >
+                      <Phone size={11} color="#154360" /> Call
+                    </button>
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -513,61 +549,101 @@ export default function MainHRDashboard({
           </table>
         </div>
 
-        {/* Mobile View: Clean Call Record Cards */}
+        {/* Mobile View: Clean Call Record Cards (Click to expand details) */}
         <div className="mobile-only" style={{ padding: '6px 10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
           {filteredCalls.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '20px 10px', color: '#71717a', fontSize: 'var(--font-xs)' }}>
               No calls logged yet. Dial any candidate or TPO to record talk time.
             </div>
           ) : (
-            filteredCalls.map(call => (
-              <div key={call.id} style={{
-                background: '#f8fafc',
-                border: '1px solid #e2e8f0',
-                borderRadius: 'var(--radius-sm)',
-                padding: '8px 10px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '5px'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: 'var(--font-sm)', color: '#09090b' }}>
-                      {call.recipientName}
+            filteredCalls.map(call => {
+              const isExpanded = !!expandedCallRecordIds[call.id];
+              return (
+                <div 
+                  key={call.id} 
+                  style={{
+                    background: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    borderLeft: '4px solid #154360',
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '8px 10px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: isExpanded ? '5px' : '0px',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  {/* Row 1: Clickable Name, duration badge & Chevron */}
+                  <div 
+                    onClick={() => toggleCallRecordExpand(call.id)}
+                    role="button"
+                    tabIndex={0}
+                    style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                      userSelect: 'none'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontWeight: 700, fontSize: 'var(--font-sm)', color: '#154360' }}>
+                        {call.recipientName}
+                      </span>
+                      <span className="badge badge-grey" style={{ fontSize: '0.62rem', padding: '1px 4px' }}>
+                        {call.recipientType}
+                      </span>
                     </div>
-                    <div style={{ fontSize: 'var(--font-10)', color: '#71717a', lineHeight: 'var(--lh-10)' }}>
-                      {call.recipientType} • By {call.internName}
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ 
+                        fontFamily: "'Public Sans', sans-serif", 
+                        fontWeight: 700, 
+                        background: '#ffffff', 
+                        border: '1px solid #e2e8f0', 
+                        padding: '1px 5px', 
+                        borderRadius: '4px',
+                        fontSize: '0.72rem',
+                        color: '#09090b'
+                      }}>
+                        {formatDuration(call.durationSeconds)}
+                      </span>
+                      {isExpanded ? <ChevronUp size={14} color="#154360" /> : <ChevronDown size={14} color="#64748b" />}
                     </div>
                   </div>
-                  <span className={`badge ${
-                    call.disposition === 'DRIVE_CONFIRMED' || call.disposition === 'SCREENING_PASSED'
-                      ? 'badge-green'
-                      : 'badge-amber'
-                  }`} style={{ fontSize: 'var(--font-10)' }}>
-                    {call.disposition ? call.disposition.replace(/_/g, ' ') : 'COMPLETED'}
-                  </span>
-                </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 'var(--font-xs)', color: '#52525b' }}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                    {call.callType === 'VIDEO' ? <Video size={11} /> : <Phone size={11} />}
-                    {call.callType === 'VIDEO' ? 'Video Meet' : 'Audio Call'}
-                  </span>
-                  <span style={{ 
-                    fontFamily: "'Public Sans', sans-serif", 
-                    fontWeight: 700, 
-                    background: '#ffffff', 
-                    border: '1px solid #e2e8f0', 
-                    padding: '1px 5px', 
-                    borderRadius: '4px',
-                    color: '#09090b'
-                  }}>
-                    {formatDuration(call.durationSeconds)}
-                  </span>
-                  <span style={{ fontSize: 'var(--font-11)' }}>{new Date(call.startedAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>
+                  {/* Expanded Body: Caller intern, date, disposition and meet type */}
+                  {isExpanded && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', borderTop: '1px dashed #e2e8f0', paddingTop: '6px', marginTop: '4px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 'var(--font-10)', color: '#71717a' }}>
+                        <span>Caller: <strong style={{ color: '#154360' }}>{call.internName}</strong></span>
+                        <span>{new Date(call.startedAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 'var(--font-xs)', color: '#52525b', marginTop: '2px' }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          {call.callType === 'VIDEO' ? <Video size={11} color="#154360" /> : <Phone size={11} color="#154360" />}
+                          {call.callType === 'VIDEO' ? 'Video Meet' : 'Audio Call'}
+                        </span>
+                        <span className={`badge ${
+                          call.disposition === 'DRIVE_CONFIRMED' || call.disposition === 'SCREENING_PASSED'
+                            ? 'badge-green'
+                            : 'badge-amber'
+                        }`} style={{ fontSize: 'var(--font-10)' }}>
+                          {call.disposition ? call.disposition.replace(/_/g, ' ') : 'COMPLETED'}
+                        </span>
+                      </div>
+
+                      {call.notes && (
+                        <div style={{ fontSize: '0.7rem', color: '#52525b', background: '#ffffff', padding: '4px 6px', borderRadius: '4px', border: '1px solid #f1f5f9', wordBreak: 'break-word', marginTop: '2px' }}>
+                          {call.notes}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>

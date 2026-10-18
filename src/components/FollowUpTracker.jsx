@@ -11,7 +11,9 @@ import {
   Filter, 
   ArrowUpRight,
   Trash2,
-  X
+  X,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 export default function FollowUpTracker({ 
@@ -29,6 +31,10 @@ export default function FollowUpTracker({
   const [priorityFilter, setPriorityFilter] = useState('ALL');
   const [internFilter, setInternFilter] = useState('ALL');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [expandedFollowUps, setExpandedFollowUps] = useState({});
+  const toggleFollowUpExpand = (id) => {
+    setExpandedFollowUps(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
   // New Follow-Up Form
   const [newTitle, setNewTitle] = useState('');
@@ -343,117 +349,148 @@ export default function FollowUpTracker({
           </table>
         </div>
 
-        {/* Mobile View: Clean Follow-Up Cards */}
+        {/* Mobile View: Clean Follow-Up Cards (Click to expand details) */}
         <div className="mobile-only" style={{ padding: '6px 8px', display: 'flex', flexDirection: 'column', gap: '6px', width: '100%', boxSizing: 'border-box' }}>
           {filteredFollowUps.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '20px 10px', color: '#71717a', fontSize: '0.75rem' }}>
               No follow-ups found for selected filters. Tap "+ Add Follow-Up" to create one.
             </div>
           ) : (
-            filteredFollowUps.map(fup => (
-              <div key={fup.id} style={{
-                background: fup.status === 'COMPLETED' ? '#f1f5f9' : '#f8fafc',
-                border: '1px solid #e2e8f0',
-                borderLeft: fup.status === 'COMPLETED' ? '4px solid #cbd5e1' : '4px solid #154360',
-                borderRadius: '8px',
-                padding: '8px 10px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '6px',
-                width: '100%',
-                boxSizing: 'border-box',
-                opacity: fup.status === 'COMPLETED' ? 0.75 : 1
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
-                    <input 
-                      type="checkbox" 
-                      checked={fup.status === 'COMPLETED'}
-                      onChange={() => onToggleCompleteFollowUp(fup.id)}
-                      style={{ width: '14px', height: '14px', accentColor: '#154360', cursor: 'pointer', marginTop: '2px' }}
-                    />
-                    <div>
-                      <div style={{ 
-                        fontWeight: 700, 
-                        fontSize: '0.8rem', 
-                        color: fup.status === 'COMPLETED' ? '#71717a' : '#154360',
-                        textDecoration: fup.status === 'COMPLETED' ? 'line-through' : 'none'
-                      }}>
+            filteredFollowUps.map(fup => {
+              const isExpanded = !!expandedFollowUps[fup.id];
+              return (
+                <div 
+                  key={fup.id} 
+                  style={{
+                    background: fup.status === 'COMPLETED' ? '#f1f5f9' : '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    borderLeft: fup.status === 'COMPLETED' ? '4px solid #cbd5e1' : '4px solid #154360',
+                    borderRadius: '8px',
+                    padding: '8px 10px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: isExpanded ? '6px' : '0px',
+                    width: '100%',
+                    boxSizing: 'border-box',
+                    opacity: fup.status === 'COMPLETED' ? 0.75 : 1,
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  {/* Row 1: Checkbox, Clickable Title & Priority Badge + Chevron */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, flex: 1 }}>
+                      <input 
+                        type="checkbox" 
+                        checked={fup.status === 'COMPLETED'}
+                        onChange={() => onToggleCompleteFollowUp(fup.id)}
+                        style={{ width: '15px', height: '15px', accentColor: '#154360', cursor: 'pointer', flexShrink: 0 }}
+                      />
+                      <div 
+                        onClick={() => toggleFollowUpExpand(fup.id)}
+                        role="button"
+                        tabIndex={0}
+                        style={{ 
+                          fontWeight: 700, 
+                          fontSize: '0.82rem', 
+                          color: fup.status === 'COMPLETED' ? '#71717a' : '#154360',
+                          textDecoration: fup.status === 'COMPLETED' ? 'line-through' : 'none',
+                          cursor: 'pointer',
+                          userSelect: 'none',
+                          minWidth: 0,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
                         {fup.entityTitle}
                       </div>
-                      <div style={{ fontSize: '0.68rem', color: '#71717a' }}>
-                        {fup.entityType} • {fup.internName}
-                      </div>
+                    </div>
+
+                    <div 
+                      onClick={() => toggleFollowUpExpand(fup.id)}
+                      role="button"
+                      tabIndex={0}
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, cursor: 'pointer' }}
+                    >
+                      <span className={`badge ${
+                        fup.priority === 'URGENT' ? 'badge-red' : fup.priority === 'HIGH' ? 'badge-amber' : 'badge-grey'
+                      }`} style={{ fontSize: '0.62rem', padding: '1px 5px' }}>
+                        {fup.priority}
+                      </span>
+                      {isExpanded ? <ChevronUp size={14} color="#154360" /> : <ChevronDown size={14} color="#64748b" />}
                     </div>
                   </div>
 
-                  <span className={`badge ${
-                    fup.priority === 'URGENT' ? 'badge-red' : fup.priority === 'HIGH' ? 'badge-amber' : 'badge-grey'
-                  }`} style={{ fontSize: '0.62rem', padding: '1px 5px' }}>
-                    {fup.priority}
-                  </span>
+                  {/* Expanded Body: Only shown after clicking on individual name */}
+                  {isExpanded && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', borderTop: '1px dashed #e2e8f0', paddingTop: '6px', marginTop: '4px' }}>
+                      <div style={{ fontSize: '0.68rem', color: '#71717a' }}>
+                        {fup.entityType} • Assigned: <strong style={{ color: '#154360' }}>{fup.internName}</strong>
+                      </div>
+
+                      {fup.notes && (
+                        <div style={{ fontSize: '0.7rem', color: '#52525b', background: '#ffffff', padding: '5px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', wordBreak: 'break-word' }}>
+                          {fup.notes}
+                        </div>
+                      )}
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '6px' }}>
+                        <span style={{ fontSize: '0.68rem', fontWeight: 600, color: '#09090b' }}>
+                          Due: {fup.scheduledDate}
+                        </span>
+
+                        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                          {fup.status === 'PENDING' && (
+                            <>
+                              <button 
+                                onClick={() => {
+                                  const cleanTitle = (fup.entityTitle || '').replace(/\s*\([^)]*\)/g, '').replace(/\s*-\s*.*$/, '').trim().toLowerCase();
+                                  const matched = fup.phone ? null : (
+                                    students?.find(s => s.id === fup.entityId || (s.name && (s.name.trim().toLowerCase() === cleanTitle || cleanTitle.includes(s.name.trim().toLowerCase()) || s.name.trim().toLowerCase().includes(cleanTitle)))) ||
+                                    tpos?.find(t => t.id === fup.entityId || (t.name && (t.name.trim().toLowerCase() === cleanTitle || cleanTitle.includes(t.name.trim().toLowerCase()) || t.name.trim().toLowerCase().includes(cleanTitle))))
+                                  );
+                                  onStartCall({
+                                    recipientType: fup.entityType,
+                                    recipientName: fup.entityTitle,
+                                    recipientDetail: fup.notes,
+                                    recipientPhone: fup.phone || matched?.phone || '',
+                                    type: 'AUDIO',
+                                    followUpId: fup.id
+                                  });
+                                }}
+                                className="btn-mustard btn-black-sm"
+                                style={{ padding: '3px 8px', fontSize: '0.72rem', gap: '3px' }}
+                              >
+                                <Phone size={11} color="#154360" /> Call
+                              </button>
+
+                              <button 
+                                onClick={() => onSnoozeFollowUp(fup.id, 1)}
+                                className="btn-navy-outline btn-black-sm"
+                                style={{ padding: '3px 7px', fontSize: '0.72rem' }}
+                              >
+                                +1d
+                              </button>
+                            </>
+                          )}
+
+                          {onDeleteFollowUp && (
+                            <button 
+                              onClick={() => onDeleteFollowUp(fup.id)}
+                              className="btn-icon"
+                              style={{ width: '26px', height: '26px', color: '#ef4444' }}
+                              title="Delete follow-up"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-
-                {fup.notes && (
-                  <div style={{ fontSize: '0.7rem', color: '#52525b', background: '#ffffff', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', wordBreak: 'break-word' }}>
-                    {fup.notes}
-                  </div>
-                )}
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #e2e8f0', paddingTop: '6px' }}>
-                  <span style={{ fontSize: '0.68rem', fontWeight: 600, color: '#09090b' }}>
-                    Due: {fup.scheduledDate}
-                  </span>
-
-                  <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                    {fup.status === 'PENDING' && (
-                      <>
-                        <button 
-                          onClick={() => {
-                            const cleanTitle = (fup.entityTitle || '').replace(/\s*\([^)]*\)/g, '').replace(/\s*-\s*.*$/, '').trim().toLowerCase();
-                            const matched = fup.phone ? null : (
-                              students?.find(s => s.id === fup.entityId || (s.name && (s.name.trim().toLowerCase() === cleanTitle || cleanTitle.includes(s.name.trim().toLowerCase()) || s.name.trim().toLowerCase().includes(cleanTitle)))) ||
-                              tpos?.find(t => t.id === fup.entityId || (t.name && (t.name.trim().toLowerCase() === cleanTitle || cleanTitle.includes(t.name.trim().toLowerCase()) || t.name.trim().toLowerCase().includes(cleanTitle))))
-                            );
-                            onStartCall({
-                              recipientType: fup.entityType,
-                              recipientName: fup.entityTitle,
-                              recipientDetail: fup.notes,
-                              recipientPhone: fup.phone || matched?.phone || '',
-                              type: 'AUDIO',
-                              followUpId: fup.id
-                            });
-                          }}
-                          className="btn-mustard btn-black-sm"
-                          style={{ padding: '3px 8px', fontSize: '0.72rem', gap: '3px' }}
-                        >
-                          <Phone size={11} color="#154360" /> Call
-                        </button>
-
-                        <button 
-                          onClick={() => onSnoozeFollowUp(fup.id, 1)}
-                          className="btn-navy-outline btn-black-sm"
-                          style={{ padding: '3px 7px', fontSize: '0.72rem' }}
-                        >
-                          +1d
-                        </button>
-                      </>
-                    )}
-
-                    {onDeleteFollowUp && (
-                      <button 
-                        onClick={() => onDeleteFollowUp(fup.id)}
-                        className="btn-icon"
-                        style={{ width: '26px', height: '26px', color: '#ef4444' }}
-                        title="Delete follow-up"
-                      >
-                        <Trash2 size={12} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>

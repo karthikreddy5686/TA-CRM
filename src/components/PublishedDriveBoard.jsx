@@ -31,7 +31,9 @@ import {
   Coffee,
   Utensils,
   AlertTriangle,
-  ShieldCheck
+  ShieldCheck,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 // Custom Time Input without browser dashed lines (--:-- --), with clean text typing and AM / PM options
@@ -215,6 +217,10 @@ export default function PublishedDriveBoard({
   const [searchTerm, setSearchTerm] = useState('');
   const [branchFilter, setBranchFilter] = useState('ALL');
   const [copiedShareLink, setCopiedShareLink] = useState(false);
+  const [expandedStudents, setExpandedStudents] = useState({});
+  const toggleStudentExpand = (id) => {
+    setExpandedStudents(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
   // Link Google Sheets state
   const [isLinkSheetsModalOpen, setIsLinkSheetsModalOpen] = useState(false);
@@ -1319,175 +1325,203 @@ export default function PublishedDriveBoard({
           </table>
         </div>
 
-        {/* Mobile View: Clean Candidate Cards */}
+        {/* Mobile View: Clean Candidate Cards (Click to expand details) */}
         <div className="mobile-only" style={{ padding: '6px 10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
           {filteredStudents.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '20px 10px', color: '#71717a', fontSize: 'var(--font-xs)' }}>
               No candidates posted yet for this drive. Click <strong>"Link Sheets"</strong> above to import students.
             </div>
           ) : (
-            filteredStudents.map(student => (
-              <div key={student.id} style={{
-                background: '#f8fafc',
-                border: '1px solid #e2e8f0',
-                borderLeft: '4px solid #154360',
-                borderRadius: 'var(--radius-sm)',
-                padding: '8px 10px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '6px'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div>
+            filteredStudents.map(student => {
+              const isExpanded = !!expandedStudents[student.id];
+              return (
+                <div 
+                  key={student.id} 
+                  style={{
+                    background: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    borderLeft: '4px solid #154360',
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '8px 10px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: isExpanded ? '6px' : '0px',
+                    boxShadow: isExpanded ? '0 2px 4px rgba(0,0,0,0.04)' : 'none',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  {/* Row 1: Clickable Name, CGPA badge & Expand Chevron */}
+                  <div 
+                    onClick={() => toggleStudentExpand(student.id)}
+                    role="button"
+                    tabIndex={0}
+                    style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center', 
+                      cursor: 'pointer',
+                      userSelect: 'none'
+                    }}
+                  >
                     <div style={{ fontWeight: 800, fontSize: 'var(--font-sm)', lineHeight: 'var(--lh-sm)', color: '#154360' }}>
                       {student.name}
                     </div>
-                    <div style={{ fontSize: 'var(--font-10)', lineHeight: 'var(--lh-10)', color: '#71717a' }}>
-                      {student.rollNumber} • {student.branch}
-                    </div>
-                    {student.interviewTime && (
-                      <div style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        background: '#eff6ff',
-                        border: '1px solid #bfdbfe',
-                        color: '#1d4ed8',
-                        borderRadius: '4px',
-                        padding: '1px 5px',
-                        fontSize: '0.66rem',
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{
                         fontWeight: 700,
-                        marginTop: '3px'
+                        background: '#FFDB58',
+                        border: '1px solid #fae27a',
+                        padding: '1px 6px',
+                        borderRadius: '4px',
+                        fontSize: 'var(--font-10)',
+                        lineHeight: 'var(--lh-10)',
+                        color: '#154360'
                       }}>
-                        <Clock size={9} color="#1d4ed8" />
-                        <span>Slot: {student.interviewTime}</span>
-                        {student.meetLink && (
-                          <span 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              window.open(student.meetLink, '_blank');
-                            }}
-                            style={{ color: '#059669', cursor: 'pointer', textDecoration: 'underline', marginLeft: '2px' }}
-                          >
-                            • Meet 🎥
-                          </span>
-                        )}
+                        ⭐ {student.cgpa} CGPA
+                      </span>
+                      {isExpanded ? <ChevronUp size={14} color="#154360" /> : <ChevronDown size={14} color="#64748b" />}
+                    </div>
+                  </div>
+
+                  {/* Expanded Body: Only shown after clicking on individual name */}
+                  {isExpanded && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', borderTop: '1px dashed #e2e8f0', paddingTop: '6px', marginTop: '4px' }}>
+                      <div style={{ fontSize: 'var(--font-10)', lineHeight: 'var(--lh-10)', color: '#71717a' }}>
+                        {student.rollNumber} • {student.branch}
                       </div>
-                    )}
-                  </div>
-                  <span style={{
-                    fontWeight: 700,
-                    background: '#FFDB58',
-                    border: '1px solid #fae27a',
-                    padding: '1px 6px',
-                    borderRadius: '4px',
-                    fontSize: 'var(--font-10)',
-                    lineHeight: 'var(--lh-10)',
-                    color: '#154360'
-                  }}>
-                    ⭐ {student.cgpa} CGPA
-                  </span>
+                      {student.interviewTime && (
+                        <div style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          background: '#eff6ff',
+                          border: '1px solid #bfdbfe',
+                          color: '#1d4ed8',
+                          borderRadius: '4px',
+                          padding: '2px 6px',
+                          fontSize: '0.66rem',
+                          fontWeight: 700,
+                          width: 'fit-content'
+                        }}>
+                          <Clock size={9} color="#1d4ed8" />
+                          <span>Slot: {student.interviewTime}</span>
+                          {student.meetLink && (
+                            <span 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(student.meetLink, '_blank');
+                              }}
+                              style={{ color: '#059669', cursor: 'pointer', textDecoration: 'underline', marginLeft: '2px' }}
+                            >
+                              • Meet 🎥
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'space-between', 
+                        gap: '6px', 
+                        background: '#ffffff', 
+                        padding: '5px 8px', 
+                        borderRadius: 'var(--radius-sm)', 
+                        border: '1px solid #e2e8f0',
+                        flexWrap: 'nowrap',
+                        marginTop: '2px'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', minWidth: 0, flexShrink: 1 }}>
+                          <span style={{ fontSize: '0.72rem', color: '#154360', fontWeight: 700, flexShrink: 0 }}>Stage:</span>
+                          <select
+                            className="form-select"
+                            value={student.stage || 'ONLINE_ASSESSMENT'}
+                            onChange={(e) => onUpdateCandidateStage && onUpdateCandidateStage(student.id, e.target.value)}
+                            style={{
+                              fontSize: '0.72rem',
+                              lineHeight: 1.2,
+                              padding: '2px 4px',
+                              fontWeight: 700,
+                              borderRadius: '4px',
+                              minWidth: 0,
+                              maxWidth: '120px',
+                              background: student.stage === 'OFFERED' ? '#FFDB58' : student.stage === 'TECH_INTERVIEW' ? '#ebf5fb' : '#f8fafc',
+                              color: student.stage === 'OFFERED' ? '#154360' : student.stage === 'TECH_INTERVIEW' ? '#154360' : '#09090b',
+                              border: student.stage === 'OFFERED' ? '1px solid #fae27a' : student.stage === 'TECH_INTERVIEW' ? '1px solid #aed6f1' : '1px solid #cbd5e1'
+                            }}
+                          >
+                            <option value="APPLIED">1. Applied</option>
+                            <option value="ONLINE_ASSESSMENT">2. Test</option>
+                            <option value="TECH_INTERVIEW">3. Interview</option>
+                            <option value="OFFERED">4. Selected</option>
+                          </select>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexShrink: 0 }}>
+                          <button
+                            onClick={() => onStartCall({
+                              recipientType: 'STUDENT',
+                              recipientName: student.name,
+                              recipientDetail: `${student.branch} • ${student.phone}`,
+                              recipientPhone: student.phone,
+                              type: 'AUDIO',
+                              studentId: student.id,
+                              student
+                            })}
+                            className="btn-mustard btn-black-sm"
+                            style={{ padding: '3px 8px', fontSize: '0.72rem', gap: '3px', whiteSpace: 'nowrap' }}
+                            title="Direct Phone Call"
+                          >
+                            <Phone size={11} color="#154360" /> Call
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              if (student.meetLink) {
+                                window.open(student.meetLink, '_blank');
+                              } else {
+                                onStartCall({
+                                  recipientType: 'STUDENT',
+                                  recipientName: student.name,
+                                  recipientDetail: `${student.branch} • ${student.phone}`,
+                                  recipientPhone: student.phone,
+                                  type: 'VIDEO',
+                                  studentId: student.id,
+                                  student
+                                });
+                              }
+                            }}
+                            className="btn-navy btn-black-sm"
+                            style={{ 
+                              padding: '3px 8px', 
+                              fontSize: '0.72rem', 
+                              gap: '3px',
+                              whiteSpace: 'nowrap',
+                              background: student.meetLink ? '#0f766e' : '#154360',
+                              borderColor: student.meetLink ? '#2dd4bf' : undefined
+                            }}
+                            title={student.meetLink ? `Join Google Meet (${student.interviewTime || ''})` : "Video Interview Room"}
+                          >
+                            <Video size={11} color="#FFDB58" /> {student.meetLink ? 'Meet' : 'Video'}
+                          </button>
+
+                          {onDeleteStudent && (
+                            <button
+                              onClick={() => onDeleteStudent(student.id)}
+                              className="btn-icon"
+                              style={{ width: '22px', height: '22px', color: '#ef4444', flexShrink: 0 }}
+                              title="Delete candidate"
+                            >
+                              <Trash2 size={11} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'space-between', 
-                  gap: '6px', 
-                  background: '#ffffff', 
-                  padding: '5px 8px', 
-                  borderRadius: 'var(--radius-sm)', 
-                  border: '1px solid #e2e8f0',
-                  flexWrap: 'nowrap'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', minWidth: 0, flexShrink: 1 }}>
-                    <span style={{ fontSize: '0.72rem', color: '#154360', fontWeight: 700, flexShrink: 0 }}>Stage:</span>
-                    <select
-                      className="form-select"
-                      value={student.stage || 'ONLINE_ASSESSMENT'}
-                      onChange={(e) => onUpdateCandidateStage && onUpdateCandidateStage(student.id, e.target.value)}
-                      style={{
-                        fontSize: '0.72rem',
-                        lineHeight: 1.2,
-                        padding: '2px 4px',
-                        fontWeight: 700,
-                        borderRadius: '4px',
-                        minWidth: 0,
-                        maxWidth: '120px',
-                        background: student.stage === 'OFFERED' ? '#FFDB58' : student.stage === 'TECH_INTERVIEW' ? '#ebf5fb' : '#f8fafc',
-                        color: student.stage === 'OFFERED' ? '#154360' : student.stage === 'TECH_INTERVIEW' ? '#154360' : '#09090b',
-                        border: student.stage === 'OFFERED' ? '1px solid #fae27a' : student.stage === 'TECH_INTERVIEW' ? '1px solid #aed6f1' : '1px solid #cbd5e1'
-                      }}
-                    >
-                      <option value="APPLIED">1. Applied</option>
-                      <option value="ONLINE_ASSESSMENT">2. Test</option>
-                      <option value="TECH_INTERVIEW">3. Interview</option>
-                      <option value="OFFERED">4. Selected</option>
-                    </select>
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexShrink: 0 }}>
-                    <button
-                      onClick={() => onStartCall({
-                        recipientType: 'STUDENT',
-                        recipientName: student.name,
-                        recipientDetail: `${student.branch} • ${student.phone}`,
-                        recipientPhone: student.phone,
-                        type: 'AUDIO',
-                        studentId: student.id,
-                        student
-                      })}
-                      className="btn-mustard btn-black-sm"
-                      style={{ padding: '3px 8px', fontSize: '0.72rem', gap: '3px', whiteSpace: 'nowrap' }}
-                      title="Direct Phone Call"
-                    >
-                      <Phone size={11} color="#154360" /> Call
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        if (student.meetLink) {
-                          window.open(student.meetLink, '_blank');
-                        } else {
-                          onStartCall({
-                            recipientType: 'STUDENT',
-                            recipientName: student.name,
-                            recipientDetail: `${student.branch} • ${student.phone}`,
-                            recipientPhone: student.phone,
-                            type: 'VIDEO',
-                            studentId: student.id,
-                            student
-                          });
-                        }
-                      }}
-                      className="btn-navy btn-black-sm"
-                      style={{ 
-                        padding: '3px 8px', 
-                        fontSize: '0.72rem', 
-                        gap: '3px',
-                        whiteSpace: 'nowrap',
-                        background: student.meetLink ? '#0f766e' : '#154360',
-                        borderColor: student.meetLink ? '#2dd4bf' : undefined
-                      }}
-                      title={student.meetLink ? `Join Google Meet (${student.interviewTime || ''})` : "Video Interview Room"}
-                    >
-                      <Video size={11} color="#FFDB58" /> {student.meetLink ? 'Meet' : 'Video'}
-                    </button>
-
-                    {onDeleteStudent && (
-                      <button
-                        onClick={() => onDeleteStudent(student.id)}
-                        className="btn-icon"
-                        style={{ width: '22px', height: '22px', color: '#ef4444', flexShrink: 0 }}
-                        title="Delete candidate"
-                      >
-                        <Trash2 size={11} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>

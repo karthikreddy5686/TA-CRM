@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Phone, 
   Video, 
@@ -8,7 +8,9 @@ import {
   CheckCircle2, 
   Upload, 
   ArrowRight,
-  Calendar
+  Calendar,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { formatDuration } from '../data/mockData';
 
@@ -30,6 +32,14 @@ export default function InternDashboard({
   const myTpos = tpos.filter(t => t.assignedInternId === currentIntern.id);
   const myStudents = students.filter(s => s.internId === currentIntern.id);
   const myFollowUps = followUps.filter(f => f.internId === currentIntern.id && f.status === 'PENDING');
+  const [expandedFupIds, setExpandedFupIds] = useState({});
+  const toggleFupExpand = (id) => {
+    setExpandedFupIds(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+  const [expandedTpoIds, setExpandedTpoIds] = useState({});
+  const toggleTpoExpand = (id) => {
+    setExpandedTpoIds(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
   return (
     <div>
@@ -238,67 +248,95 @@ export default function InternDashboard({
               </table>
             </div>
 
-            {/* Mobile View: Follow-Ups */}
+            {/* Mobile View: Follow-Ups (Click to expand details) */}
             <div className="mobile-only" style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {myFollowUps.map(fup => (
-                <div key={fup.id} style={{
-                  background: '#f8fafc',
-                  border: '1px solid #e2e8f0',
-                  borderLeft: '4px solid #154360',
-                  borderRadius: '10px',
-                  padding: '10px 12px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '6px'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#154360' }}>
-                      {fup.entityTitle}
+              {myFollowUps.map(fup => {
+                const isExpanded = !!expandedFupIds[fup.id];
+                return (
+                  <div 
+                    key={fup.id} 
+                    style={{
+                      background: '#f8fafc',
+                      border: '1px solid #e2e8f0',
+                      borderLeft: '4px solid #154360',
+                      borderRadius: '10px',
+                      padding: '10px 12px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: isExpanded ? '6px' : '0px',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    {/* Row 1: Clickable Title, Priority Badge & Chevron */}
+                    <div 
+                      onClick={() => toggleFupExpand(fup.id)}
+                      role="button"
+                      tabIndex={0}
+                      style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                    >
+                      <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#154360' }}>
+                        {fup.entityTitle}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span className={`badge ${
+                          fup.priority === 'URGENT' ? 'badge-red' : fup.priority === 'HIGH' ? 'badge-amber' : 'badge-grey'
+                        }`} style={{ fontSize: '0.65rem' }}>
+                          {fup.priority}
+                        </span>
+                        {isExpanded ? <ChevronUp size={14} color="#154360" /> : <ChevronDown size={14} color="#64748b" />}
+                      </div>
                     </div>
-                    <span className={`badge ${
-                      fup.priority === 'URGENT' ? 'badge-red' : fup.priority === 'HIGH' ? 'badge-amber' : 'badge-grey'
-                    }`} style={{ fontSize: '0.65rem' }}>
-                      {fup.priority}
-                    </span>
+
+                    {/* Expanded Body: Notes, Date & Actions */}
+                    {isExpanded && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', borderTop: '1px dashed #e2e8f0', paddingTop: '6px', marginTop: '4px' }}>
+                        {fup.notes && (
+                          <div style={{ fontSize: '0.72rem', color: '#52525b', background: '#ffffff', padding: '4px 6px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>{fup.notes}</div>
+                        )}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', paddingTop: '6px' }}>
+                          <span style={{ fontSize: '0.7rem', color: '#71717a' }}>📅 {fup.scheduledDate}</span>
+                          <div style={{ display: 'flex', gap: '4px' }}>
+                            <button 
+                              onClick={() => {
+                                const cleanTitle = (fup.entityTitle || '').replace(/\s*\([^)]*\)/g, '').replace(/\s*-\s*.*$/, '').trim().toLowerCase();
+                                const matched = fup.phone ? null : (
+                                  students?.find(s => s.id === fup.entityId || (s.name && (s.name.trim().toLowerCase() === cleanTitle || cleanTitle.includes(s.name.trim().toLowerCase()) || s.name.trim().toLowerCase().includes(cleanTitle)))) ||
+                                  tpos?.find(t => t.id === fup.entityId || (t.name && (t.name.trim().toLowerCase() === cleanTitle || cleanTitle.includes(t.name.trim().toLowerCase()) || t.name.trim().toLowerCase().includes(cleanTitle))))
+                                );
+                                onStartCall({
+                                  recipientType: fup.entityType,
+                                  recipientName: fup.entityTitle,
+                                  recipientDetail: fup.notes,
+                                  recipientPhone: fup.phone || matched?.phone || '',
+                                  type: 'AUDIO',
+                                  followUpId: fup.id
+                                });
+                              }}
+                              className="btn-mustard btn-black-sm"
+                              style={{ padding: '3px 8px', fontSize: '0.72rem', gap: '3px' }}
+                            >
+                              <Phone size={11} color="#154360" /> Call
+                            </button>
+                            <button 
+                              onClick={() => onCompleteFollowUp(fup.id)}
+                              className="btn-secondary btn-black-sm"
+                              style={{ padding: '3px 6px' }}
+                            >
+                              <CheckCircle2 size={11} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  {fup.notes && (
-                    <div style={{ fontSize: '0.72rem', color: '#52525b' }}>{fup.notes}</div>
-                  )}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #e2e8f0', paddingTop: '6px' }}>
-                    <span style={{ fontSize: '0.7rem', color: '#71717a' }}>📅 {fup.scheduledDate}</span>
-                    <div style={{ display: 'flex', gap: '4px' }}>
-                      <button 
-                        onClick={() => {
-                          const cleanTitle = (fup.entityTitle || '').replace(/\s*\([^)]*\)/g, '').replace(/\s*-\s*.*$/, '').trim().toLowerCase();
-                          const matched = fup.phone ? null : (
-                            students?.find(s => s.id === fup.entityId || (s.name && (s.name.trim().toLowerCase() === cleanTitle || cleanTitle.includes(s.name.trim().toLowerCase()) || s.name.trim().toLowerCase().includes(cleanTitle)))) ||
-                            tpos?.find(t => t.id === fup.entityId || (t.name && (t.name.trim().toLowerCase() === cleanTitle || cleanTitle.includes(t.name.trim().toLowerCase()) || t.name.trim().toLowerCase().includes(cleanTitle))))
-                          );
-                          onStartCall({
-                            recipientType: fup.entityType,
-                            recipientName: fup.entityTitle,
-                            recipientDetail: fup.notes,
-                            recipientPhone: fup.phone || matched?.phone || '',
-                            type: 'AUDIO',
-                            followUpId: fup.id
-                          });
-                        }}
-                        className="btn-mustard btn-black-sm"
-                        style={{ padding: '3px 8px', fontSize: '0.72rem', gap: '3px' }}
-                      >
-                        <Phone size={11} color="#154360" /> Call
-                      </button>
-                      <button 
-                        onClick={() => onCompleteFollowUp(fup.id)}
-                        className="btn-secondary btn-black-sm"
-                        style={{ padding: '3px 6px' }}
-                      >
-                        <CheckCircle2 size={11} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </>
         )}
@@ -394,62 +432,93 @@ export default function InternDashboard({
           </table>
         </div>
 
-        {/* Mobile View: Assigned TPOs */}
+        {/* Mobile View: Assigned TPOs (Click to expand details) */}
         <div className="mobile-only" style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {myTpos.map(tpo => (
-            <div key={tpo.id} style={{
-              background: '#f8fafc',
-              border: '1px solid #e2e8f0',
-              borderRadius: '10px',
-              padding: '10px 12px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '6px'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#09090b' }}>{tpo.name}</div>
-                  <div style={{ fontSize: '0.72rem', color: '#71717a' }}>{tpo.collegeName}</div>
-                  <div style={{ fontSize: '0.72rem', fontFamily: 'monospace', color: '#52525b' }}>{tpo.phone}</div>
+          {myTpos.map(tpo => {
+            const isExpanded = !!expandedTpoIds[tpo.id];
+            return (
+              <div 
+                key={tpo.id} 
+                style={{
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderLeft: '4px solid #154360',
+                  borderRadius: '10px',
+                  padding: '10px 12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: isExpanded ? '6px' : '0px',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                {/* Row 1: Clickable Name, Badge & Chevron */}
+                <div 
+                  onClick={() => toggleTpoExpand(tpo.id)}
+                  role="button"
+                  tabIndex={0}
+                  style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                    userSelect: 'none'
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#154360' }}>{tpo.name}</div>
+                    <div style={{ fontSize: '0.72rem', color: '#71717a' }}>{tpo.collegeName}</div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span className={`badge ${
+                      tpo.status === 'DRIVE_CONFIRMED' ? 'badge-green' : tpo.status === 'PITCHED' ? 'badge-amber' : 'badge-grey'
+                    }`} style={{ fontSize: '0.65rem' }}>
+                      {tpo.status.replace(/_/g, ' ')}
+                    </span>
+                    {isExpanded ? <ChevronUp size={14} color="#154360" /> : <ChevronDown size={14} color="#64748b" />}
+                  </div>
                 </div>
-                <span className={`badge ${
-                  tpo.status === 'DRIVE_CONFIRMED' ? 'badge-green' : tpo.status === 'PITCHED' ? 'badge-amber' : 'badge-grey'
-                }`} style={{ fontSize: '0.65rem' }}>
-                  {tpo.status.replace(/_/g, ' ')}
-                </span>
+
+                {/* Expanded Body: Phone & Call Buttons */}
+                {isExpanded && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', borderTop: '1px dashed #e2e8f0', paddingTop: '6px', marginTop: '4px' }}>
+                    <div style={{ fontSize: '0.74rem', fontFamily: 'monospace', color: '#154360', fontWeight: 600 }}>
+                      📞 {tpo.phone || 'No phone'}
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px', borderTop: '1px solid #f1f5f9', paddingTop: '6px' }}>
+                      <button 
+                        onClick={() => onStartCall({
+                          recipientType: 'TPO',
+                          recipientName: `${tpo.name} (${tpo.collegeName})`,
+                          recipientDetail: `${tpo.designation} • ${tpo.phone}`,
+                          recipientPhone: tpo.phone,
+                          type: 'AUDIO',
+                          tpoId: tpo.id
+                        })}
+                        className="btn-mustard btn-black-sm"
+                        style={{ padding: '3px 8px', fontSize: '0.72rem', gap: '3px' }}
+                      >
+                        <Phone size={11} color="#154360" /> Call
+                      </button>
+                      <button 
+                        onClick={() => onStartCall({
+                          recipientType: 'TPO',
+                          recipientName: `${tpo.name} (${tpo.collegeName})`,
+                          recipientDetail: `${tpo.designation} • ${tpo.phone}`,
+                          recipientPhone: tpo.phone,
+                          type: 'VIDEO',
+                          tpoId: tpo.id
+                        })}
+                        className="btn-navy btn-black-sm"
+                        style={{ padding: '3px 8px', fontSize: '0.72rem', gap: '3px' }}
+                      >
+                        <Video size={11} color="#FFDB58" /> Video
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px', borderTop: '1px solid #e2e8f0', paddingTop: '6px' }}>
-                <button 
-                  onClick={() => onStartCall({
-                    recipientType: 'TPO',
-                    recipientName: `${tpo.name} (${tpo.collegeName})`,
-                    recipientDetail: `${tpo.designation} • ${tpo.phone}`,
-                    recipientPhone: tpo.phone,
-                    type: 'AUDIO',
-                    tpoId: tpo.id
-                  })}
-                  className="btn-black btn-black-sm"
-                  style={{ padding: '3px 8px', fontSize: '0.72rem', gap: '3px' }}
-                >
-                  <Phone size={11} /> Call
-                </button>
-                <button 
-                  onClick={() => onStartCall({
-                    recipientType: 'TPO',
-                    recipientName: `${tpo.name} (${tpo.collegeName})`,
-                    recipientDetail: `${tpo.designation} • ${tpo.phone}`,
-                    recipientPhone: tpo.phone,
-                    type: 'VIDEO',
-                    tpoId: tpo.id
-                  })}
-                  className="btn-secondary btn-black-sm"
-                  style={{ padding: '3px 8px', fontSize: '0.72rem', gap: '3px' }}
-                >
-                  <Video size={11} /> Video
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

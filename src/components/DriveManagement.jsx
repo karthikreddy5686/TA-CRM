@@ -25,7 +25,9 @@ import {
   ArrowLeft,
   ArrowUpDown,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 // 4 simple, natural hiring stages that anyone can understand immediately
@@ -155,6 +157,14 @@ export default function DriveManagement({
   const [studentStage, setStudentStage] = useState('APPLIED');
   const [manualDriveTitle, setManualDriveTitle] = useState('');
   const [manualCollegeName, setManualCollegeName] = useState('');
+  const [expandedCandidateIds, setExpandedCandidateIds] = useState({});
+  const toggleCandidateExpand = (id) => {
+    setExpandedCandidateIds(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+  const [expandedDriveIds, setExpandedDriveIds] = useState({});
+  const toggleDriveExpand = (id) => {
+    setExpandedDriveIds(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
   // Derived effective target drive without cascading setState in effect
   const effectiveTargetDriveId = targetDriveForUpload && drives.some(d => d.id === targetDriveForUpload)
@@ -802,7 +812,7 @@ export default function DriveManagement({
                 </table>
               </div>
 
-              {/* Mobile View: Clean Candidate Pipeline Cards */}
+              {/* Mobile View: Clean Candidate Pipeline Cards (Click to expand details) */}
               <div className="mobile-only" style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {filteredStudents.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '24px 12px', color: '#71717a', fontSize: '0.8rem' }}>
@@ -810,118 +820,146 @@ export default function DriveManagement({
                   </div>
                 ) : (
                   filteredStudents.map(student => {
+                    const isExpanded = !!expandedCandidateIds[student.id];
                     const currentStep = normalizeStage(student.stage);
                     return (
-                      <div key={student.id} style={{
-                        background: '#f8fafc',
-                        border: '1px solid #e2e8f0',
-                        borderRadius: '10px',
-                        padding: '12px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '8px'
-                      }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                          <div>
-                            <div style={{ fontWeight: 800, fontSize: '0.925rem', color: '#09090b' }}>
-                              {student.name}
-                            </div>
-                            <div style={{ fontSize: '0.72rem', color: '#71717a' }}>
-                              {student.rollNumber} • {student.branch}
-                            </div>
-                            <div style={{ fontSize: '0.72rem', color: '#52525b' }}>
-                              {student.collegeName}
-                            </div>
-                          </div>
-                          <span style={{
-                            fontWeight: 700,
-                            background: '#ffffff',
-                            border: '1px solid #e2e8f0',
-                            padding: '2px 7px',
-                            borderRadius: '6px',
-                            fontSize: '0.75rem',
-                            color: '#09090b'
-                          }}>
-                            ⭐ {student.cgpa} CGPA
-                          </span>
-                        </div>
-
-                        <div style={{
+                      <div 
+                        key={student.id} 
+                        style={{
+                          background: '#f8fafc',
+                          border: '1px solid #e2e8f0',
+                          borderLeft: '4px solid #154360',
+                          borderRadius: '10px',
+                          padding: '10px 12px',
                           display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          gap: '8px',
-                          borderTop: '1px solid #e2e8f0',
-                          paddingTop: '8px',
-                          flexWrap: 'wrap'
-                        }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span style={{ fontSize: '0.7rem', color: '#71717a', fontWeight: 600 }}>Stage:</span>
-                            <select
-                              value={currentStep}
-                              onChange={(e) => onUpdateCandidateStage(student.id, e.target.value)}
-                              style={{
-                                fontSize: '0.72rem',
-                                padding: '2px 6px',
-                                fontWeight: 700,
-                                borderRadius: '6px',
-                                border: '1px solid #cbd5e1',
-                                background: currentStep === 'OFFERED' ? '#ecfdf5' : '#ffffff',
-                                color: currentStep === 'OFFERED' ? '#065f46' : '#09090b'
-                              }}
-                            >
-                              <option value="APPLIED">1. Applied</option>
-                              <option value="ONLINE_ASSESSMENT">2. Test</option>
-                              <option value="TECH_INTERVIEW">3. Interview</option>
-                              <option value="OFFERED">4. Selected</option>
-                            </select>
+                          flexDirection: 'column',
+                          gap: isExpanded ? '8px' : '0px',
+                          boxShadow: isExpanded ? '0 2px 4px rgba(0,0,0,0.04)' : 'none',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        {/* Row 1: Clickable Name, CGPA & Chevron */}
+                        <div 
+                          onClick={() => toggleCandidateExpand(student.id)}
+                          role="button"
+                          tabIndex={0}
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            cursor: 'pointer',
+                            userSelect: 'none'
+                          }}
+                        >
+                          <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#154360' }}>
+                            {student.name}
                           </div>
-
-                          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                            <button
-                              onClick={() => onStartCall({
-                                recipientType: 'STUDENT',
-                                recipientName: student.name,
-                                recipientDetail: `${student.branch} • ${student.phone}`,
-                                recipientPhone: student.phone,
-                                type: 'AUDIO',
-                                studentId: student.id,
-                                student
-                              })}
-                              className="btn-black btn-black-sm"
-                              style={{ padding: '4px 10px', fontSize: '0.75rem', gap: '4px' }}
-                            >
-                              <Phone size={12} /> Call
-                            </button>
-
-                            <button
-                              onClick={() => onStartCall({
-                                recipientType: 'STUDENT',
-                                recipientName: student.name,
-                                recipientDetail: `${student.branch} • ${student.phone}`,
-                                recipientPhone: student.phone,
-                                type: 'VIDEO',
-                                studentId: student.id,
-                                student
-                              })}
-                              className="btn-secondary btn-black-sm"
-                              style={{ padding: '4px 8px', fontSize: '0.75rem', gap: '4px' }}
-                            >
-                              <Video size={12} /> Video
-                            </button>
-
-                            {onDeleteStudent && (
-                              <button
-                                onClick={() => onDeleteStudent(student.id)}
-                                className="btn-icon"
-                                style={{ width: '28px', height: '28px', color: '#ef4444' }}
-                                title="Delete"
-                              >
-                                <Trash2 size={12} />
-                              </button>
-                            )}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{
+                              fontWeight: 700,
+                              background: '#FFDB58',
+                              border: '1px solid #fae27a',
+                              padding: '2px 7px',
+                              borderRadius: '4px',
+                              fontSize: '0.72rem',
+                              color: '#154360'
+                            }}>
+                              ⭐ {student.cgpa} CGPA
+                            </span>
+                            {isExpanded ? <ChevronUp size={15} color="#154360" /> : <ChevronDown size={15} color="#64748b" />}
                           </div>
                         </div>
+
+                        {/* Expanded Body: Only shown after clicking on individual name */}
+                        {isExpanded && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderTop: '1px dashed #e2e8f0', paddingTop: '8px', marginTop: '4px' }}>
+                            <div style={{ fontSize: '0.72rem', color: '#71717a' }}>
+                              {student.rollNumber} • {student.branch} • {student.collegeName}
+                            </div>
+                            <div style={{ fontSize: '0.72rem', color: '#0284c7', fontWeight: 600 }}>
+                              📞 {student.phone || 'No phone'}
+                            </div>
+
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              gap: '8px',
+                              background: '#ffffff',
+                              padding: '6px 8px',
+                              borderRadius: '6px',
+                              border: '1px solid #e2e8f0',
+                              flexWrap: 'wrap'
+                            }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <span style={{ fontSize: '0.7rem', color: '#71717a', fontWeight: 600 }}>Stage:</span>
+                                <select
+                                  value={currentStep}
+                                  onChange={(e) => onUpdateCandidateStage(student.id, e.target.value)}
+                                  style={{
+                                    fontSize: '0.72rem',
+                                    padding: '2px 6px',
+                                    fontWeight: 700,
+                                    borderRadius: '6px',
+                                    border: '1px solid #cbd5e1',
+                                    background: currentStep === 'OFFERED' ? '#FFDB58' : '#ffffff',
+                                    color: '#154360'
+                                  }}
+                                >
+                                  <option value="APPLIED">1. Applied</option>
+                                  <option value="ONLINE_ASSESSMENT">2. Test</option>
+                                  <option value="TECH_INTERVIEW">3. Interview</option>
+                                  <option value="OFFERED">4. Selected</option>
+                                </select>
+                              </div>
+
+                              <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                                <button
+                                  onClick={() => onStartCall({
+                                    recipientType: 'STUDENT',
+                                    recipientName: student.name,
+                                    recipientDetail: `${student.branch} • ${student.phone}`,
+                                    recipientPhone: student.phone,
+                                    type: 'AUDIO',
+                                    studentId: student.id,
+                                    student
+                                  })}
+                                  className="btn-mustard btn-black-sm"
+                                  style={{ padding: '4px 10px', fontSize: '0.75rem', gap: '4px' }}
+                                >
+                                  <Phone size={12} color="#154360" /> Call
+                                </button>
+
+                                <button
+                                  onClick={() => onStartCall({
+                                    recipientType: 'STUDENT',
+                                    recipientName: student.name,
+                                    recipientDetail: `${student.branch} • ${student.phone}`,
+                                    recipientPhone: student.phone,
+                                    type: 'VIDEO',
+                                    studentId: student.id,
+                                    student
+                                  })}
+                                  className="btn-navy btn-black-sm"
+                                  style={{ padding: '4px 8px', fontSize: '0.75rem', gap: '4px' }}
+                                >
+                                  <Video size={12} color="#FFDB58" /> Video
+                                </button>
+
+                                {onDeleteStudent && (
+                                  <button
+                                    onClick={() => onDeleteStudent(student.id)}
+                                    className="btn-icon"
+                                    style={{ width: '28px', height: '28px', color: '#ef4444' }}
+                                    title="Delete"
+                                  >
+                                    <Trash2 size={12} />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })
@@ -1243,7 +1281,7 @@ export default function DriveManagement({
             </table>
           </div>
 
-          {/* Mobile View: Clean Campus Drive Cards */}
+          {/* Mobile View: Clean Campus Drive Cards (Click to expand details) */}
           <div className="mobile-only" style={{ padding: '6px 8px', display: 'flex', flexDirection: 'column', gap: '6px', width: '100%', boxSizing: 'border-box' }}>
             {drives.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '20px 10px', color: '#71717a', fontSize: '0.78rem' }}>
@@ -1252,23 +1290,55 @@ export default function DriveManagement({
             ) : (
               drives.map(drive => {
                 const driveCandidates = students.filter(s => s.driveId === drive.id);
+                const isExpanded = !!expandedDriveIds[drive.id];
                 return (
-                  <div key={drive.id} style={{
-                    background: '#f8fafc',
-                    border: '1px solid #e2e8f0',
-                    borderLeft: '4px solid #154360',
-                    borderRadius: '8px',
-                    padding: '8px 10px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '6px',
-                    width: '100%',
-                    boxSizing: 'border-box'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: '0.825rem', color: '#154360', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span>{drive.title}</span>
+                  <div 
+                    key={drive.id} 
+                    style={{
+                      background: '#f8fafc',
+                      border: '1px solid #e2e8f0',
+                      borderLeft: '4px solid #154360',
+                      borderRadius: '8px',
+                      padding: '8px 10px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: isExpanded ? '6px' : '0px',
+                      width: '100%',
+                      boxSizing: 'border-box',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    {/* Row 1: Clickable Drive Title, Badge & Chevron */}
+                    <div 
+                      onClick={() => toggleDriveExpand(drive.id)}
+                      role="button"
+                      tabIndex={0}
+                      style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                    >
+                      <div style={{ fontWeight: 700, fontSize: '0.84rem', color: '#154360' }}>
+                        {drive.title}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span className={`badge ${drive.status === 'CONFIRMED' ? 'badge-green' : 'badge-amber'}`} style={{ fontSize: '0.62rem', padding: '1px 5px' }}>
+                          {drive.status}
+                        </span>
+                        {isExpanded ? <ChevronUp size={14} color="#154360" /> : <ChevronDown size={14} color="#64748b" />}
+                      </div>
+                    </div>
+
+                    {/* Expanded Body: Only shown after clicking */}
+                    {isExpanded && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', borderTop: '1px dashed #e2e8f0', paddingTop: '6px', marginTop: '4px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ fontSize: '0.72rem', color: '#71717a' }}>
+                            {drive.collegeName} • {drive.jobRole}
+                          </div>
                           <span style={{
                             fontSize: '0.62rem',
                             fontWeight: 700,
@@ -1285,51 +1355,44 @@ export default function DriveManagement({
                             {drive.mode || 'Offline'}
                           </span>
                         </div>
-                        <div style={{ fontSize: '0.68rem', color: '#71717a' }}>
-                          {drive.collegeName} • {drive.jobRole}
+
+                        <div style={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between', 
+                          alignItems: 'center',
+                          background: '#ffffff',
+                          padding: '6px 8px',
+                          borderRadius: '6px',
+                          border: '1px solid #e2e8f0',
+                          fontSize: '0.7rem',
+                          color: '#52525b'
+                        }}>
+                          <span style={{ 
+                            background: '#FFDB58', 
+                            color: '#154360', 
+                            fontWeight: 700, 
+                            padding: '1px 6px', 
+                            borderRadius: '4px',
+                            border: '1px solid #fae27a'
+                          }}>💰 {drive.ctc}</span>
+                          <span>📅 {drive.driveDate || 'Upcoming'}</span>
+                          <button
+                            onClick={() => {
+                              if (onNavigateToLiveBoard) {
+                                onNavigateToLiveBoard(drive.id);
+                              } else {
+                                setSelectedDriveId(drive.id);
+                                setActiveTab('pipeline');
+                              }
+                            }}
+                            className="btn-navy-outline btn-black-sm"
+                            style={{ padding: '2px 6px', fontSize: '0.68rem', gap: '3px' }}
+                          >
+                            <Users size={10} color="#154360" /> {driveCandidates.length} Students
+                          </button>
                         </div>
                       </div>
-                      <span className={`badge ${drive.status === 'CONFIRMED' ? 'badge-green' : 'badge-amber'}`} style={{ fontSize: '0.62rem', padding: '1px 5px' }}>
-                        {drive.status}
-                      </span>
-                    </div>
-
-                    <div style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center',
-                      background: '#ffffff',
-                      padding: '6px 8px',
-                      borderRadius: '6px',
-                      border: '1px solid #e2e8f0',
-                      fontSize: '0.7rem',
-                      color: '#52525b'
-                    }}>
-                      <span style={{ 
-                        background: '#FFDB58', 
-                        color: '#154360', 
-                        fontWeight: 700, 
-                        padding: '1px 6px', 
-                        borderRadius: '4px',
-                        border: '1px solid #fae27a'
-                      }}>💰 {drive.ctc}</span>
-                      <span>📅 {drive.driveDate || 'Upcoming'}</span>
-                      <button
-                        onClick={() => {
-                          if (onNavigateToLiveBoard) {
-                            onNavigateToLiveBoard(drive.id);
-                          } else {
-                            setSelectedDriveId(drive.id);
-                            setActiveTab('pipeline');
-                          }
-                        }}
-                        className="btn-navy-outline btn-black-sm"
-                        style={{ padding: '2px 6px', fontSize: '0.68rem', gap: '3px' }}
-                      >
-                        <Users size={10} color="#154360" /> {driveCandidates.length} Students
-                      </button>
-                    </div>
-
+                    )}
                   </div>
                 );
               })
