@@ -1390,7 +1390,7 @@ export default function App() {
   const handleSaveDisposition = ({ disposition, notes, needFollowUp, followUpDate, followUpPriority, candidateStage }) => {
     if (!dispositionData) return;
 
-    // 1. Create Call Session Record with recipientPhone
+    // 1. Create Call Session Record with recipientPhone and relatedEntityId
     const newSession = {
       id: `call-${Date.now()}`,
       internId: dispositionData.internId,
@@ -1398,6 +1398,7 @@ export default function App() {
       recipientType: dispositionData.recipientType,
       recipientName: dispositionData.recipientName,
       recipientPhone: dispositionData.recipientPhone || '',
+      relatedEntityId: dispositionData.relatedEntityId || null,
       callType: dispositionData.callType,
       startedAt: dispositionData.startedAt,
       endedAt: dispositionData.endedAt,
@@ -1429,21 +1430,43 @@ export default function App() {
     // 3. Update TPO status if applicable
     if (dispositionData.recipientType === 'TPO') {
       let nextStatus = disposition;
-      if (disposition === 'FOLLOW_UP_NEEDED' || disposition === 'CALL_AGAIN') nextStatus = 'FOLLOW_UP_NEEDED';
+      if (disposition === 'FOLLOW_UP_NEEDED' || disposition === 'CALL_AGAIN') nextStatus = 'CALLBACK_LATER';
       else if (disposition === 'NOT_ANSWERED') nextStatus = 'NOT_ANSWERED';
       else if (disposition === 'NOT_INTERESTED') nextStatus = 'NOT_INTERESTED';
       else if (disposition === 'DRIVE_CONFIRMED') nextStatus = 'DRIVE_CONFIRMED';
       else if (disposition === 'DETAILS_SENT') nextStatus = 'DETAILS_SENT';
+      else if (disposition === 'INTERESTED' || disposition === 'PITCHED') nextStatus = 'INTERESTED';
+      else if (disposition === 'PROPOSAL_SENT') nextStatus = 'PROPOSAL_SENT';
 
-      setTpos(prev => prev.map(t => {
-        const matchesEntityId = dispositionData.relatedEntityId && t.id === dispositionData.relatedEntityId;
-        const matchesName = t.name && (t.name.includes(dispositionData.recipientName) || dispositionData.recipientName.includes(t.name));
-        const matchesCollege = t.collegeName && dispositionData.recipientName.includes(t.collegeName);
-        if (matchesEntityId || matchesName || matchesCollege) {
-          return { ...t, status: nextStatus, lastContacted: new Date().toISOString().split('T')[0] };
-        }
-        return t;
-      }));
+      setTpos(prev => {
+        const next = prev.map(t => {
+          const matchesEntityId = dispositionData.relatedEntityId && (t.id === dispositionData.relatedEntityId || t.collegeId === dispositionData.relatedEntityId);
+          const tpoCleanPhone = (t.phone || '').replace(/\D/g, '').slice(-10);
+          const recipCleanPhone = (dispositionData.recipientPhone || '').replace(/\D/g, '').slice(-10);
+          const matchesPhone = tpoCleanPhone && recipCleanPhone && tpoCleanPhone === recipCleanPhone;
+          const cleanDispName = (dispositionData.recipientName || '').toLowerCase();
+          const cleanTpoName = (t.name || '').toLowerCase();
+          const matchesName = cleanTpoName && cleanDispName && (cleanTpoName.includes(cleanDispName) || cleanDispName.includes(cleanTpoName));
+          const matchesCollege = t.collegeName && cleanDispName.includes(t.collegeName.toLowerCase());
+
+          if (matchesEntityId || matchesPhone || matchesName || matchesCollege) {
+            return { 
+              ...t, 
+              status: nextStatus, 
+              lastContacted: new Date().toISOString().split('T')[0],
+              manuallyMoved: false
+            };
+          }
+          return t;
+        });
+        try { localStorage.setItem('tacrm_tpos', JSON.stringify(next)); } catch (e) {}
+        fetch('/api/storage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tpos: next })
+        }).catch(() => {});
+        return next;
+      });
     }
 
     // 4. Update Candidate Stage and Notes if applicable
@@ -1638,7 +1661,12 @@ export default function App() {
   };
   const handleUpdateTpoStatus = (tpoId, newStatus) => {
     setTpos(prev => {
-      const next = prev.map(t => t.id === tpoId ? { ...t, status: newStatus, lastContacted: new Date().toISOString().split('T')[0] } : t);
+      const next = prev.map(t => t.id === tpoId ? { 
+        ...t, 
+        status: newStatus, 
+        manuallyMoved: true,
+        lastContacted: new Date().toISOString().split('T')[0] 
+      } : t);
       try { localStorage.setItem('tacrm_tpos', JSON.stringify(next)); } catch (e) {}
       fetch('/api/storage', {
         method: 'POST',
@@ -1873,12 +1901,40 @@ export default function App() {
       entityType: 'TPO',
       entityId: tpo.id,
       entityTitle: `${tpo.name} (${tpo.collegeName})`,
+      phone: tpo.phone || '',
       scheduledDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       priority: 'HIGH',
       status: 'PENDING',
       notes: `Scheduled outreach callback regarding upcoming campus drive slot.`,
     };
-    setFollowUps(prev => [newFup, ...prev]);
+    setFollowUps(prev => {
+      const next = [newFup, ...prev];
+      try { localStorage.setItem('tacrm_followups', JSON.stringify(next)); } catch (e) {}
+      fetch('/api/storage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ followUps: next })
+      }).catch(() => {});
+      return next;
+    });
+
+    setTpos(prev => {
+      const next = prev.map(t => t.id === tpo.id ? { 
+        ...t, 
+        status: 'CALLBACK_LATER', 
+        manuallyMoved: false,
+        lastContacted: new Date().toISOString().split('T')[0] 
+      } : t);
+      try { localStorage.setItem('tacrm_tpos', JSON.stringify(next)); } catch (e) {}
+      fetch('/api/storage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tpos: next })
+      }).catch(() => {});
+      return next;
+    });
+
+    addToast(`Scheduled follow-up callback for ${tpo.name}`, 'info');
     setActiveTab('followups');
   };
 
@@ -2284,8 +2340,11 @@ export default function App() {
           {activeTab === 'pipeline' && (
             <LeadPipeline 
               tpos={tpos}
+              drives={drives}
               colleges={colleges}
               users={users}
+              callSessions={callSessions}
+              followUps={followUps}
               currentRole={currentUser.role}
               onStartCall={handleStartCall}
               onUpdateTpoStatus={handleUpdateTpoStatus}

@@ -10,7 +10,9 @@ export default function CallDispositionModal({
 }) {
   const [disposition, setDisposition] = useState(() => {
     if (sessionData?.callType === 'VIDEO') return 'SCREENING_PASSED';
-    if (sessionData?.recipientType === 'TPO') return 'NOT_ANSWERED';
+    if (sessionData?.recipientType === 'TPO') {
+      return (sessionData?.duration > 15) ? 'INTERESTED' : 'NOT_ANSWERED';
+    }
     return 'FOLLOW_UP_NEEDED';
   });
   const [candidateStage, setCandidateStage] = useState(() => {
@@ -32,7 +34,7 @@ export default function CallDispositionModal({
       setDisposition('SCREENING_PASSED');
       setCandidateStage('TECH_INTERVIEW');
     } else if (sessionData?.recipientType === 'TPO') {
-      setDisposition('NOT_ANSWERED');
+      setDisposition((sessionData?.duration > 15) ? 'INTERESTED' : 'NOT_ANSWERED');
     }
   }, [sessionData]);
 
@@ -146,11 +148,13 @@ export default function CallDispositionModal({
               >
                 {sessionData.recipientType === 'TPO' ? (
                   <>
-                    <option value="NOT_ANSWERED">1) Not Answered</option>
-                    <option value="NOT_INTERESTED">2) Not Interested</option>
-                    <option value="DRIVE_CONFIRMED">3) Drive Confirmed</option>
-                    <option value="DETAILS_SENT">4) Details Sent</option>
-                    <option value="FOLLOW_UP_NEEDED">5) Call Again / Follow Up Needed</option>
+                    <option value="INTERESTED">1) ⭐ Interested / Pitched</option>
+                    <option value="FOLLOW_UP_NEEDED">2) 📞 Call Again / Follow Up Needed</option>
+                    <option value="DETAILS_SENT">3) 📄 Details Sent</option>
+                    <option value="PROPOSAL_SENT">4) 📑 Proposal / Slots Sent</option>
+                    <option value="DRIVE_CONFIRMED">5) ✅ Drive Confirmed</option>
+                    <option value="NOT_ANSWERED">6) ⏳ Not Answered / Line Busy</option>
+                    <option value="NOT_INTERESTED">7) ❌ Not Interested / Declined</option>
                   </>
                 ) : (
                   <>

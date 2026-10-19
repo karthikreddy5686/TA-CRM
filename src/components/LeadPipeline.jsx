@@ -8,9 +8,12 @@ import {
   Building2, 
   ChevronDown, 
   ChevronUp, 
-  X 
+  X,
+  PhoneCall,
+  CheckCircle2
 } from 'lucide-react';
 import WhatsAppIcon from './WhatsAppIcon';
+import { formatDuration } from '../data/mockData';
 
 export const PIPELINE_STAGES = [
   { id: 'NEW', label: 'New', dotColor: '#94a3b8', bgLight: '#f1f5f9', textColor: '#475569' },
@@ -36,8 +39,103 @@ export const normalizeStage = (status) => {
   return 'NEW';
 };
 
+export const isCallForTpo = (call, tpo) => {
+  if (!call || !tpo) return false;
+  if (call.relatedEntityId && (call.relatedEntityId === tpo.id || call.relatedEntityId === tpo.collegeId)) return true;
+  if (call.tpoId && call.tpoId === tpo.id) return true;
+  
+  const callPhone = (call.recipientPhone || '').replace(/\D/g, '').slice(-10);
+  const tpoPhone = (tpo.phone || '').replace(/\D/g, '').slice(-10);
+  if (callPhone && tpoPhone && callPhone === tpoPhone) return true;
+
+  if (call.recipientName && tpo.name) {
+    const cName = call.recipientName.toLowerCase();
+    const tName = tpo.name.toLowerCase();
+    if (cName.includes(tName) || tName.includes(cName)) return true;
+  }
+  return false;
+};
+
+export const isFollowUpForTpo = (fup, tpo) => {
+  if (!fup || !tpo) return false;
+  if (fup.entityId && (fup.entityId === tpo.id || fup.entityId === tpo.collegeId)) return true;
+  
+  const fupPhone = (fup.phone || '').replace(/\D/g, '').slice(-10);
+  const tpoPhone = (tpo.phone || '').replace(/\D/g, '').slice(-10);
+  if (fupPhone && tpoPhone && fupPhone === tpoPhone) return true;
+
+  if (fup.entityTitle && tpo.name) {
+    const fTitle = fup.entityTitle.toLowerCase();
+    const tName = tpo.name.toLowerCase();
+    if (fTitle.includes(tName) || tName.includes(fTitle)) return true;
+  }
+  return false;
+};
+
+export const getEffectiveStage = (tpo, callSessions = [], followUps = [], drives = []) => {
+  if (!tpo) return 'NEW';
+
+  // 1. Explicit user manual override
+  if (tpo.manuallyMoved && tpo.status) {
+    return normalizeStage(tpo.status);
+  }
+
+  // 2. Drive confirmed in published drives for this college
+  const hasConfirmedDrive = Array.isArray(drives) && drives.some(d => 
+    (d.collegeId && tpo.collegeId && d.collegeId === tpo.collegeId) ||
+    (d.collegeName && tpo.collegeName && d.collegeName.toLowerCase().trim() === tpo.collegeName.toLowerCase().trim())
+  );
+  if (hasConfirmedDrive) {
+    return 'DRIVE_CONFIRMED';
+  }
+
+  // 3. Find all call logs for this TPO
+  const leadCalls = (callSessions || []).filter(c => isCallForTpo(c, tpo));
+
+  // 4. Find all follow-ups for this TPO
+  const leadFollowUps = (followUps || []).filter(f => isFollowUpForTpo(f, tpo));
+  const pendingFollowUp = leadFollowUps.find(f => f.status === 'PENDING');
+
+  // 5. If NO call logs and NO pending follow-ups exist:
+  // Lead is completely fresh / uncontacted! It MUST be in NEW.
+  if (leadCalls.length === 0 && !pendingFollowUp) {
+    return 'NEW';
+  }
+
+  // 6. If calls exist, evaluate the most recent call
+  if (leadCalls.length > 0) {
+    const sorted = [...leadCalls].sort((a, b) => {
+      const timeA = new Date(a.endedAt || a.startedAt || 0).getTime();
+      const timeB = new Date(b.endedAt || b.startedAt || 0).getTime();
+      return timeB - timeA;
+    });
+    const latest = sorted[0];
+    const disp = (latest.disposition || '').toUpperCase();
+
+    if (disp === 'DRIVE_CONFIRMED') return 'DRIVE_CONFIRMED';
+    if (disp === 'INTERESTED' || disp === 'PITCHED') return 'INTERESTED';
+    if (disp === 'PROPOSAL_SENT' || disp === 'SLOTS_REQUESTED' || disp === 'PAYMENT_LINK_SENT') return 'PROPOSAL_SENT';
+    if (disp === 'DETAILS_SENT') return 'DETAILS_SENT';
+    if (disp === 'NOT_ANSWERED') return 'NOT_ANSWERED';
+    if (disp === 'NOT_INTERESTED') return 'NOT_INTERESTED';
+    if (disp === 'FOLLOW_UP_NEEDED' || disp === 'CALL_AGAIN' || disp === 'CONTACTED' || disp === 'CALLBACK_LATER') {
+      return 'CALLBACK_LATER';
+    }
+  }
+
+  // 7. If pending follow-up is scheduled
+  if (pendingFollowUp) {
+    return 'CALLBACK_LATER';
+  }
+
+  return 'NEW';
+};
+
 export default function LeadPipeline({
   tpos = [],
+  drives = [],
+  callSessions = [],
+  followUps = [],
   colleges = [],
   users = [],
   currentRole = 'ADMIN',
@@ -63,7 +161,7 @@ export default function LeadPipeline({
   const [newStage, setNewStage] = useState('NEW');
   const [newNotes, setNewNotes] = useState('');
 
-  // Calculate counts per stage directly from tpos
+  // Calculate counts per stage directly and dynamically from real activity
   const stageCounts = useMemo(() => {
     const counts = {};
     PIPELINE_STAGES.forEach(s => {
@@ -71,12 +169,12 @@ export default function LeadPipeline({
     });
 
     tpos.forEach(t => {
-      const stage = normalizeStage(t.status);
+      const stage = getEffectiveStage(t, callSessions, followUps, drives);
       counts[stage] = (counts[stage] || 0) + 1;
     });
 
     return counts;
-  }, [tpos]);
+  }, [tpos, callSessions, followUps, drives]);
 
   // Current active stage object
   const activeStage = useMemo(() => {
@@ -85,8 +183,8 @@ export default function LeadPipeline({
 
   // Leads in the active stage
   const activeStageLeads = useMemo(() => {
-    return tpos.filter(t => normalizeStage(t.status) === activeStageId);
-  }, [tpos, activeStageId]);
+    return tpos.filter(t => getEffectiveStage(t, callSessions, followUps, drives) === activeStageId);
+  }, [tpos, activeStageId, callSessions, followUps, drives]);
 
   // Clean phone for WhatsApp/Calling
   const formatPhoneForWa = (phone) => {
@@ -107,6 +205,7 @@ export default function LeadPipeline({
       phone: newPhone.trim(),
       email: newEmail.trim() || `${newName.toLowerCase().replace(/\s+/g, '.')}@college.edu`,
       status: newStage,
+      manuallyMoved: newStage !== 'NEW',
       assignedInternId: users[0]?.id || 'hr-karthik',
       assignedInternName: users[0]?.name || 'karthik',
       notes: newNotes.trim() || 'Direct outreach pipeline lead created.',
@@ -131,7 +230,7 @@ export default function LeadPipeline({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
-      {/* 1. Header Banner - Clean Lead Pipeline Title Only */}
+      {/* 1. Header Banner - Clean Lead Pipeline Title + Add Lead Button */}
       <div style={{
         background: 'linear-gradient(135deg, #154360 0%, #0e2e42 100%)',
         color: '#ffffff',
@@ -139,7 +238,8 @@ export default function LeadPipeline({
         padding: '14px 20px',
         boxShadow: 'var(--shadow-card)',
         display: 'flex',
-        alignItems: 'center'
+        alignItems: 'center',
+        justifyContent: 'space-between'
       }}>
         <h1 style={{
           fontSize: '1.25rem',
@@ -151,6 +251,25 @@ export default function LeadPipeline({
         }}>
           Lead Pipeline
         </h1>
+        <button
+          type="button"
+          onClick={() => setIsAddModalOpen(true)}
+          className="btn-mustard"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            fontSize: '0.78rem',
+            fontWeight: 800,
+            padding: '6px 14px',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            border: 'none',
+            color: '#154360'
+          }}
+        >
+          <Plus size={14} color="#154360" /> Add Lead
+        </button>
       </div>
 
       {/* 2. Main Pipeline Card Container */}
@@ -267,7 +386,7 @@ export default function LeadPipeline({
                   No leads in {activeStage.label}
                 </div>
                 <div style={{ fontSize: '0.78rem', color: '#64748b', maxWidth: '380px' }}>
-                  Placement officers in this outreach category will appear here.
+                  Placement officers in this outreach category will appear here based on actual call dispositions and scheduled follow-ups.
                 </div>
               </div>
             ) : (
@@ -275,6 +394,13 @@ export default function LeadPipeline({
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {activeStageLeads.map(lead => {
                   const isExpanded = !!expandedLeadIds[lead.id];
+                  const effectiveStage = getEffectiveStage(lead, callSessions, followUps, drives);
+                  const leadCalls = (callSessions || []).filter(c => isCallForTpo(c, lead));
+                  const leadFollowUps = (followUps || []).filter(f => isFollowUpForTpo(f, lead));
+                  const latestCall = leadCalls.length > 0
+                    ? [...leadCalls].sort((a, b) => new Date(b.endedAt || b.startedAt || 0) - new Date(a.endedAt || a.startedAt || 0))[0]
+                    : null;
+                  const pendingFollowUp = leadFollowUps.find(f => f.status === 'PENDING');
 
                   return (
                     <div
@@ -348,7 +474,7 @@ export default function LeadPipeline({
                         </div>
                       </div>
 
-                      {/* Expanded Details: Phone, Call, WhatsApp, Email, Follow-up, Notes & Stage Mover */}
+                      {/* Expanded Details: Real Activity History, Actions & Stage Mover */}
                       {isExpanded && (
                         <div style={{
                           padding: '12px 14px',
@@ -369,9 +495,96 @@ export default function LeadPipeline({
                             <div>
                               Assigned: <strong style={{ color: '#154360' }}>{lead.assignedInternName || 'karthik'}</strong>
                             </div>
-                            {lead.lastContacted && (
-                              <div>Last contact: {lead.lastContacted}</div>
-                            )}
+                            <div>
+                              Last contact: {latestCall ? new Date(latestCall.startedAt || latestCall.endedAt).toLocaleDateString() : (lead.lastContacted || 'None')}
+                            </div>
+                          </div>
+
+                          {/* Real Activity Panel: Call Log Record & Scheduled Follow-up */}
+                          <div style={{
+                            background: '#f8fafc',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '8px',
+                            padding: '8px 10px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '6px'
+                          }}>
+                            {/* Call Log Record */}
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.75rem' }}>
+                              <PhoneCall size={13} color="#154360" style={{ marginTop: '2px', flexShrink: 0 }} />
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                {latestCall ? (
+                                  <div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                      <strong style={{ color: '#154360' }}>Last Call:</strong>
+                                      <span style={{ fontWeight: 700, color: '#0369a1' }}>{formatDuration(latestCall.durationSeconds || 0)}</span>
+                                      <span style={{
+                                        fontSize: '0.68rem',
+                                        padding: '1px 6px',
+                                        borderRadius: '4px',
+                                        background: '#dcfce7',
+                                        color: '#15803d',
+                                        fontWeight: 700
+                                      }}>
+                                        {latestCall.disposition ? latestCall.disposition.replace(/_/g, ' ') : 'COMPLETED'}
+                                      </span>
+                                      <span style={{ color: '#64748b', fontSize: '0.7rem' }}>
+                                        {new Date(latestCall.startedAt || latestCall.endedAt).toLocaleDateString()}
+                                      </span>
+                                    </div>
+                                    {latestCall.notes && (
+                                      <div style={{ color: '#475569', fontSize: '0.72rem', marginTop: '2px', fontStyle: 'italic' }}>
+                                        "{latestCall.notes}"
+                                      </div>
+                                    )}
+                                    {leadCalls.length > 1 && (
+                                      <div style={{ color: '#64748b', fontSize: '0.68rem', marginTop: '2px' }}>
+                                        ({leadCalls.length} calls logged total)
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span style={{ color: '#94a3b8' }}>
+                                    No calls logged yet — click the Call button below to log outreach
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Follow-up Record */}
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.75rem', borderTop: '1px solid #eef2f6', paddingTop: '6px' }}>
+                              <Clock size={13} color="#0369a1" style={{ marginTop: '2px', flexShrink: 0 }} />
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                {pendingFollowUp ? (
+                                  <div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                      <strong style={{ color: '#0369a1' }}>Follow-up Scheduled:</strong>
+                                      <span style={{ fontWeight: 700, color: '#154360' }}>{pendingFollowUp.scheduledDate}</span>
+                                      <span style={{
+                                        fontSize: '0.68rem',
+                                        padding: '1px 6px',
+                                        borderRadius: '4px',
+                                        background: pendingFollowUp.priority === 'URGENT' ? '#fee2e2' : '#fef3c7',
+                                        color: pendingFollowUp.priority === 'URGENT' ? '#b91c1c' : '#b45309',
+                                        fontWeight: 700
+                                      }}>
+                                        {pendingFollowUp.priority}
+                                      </span>
+                                    </div>
+                                    {pendingFollowUp.notes && (
+                                      <div style={{ color: '#475569', fontSize: '0.72rem', marginTop: '2px' }}>
+                                        {pendingFollowUp.notes}
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span style={{ color: '#94a3b8' }}>
+                                    No pending follow-up scheduled
+                                  </span>
+                                )}
+                              </div>
+                            </div>
                           </div>
 
                           {/* Notes if present */}
@@ -407,6 +620,8 @@ export default function LeadPipeline({
                                   if (onStartCall) {
                                     onStartCall({
                                       ...lead,
+                                      id: lead.id,
+                                      tpoId: lead.id,
                                       recipientName: lead.name,
                                       recipientPhone: lead.phone,
                                       recipientType: 'TPO',
@@ -501,7 +716,7 @@ export default function LeadPipeline({
                                 Move to:
                               </span>
                               <select
-                                value={normalizeStage(lead.status)}
+                                value={effectiveStage}
                                 onChange={(e) => {
                                   if (onUpdateTpoStatus) {
                                     onUpdateTpoStatus(lead.id, e.target.value);
