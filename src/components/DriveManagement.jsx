@@ -482,7 +482,7 @@ export default function DriveManagement({
         <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
           {onNavigateToLiveBoard && (
             <button
-              onClick={onNavigateToLiveBoard}
+              onClick={() => onNavigateToLiveBoard('ALL')}
               className="btn-navy-outline btn-black-sm"
               style={{ fontSize: '0.75rem', padding: '4px 9px', gap: '4px' }}
               title="Go to Students board"
@@ -557,6 +557,23 @@ export default function DriveManagement({
                     <option key={d.id} value={d.id}>{d.title} ({d.collegeName})</option>
                   ))}
                 </select>
+                {selectedDriveId !== 'ALL' && currentRole === 'ADMIN' && onDeleteDrive && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const curDrive = drives.find(d => d.id === selectedDriveId);
+                      if (curDrive && window.confirm(`Are you sure you want to delete drive "${curDrive.title}"? All associated candidate records will also be removed.`)) {
+                        onDeleteDrive(curDrive.id);
+                        setSelectedDriveId('ALL');
+                      }
+                    }}
+                    className="btn-secondary btn-black-sm"
+                    style={{ fontSize: '0.72rem', padding: '3px 8px', color: '#ef4444', borderColor: '#fca5a5' }}
+                    title="Delete this drive"
+                  >
+                    <Trash2 size={11} color="#ef4444" /> Delete Drive
+                  </button>
+                )}
               </div>
             )}
 
@@ -1181,12 +1198,17 @@ export default function DriveManagement({
                       {drivesSortField === 'candidates' ? (drivesSortDir === 'asc' ? <ArrowUp size={11} color="#FFDB58" /> : <ArrowDown size={11} color="#FFDB58" />) : <ArrowUpDown size={11} style={{ opacity: 0.5 }} />}
                     </div>
                   </th>
+                  {currentRole === 'ADMIN' && onDeleteDrive && (
+                    <th style={{ fontSize: '0.68rem', padding: '6px 8px', background: '#154360', color: '#ffffff', textAlign: 'center', width: '60px' }}>
+                      Action
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody>
                 {sortedDrives.length === 0 ? (
                   <tr>
-                    <td colSpan={8} style={{ textAlign: 'center', padding: '28px', color: '#71717a', fontSize: '0.78rem' }}>
+                    <td colSpan={currentRole === 'ADMIN' && onDeleteDrive ? 9 : 8} style={{ textAlign: 'center', padding: '28px', color: '#71717a', fontSize: '0.78rem' }}>
                       No drives scheduled yet. Click "New Drive" to add your first campus drive.
                     </td>
                   </tr>
@@ -1271,6 +1293,36 @@ export default function DriveManagement({
                             <Users size={11} color="#154360" /> {driveCandidates.length} Students
                           </button>
                         </td>
+
+                        {currentRole === 'ADMIN' && onDeleteDrive && (
+                          <td style={{ padding: '6px 8px', textAlign: 'center' }}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (window.confirm(`Are you sure you want to delete campus drive "${drive.title}"? All associated candidate records will also be removed.`)) {
+                                  onDeleteDrive(drive.id);
+                                }
+                              }}
+                              className="btn-icon"
+                              style={{
+                                width: '28px',
+                                height: '28px',
+                                color: '#ef4444',
+                                border: '1px solid #fecaca',
+                                borderRadius: '5px',
+                                background: '#fff',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s ease'
+                              }}
+                              title={`Delete drive "${drive.title}"`}
+                            >
+                              <Trash2 size={12} color="#ef4444" />
+                            </button>
+                          </td>
+                        )}
 
                       </tr>
                     );
@@ -1388,6 +1440,33 @@ export default function DriveManagement({
                           >
                             <Users size={10} color="#154360" /> {driveCandidates.length} Students
                           </button>
+
+                          {currentRole === 'ADMIN' && onDeleteDrive && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (window.confirm(`Are you sure you want to delete drive "${drive.title}"? All associated candidate records will also be removed.`)) {
+                                  onDeleteDrive(drive.id);
+                                }
+                              }}
+                              className="btn-icon"
+                              style={{
+                                width: '26px',
+                                height: '26px',
+                                color: '#ef4444',
+                                border: '1px solid #fecaca',
+                                borderRadius: '4px',
+                                background: '#fff',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}
+                              title={`Delete drive "${drive.title}"`}
+                            >
+                              <Trash2 size={11} color="#ef4444" />
+                            </button>
+                          )}
                         </div>
                       </div>
                     )}

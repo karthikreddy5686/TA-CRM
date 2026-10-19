@@ -1271,19 +1271,21 @@ export default function AdminDashboard({
                             >
                               <Edit3 size={12} /> Edit
                             </button>
-                            <button 
-                              onClick={() => {
-                                if (window.confirm(`Delete drive "${drive.title}"?`)) {
-                                  onDeleteDrive(drive.id);
-                                  showNotification(`Deleted drive "${drive.title}"`);
-                                }
-                              }}
-                              className="btn-secondary btn-black-sm"
-                              style={{ padding: '3px 8px', fontSize: '0.72rem', color: '#ef4444', borderColor: '#fca5a5' }}
-                              title="Delete Drive"
-                            >
-                              <Trash2 size={12} />
-                            </button>
+                            {onDeleteDrive && (
+                              <button 
+                                onClick={() => {
+                                  if (window.confirm(`Delete drive "${drive.title}"? Associated candidate records will also be removed.`)) {
+                                    onDeleteDrive(drive.id);
+                                    showNotification(`Deleted drive "${drive.title}"`);
+                                  }
+                                }}
+                                className="btn-secondary btn-black-sm"
+                                style={{ padding: '3px 8px', fontSize: '0.72rem', color: '#ef4444', borderColor: '#fca5a5' }}
+                                title="Delete Drive"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -1292,6 +1294,75 @@ export default function AdminDashboard({
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile View: Master Campus Drives Cards */}
+          <div className="mobile-only" style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {drives.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '24px', color: '#71717a', fontSize: '0.8rem' }}>
+                No campus drives created yet. Click "Post New Campus Drive" above.
+              </div>
+            ) : (
+              drives.map(drive => {
+                const candidateCount = students.filter(s => s.driveId === drive.id).length;
+                return (
+                  <div 
+                    key={drive.id}
+                    style={{
+                      background: '#f8fafc',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                      padding: '10px 12px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                      <div>
+                        <div style={{ fontWeight: 700, color: '#154360', fontSize: '0.86rem' }}>{drive.title}</div>
+                        <div style={{ fontSize: '0.74rem', color: '#52525b' }}>{drive.collegeName} • Role: <strong>{drive.jobRole}</strong></div>
+                      </div>
+                      <span className={drive.status === 'CONFIRMED' ? 'badge badge-green' : 'badge badge-mustard'} style={{ fontSize: '0.65rem' }}>
+                        {drive.status || 'CONFIRMED'}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', background: '#ffffff', padding: '6px 10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                      <span style={{ fontWeight: 700, color: '#154360' }}>💰 {drive.ctc}</span>
+                      <span>📅 {drive.driveDate || 'Upcoming'}</span>
+                      <span style={{ fontWeight: 700, color: '#154360' }}>👥 {candidateCount} candidates</span>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', paddingTop: '4px' }}>
+                      <button 
+                        onClick={() => handleOpenEditDrive(drive)}
+                        className="btn-secondary btn-black-sm"
+                        style={{ padding: '4px 10px', fontSize: '0.74rem' }}
+                        title="Edit Drive Details"
+                      >
+                        <Edit3 size={12} /> Edit
+                      </button>
+                      {onDeleteDrive && (
+                        <button 
+                          onClick={() => {
+                            if (window.confirm(`Delete drive "${drive.title}"? Associated candidate records will also be removed.`)) {
+                              onDeleteDrive(drive.id);
+                              showNotification(`Deleted drive "${drive.title}"`);
+                            }
+                          }}
+                          className="btn-secondary btn-black-sm"
+                          style={{ padding: '4px 10px', fontSize: '0.74rem', color: '#ef4444', borderColor: '#fca5a5' }}
+                          title="Delete Drive"
+                        >
+                          <Trash2 size={12} /> Delete
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       )}

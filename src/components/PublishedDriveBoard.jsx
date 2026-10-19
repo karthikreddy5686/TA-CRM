@@ -189,10 +189,12 @@ function TimeSelectInput({ value, onChange, placeholder = "09:00", isCompact = f
 export default function PublishedDriveBoard({
   drives,
   students,
+  initialDriveId = 'ALL',
   formResponses,
   onStartCall,
   onAddStudentsBatch,
   onDeleteStudent,
+  onDeleteDrive,
   onNavigateToBlast,
   onUpdateCandidateStage,
   onLoadDemoData,
@@ -205,7 +207,14 @@ export default function PublishedDriveBoard({
   currentUser,
   users = []
 }) {
-  const [selectedDriveId, setSelectedDriveId] = useState(drives[0]?.id || '');
+  const [selectedDriveId, setSelectedDriveId] = useState(initialDriveId || 'ALL');
+
+  useEffect(() => {
+    if (initialDriveId !== undefined && initialDriveId !== null) {
+      setSelectedDriveId(initialDriveId);
+    }
+  }, [initialDriveId]);
+
   const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
   const [newStudentName, setNewStudentName] = useState('');
   const [newStudentRoll, setNewStudentRoll] = useState('');
@@ -232,14 +241,25 @@ export default function PublishedDriveBoard({
   const [isLoadingSheet, setIsLoadingSheet] = useState(false);
   const [importStatusMessage, setImportStatusMessage] = useState(null);
   const [copiedSample, setCopiedSample] = useState(false);
+  const [sheetTargetDriveId, setSheetTargetDriveId] = useState(drives[0]?.id || '');
 
-  const activeDrive = drives.find(d => d.id === selectedDriveId) || drives[0] || null;
+  const activeDrive = (selectedDriveId && selectedDriveId !== 'ALL')
+    ? (drives.find(d => d.id === selectedDriveId) || null)
+    : null;
   const driveStudents = activeDrive ? students.filter(s => s.driveId === activeDrive.id) : students;
   const branches = Array.from(new Set(driveStudents.map(s => s.branch))).filter(Boolean);
 
+  useEffect(() => {
+    if (branchFilter !== 'ALL' && !branches.includes(branchFilter)) {
+      setBranchFilter('ALL');
+    }
+  }, [selectedDriveId, branches, branchFilter]);
+
+  const currentSheetDrive = activeDrive || drives.find(d => d.id === sheetTargetDriveId) || drives[0] || null;
+
   // ---------------- Schedule Interviews State & Engine ----------------
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
-  const [scheduleDriveId, setScheduleDriveId] = useState(() => selectedDriveId || activeDrive?.id || drives[0]?.id || 'ALL');
+  const [scheduleDriveId, setScheduleDriveId] = useState(() => (selectedDriveId && selectedDriveId !== 'ALL' ? selectedDriveId : (activeDrive?.id || 'ALL')));
   const [scheduleDate, setScheduleDate] = useState('');
   const [scheduleStartTime, setScheduleStartTime] = useState('');
   const [scheduleEndTime, setScheduleEndTime] = useState('');
@@ -798,7 +818,7 @@ export default function PublishedDriveBoard({
   const handlePasteChange = (e) => {
     const text = e.target.value;
     setPasteText(text);
-    const parsed = parseCandidateRows(text, activeDrive);
+    const parsed = parseCandidateRows(text, currentSheetDrive);
     setParsedCandidates(parsed);
   };
 
@@ -827,7 +847,7 @@ export default function PublishedDriveBoard({
         throw new Error('Google Sheet is restricted or private.');
       }
       const csvText = await response.text();
-      const parsed = parseCandidateRows(csvText, activeDrive);
+      const parsed = parseCandidateRows(csvText, currentSheetDrive);
 
       if (parsed.length > 0) {
         if (onAddStudentsBatch) {
@@ -839,7 +859,7 @@ export default function PublishedDriveBoard({
 
         setImportStatusMessage({
           type: 'success',
-          text: `Successfully synced & imported ${parsed.length} candidate records for ${activeDrive?.title || 'Drive'}!`
+          text: `Successfully synced & imported ${parsed.length} candidate records for ${currentSheetDrive?.title || 'Drive'}!`
         });
         setSheetInputUrl('');
       } else {
@@ -862,7 +882,7 @@ export default function PublishedDriveBoard({
     }
     setImportStatusMessage({
       type: 'success',
-      text: `Successfully imported ${parsedCandidates.length} candidates into ${activeDrive?.title || 'Drive'}!`
+      text: `Successfully imported ${parsedCandidates.length} candidates into ${currentSheetDrive?.title || 'Drive'}!`
     });
     setPasteText('');
     setParsedCandidates([]);
@@ -949,24 +969,59 @@ export default function PublishedDriveBoard({
       <div className="content-card" style={{ marginBottom: '12px', padding: '12px 14px', background: '#ffffff' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
               <span style={{ fontWeight: 800, fontSize: 'var(--font-sm)', color: '#154360', lineHeight: 'var(--lh-sm)' }}>
                 Drive:
               </span>
               <select
                 className="form-select"
-                value={selectedDriveId || activeDrive?.id}
+                value={selectedDriveId || 'ALL'}
                 onChange={(e) => setSelectedDriveId(e.target.value)}
                 style={{ fontWeight: 700, width: 'auto', padding: '5px 10px', fontSize: 'var(--font-xs)', borderColor: '#154360', color: '#154360' }}
               >
-                {drives.map(d => (
-                  <option key={d.id} value={d.id}>{d.title} ({d.collegeName})</option>
-                ))}
+                <option value="ALL">All Drives ({drives.length} drives • {students.length} students)</option>
+                {drives.map(d => {
+                  const dCount = students.filter(s => s.driveId === d.id).length;
+                  return (
+                    <option key={d.id} value={d.id}>{d.title} ({d.collegeName}) - {dCount} students</option>
+                  );
+                })}
               </select>
+              {selectedDriveId !== 'ALL' && activeDrive && onDeleteDrive && (currentUser?.role === 'ADMIN') && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm(`Are you sure you want to delete drive "${activeDrive.title}"? Associated candidate records will also be removed.`)) {
+                      onDeleteDrive(activeDrive.id);
+                      setSelectedDriveId('ALL');
+                    }
+                  }}
+                  className="btn-icon"
+                  style={{
+                    width: '28px',
+                    height: '28px',
+                    color: '#ef4444',
+                    border: '1px solid #fca5a5',
+                    borderRadius: '6px',
+                    background: '#fff',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer'
+                  }}
+                  title={`Delete drive "${activeDrive.title}"`}
+                >
+                  <Trash2 size={13} color="#ef4444" />
+                </button>
+              )}
             </div>
-            {activeDrive && (
+            {activeDrive ? (
               <div style={{ fontSize: 'var(--font-11)', lineHeight: 'var(--lh-11)', color: '#52525b', marginTop: '4px' }}>
                 Role: <strong style={{ color: '#154360' }}>{activeDrive.jobRole}</strong> • CTC: <strong style={{ color: '#154360' }}>{activeDrive.ctc}</strong> • Date: <strong>{activeDrive.driveDate || 'Upcoming'}</strong>
+              </div>
+            ) : (
+              <div style={{ fontSize: 'var(--font-11)', lineHeight: 'var(--lh-11)', color: '#52525b', marginTop: '4px' }}>
+                Showing candidates across all <strong style={{ color: '#154360' }}>{drives.length} campus recruitment drives</strong> • <strong style={{ color: '#154360' }}>{students.length} total students</strong>
               </div>
             )}
           </div>
@@ -1143,7 +1198,13 @@ export default function PublishedDriveBoard({
               {filteredStudents.length === 0 ? (
                 <tr>
                   <td colSpan={7} style={{ textAlign: 'center', padding: '28px', color: '#71717a', fontSize: 'var(--font-sm)' }}>
-                    No students posted yet for this drive. Click <strong>"Link Sheets"</strong> above to sync or paste candidate records directly.
+                    {selectedDriveId === 'ALL'
+                      ? 'No students found across campus recruitment drives.'
+                      : (
+                        <span>
+                          No students posted yet for this drive. Click <strong>"Link Sheets"</strong> above to sync or paste candidate records directly.
+                        </span>
+                      )}
                   </td>
                 </tr>
               ) : (
@@ -1160,6 +1221,11 @@ export default function PublishedDriveBoard({
                       <div style={{ fontSize: 'var(--font-11)', color: '#52525b', lineHeight: 'var(--lh-11)' }}>
                         {student.email}
                       </div>
+                      {selectedDriveId === 'ALL' && (
+                        <div style={{ fontSize: '0.68rem', color: '#0369a1', marginTop: '2px', fontWeight: 600 }}>
+                          🏢 {drives.find(d => d.id === student.driveId)?.title || student.driveTitle || 'Drive'} ({drives.find(d => d.id === student.driveId)?.collegeName || student.collegeName || 'Campus'})
+                        </div>
+                      )}
                       {student.interviewTime && (
                         <div style={{
                           display: 'inline-flex',
@@ -1362,8 +1428,15 @@ export default function PublishedDriveBoard({
                       userSelect: 'none'
                     }}
                   >
-                    <div style={{ fontWeight: 800, fontSize: 'var(--font-sm)', lineHeight: 'var(--lh-sm)', color: '#154360' }}>
-                      {student.name}
+                    <div>
+                      <div style={{ fontWeight: 800, fontSize: 'var(--font-sm)', lineHeight: 'var(--lh-sm)', color: '#154360' }}>
+                        {student.name}
+                      </div>
+                      {selectedDriveId === 'ALL' && (
+                        <div style={{ fontSize: '0.68rem', color: '#0369a1', fontWeight: 600, marginTop: '1px' }}>
+                          🏢 {drives.find(d => d.id === student.driveId)?.title || student.driveTitle || 'Drive'}
+                        </div>
+                      )}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <span style={{
@@ -1537,7 +1610,7 @@ export default function PublishedDriveBoard({
                   <FileSpreadsheet size={18} color="#154360" /> Link Google Sheets & Import Candidates
                 </h3>
                 <p className="card-subtitle">
-                  Connect a Google Sheet link or paste candidate rows for <strong>{activeDrive?.title || 'Active Drive'}</strong> ({activeDrive?.collegeName || 'Campus'})
+                  Connect a Google Sheet link or paste candidate rows for <strong>{currentSheetDrive?.title || 'Active Drive'}</strong> ({currentSheetDrive?.collegeName || 'Campus'})
                 </p>
               </div>
               <button onClick={() => setIsLinkSheetsModalOpen(false)} className="btn-icon">

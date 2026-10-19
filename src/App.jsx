@@ -109,6 +109,7 @@ export default function App() {
 
   // Navigation State
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'liveBoard' | 'drives' | 'tpos' | 'followups' | 'calls'
+  const [selectedLiveBoardDriveId, setSelectedLiveBoardDriveId] = useState('ALL');
 
   // Sanitize helper to purge fake generic dummy accounts and establish realistic staff
   const sanitizeUsers = (list) => {
@@ -2055,7 +2056,7 @@ export default function App() {
           </button>
 
           <button 
-            onClick={() => { setActiveTab('liveBoard'); setIsMobileSidebarOpen(false); }}
+            onClick={() => { setActiveTab('liveBoard'); setSelectedLiveBoardDriveId('ALL'); setIsMobileSidebarOpen(false); }}
             className={`nav-item ${activeTab === 'liveBoard' ? 'active' : ''}`}
             title="Students"
           >
@@ -2311,7 +2312,10 @@ export default function App() {
               defaultTab="drives"
               hrPhoneNumber={hrPhoneNumber}
               onOpenPhoneConnectModal={() => setIsPhoneConnectModalOpen(true)}
-              onNavigateToLiveBoard={() => setActiveTab('liveBoard')}
+              onNavigateToLiveBoard={(driveId = 'ALL') => {
+                setSelectedLiveBoardDriveId(driveId);
+                setActiveTab('liveBoard');
+              }}
             />
           )}
 
@@ -2319,9 +2323,11 @@ export default function App() {
             <PublishedDriveBoard 
               drives={drives}
               students={students}
+              initialDriveId={selectedLiveBoardDriveId}
               formResponses={formResponses}
               onStartCall={handleStartCall}
-              onDeleteStudent={handleDeleteStudent}
+              onDeleteStudent={currentUser?.role === 'ADMIN' ? handleDeleteStudent : null}
+              onDeleteDrive={currentUser?.role === 'ADMIN' ? handleDeleteDrive : null}
               onAddStudentsBatch={handleAddStudentsBatch}
               onUpdateCandidateStage={handleUpdateCandidateStage}
               onLoadDemoData={handleLoadDemoData}
@@ -2818,7 +2824,7 @@ export default function App() {
         </button>
         <button 
           type="button"
-          onClick={() => { setActiveTab('liveBoard'); setIsMobileSidebarOpen(false); }} 
+          onClick={() => { setActiveTab('liveBoard'); setSelectedLiveBoardDriveId('ALL'); setIsMobileSidebarOpen(false); }} 
           className={`mobile-nav-btn ${activeTab === 'liveBoard' ? 'active' : ''}`}
           style={activeTab === 'liveBoard' ? { color: '#154360' } : {}}
         >
