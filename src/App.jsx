@@ -241,26 +241,6 @@ export default function App() {
     }
   }, [users]);
 
-  // Validate active employee session on initial load against central server
-  useEffect(() => {
-    if (currentUser && currentUser.role !== 'ADMIN' && currentUser.password) {
-      fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: currentUser.email || currentUser.username,
-          password: currentUser.password
-        })
-      }).then(res => {
-        if (res.status === 403) {
-          console.warn('[AUTH REVOKED] Current employee session was deleted by Administrator.');
-          try { localStorage.removeItem('tacrm_auth_user'); } catch (e) {}
-          setCurrentUser(null);
-        }
-      }).catch(() => {});
-    }
-  }, []);
-
   // Pull latest users and database from centralized server storage & cloud on initial app load
   useEffect(() => {
     fetch('/api/storage')
@@ -277,13 +257,34 @@ export default function App() {
         }
 
         if (Array.isArray(data.users) && data.users.length > 0) {
-          // Server users is the authoritative ground truth - purge any deleted accounts
+          // Server users - filter out deleted accounts
           const activeUsers = data.users.filter(u => {
             if (!u) return false;
             const keys = [u.id, u.email, u.username].filter(Boolean).map(s => String(s).toLowerCase());
             return !deletedIds.some(d => keys.includes(d));
           });
-          const sanitized = sanitizeUsers(activeUsers);
+
+          // Merge server users with local users (preserves locally provisioned staff across cold starts)
+          let localUsers = [];
+          try {
+            localUsers = JSON.parse(localStorage.getItem('tacrm_users') || '[]');
+          } catch (e) {}
+          const userMap = new Map();
+          activeUsers.forEach(u => {
+            const key = u.id || (u.email && u.email.toLowerCase());
+            if (key) userMap.set(key, u);
+          });
+          localUsers.forEach(u => {
+            if (!u) return;
+            const keys = [u.id, u.email, u.username].filter(Boolean).map(s => String(s).toLowerCase());
+            if (deletedIds.some(d => keys.includes(d))) return;
+            const key = u.id || (u.email && u.email.toLowerCase());
+            if (key && !userMap.has(key)) {
+              userMap.set(key, u);
+            }
+          });
+
+          const sanitized = sanitizeUsers(Array.from(userMap.values()));
           setUsers(sanitized);
           try {
             localStorage.setItem('tacrm_users', JSON.stringify(sanitized));
@@ -412,7 +413,28 @@ export default function App() {
               const keys = [u.id, u.email, u.username].filter(Boolean).map(s => String(s).toLowerCase());
               return !deletedIds.some(d => keys.includes(d));
             });
-            const next = sanitizeUsers(activeUsers);
+
+            // Merge server users with local users
+            let localUsers = [];
+            try {
+              localUsers = JSON.parse(localStorage.getItem('tacrm_users') || '[]');
+            } catch (e) {}
+            const userMap = new Map();
+            activeUsers.forEach(u => {
+              const key = u.id || (u.email && u.email.toLowerCase());
+              if (key) userMap.set(key, u);
+            });
+            localUsers.forEach(u => {
+              if (!u) return;
+              const keys = [u.id, u.email, u.username].filter(Boolean).map(s => String(s).toLowerCase());
+              if (deletedIds.some(d => keys.includes(d))) return;
+              const key = u.id || (u.email && u.email.toLowerCase());
+              if (key && !userMap.has(key)) {
+                userMap.set(key, u);
+              }
+            });
+
+            const next = sanitizeUsers(Array.from(userMap.values()));
             setUsers(next);
             try { localStorage.setItem('tacrm_users', JSON.stringify(next)); } catch (e) {}
 

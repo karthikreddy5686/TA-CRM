@@ -34,8 +34,8 @@ export default function LoginScreen({ onLogin, users = [], onInstallApp, isAppIn
           // Step 1: Check local device blacklist
           let isDeleted = isUserDeletedLocally(user);
 
-          // Step 2: Authoritative real-time check against /api/login endpoint
-          if (!isDeleted && user.role !== 'ADMIN') {
+          // Step 2: Authoritative real-time check against /api/login endpoint (403 = deleted)
+          if (!isDeleted && user.role !== 'ADMIN' && user.password) {
             try {
               const loginRes = await fetch('/api/login', {
                 method: 'POST',
@@ -45,21 +45,20 @@ export default function LoginScreen({ onLogin, users = [], onInstallApp, isAppIn
                   password: user.password
                 })
               });
-              if (loginRes.status === 403 || loginRes.status === 401) {
-                // Server explicitly rejected credentials as deleted or invalid
+              if (loginRes.status === 403) {
+                // Server explicitly rejected credentials as deleted
                 isDeleted = true;
               }
             } catch (e) {}
           }
 
-          // Step 3: Check /api/storage blacklist & active users list
+          // Step 3: Check /api/storage blacklist
           if (!isDeleted) {
             try {
               const res = await fetch('/api/storage');
               if (res.ok) {
                 const storageData = await res.json();
                 const serverDeleted = Array.isArray(storageData.deletedUserIds) ? storageData.deletedUserIds : [];
-                const serverUsers = Array.isArray(storageData.users) ? storageData.users : [];
 
                 // Persist server deleted list to device
                 try {
@@ -70,32 +69,6 @@ export default function LoginScreen({ onLogin, users = [], onInstallApp, isAppIn
 
                 // Check if user is in server deleted list
                 if (serverDeleted.some(k => userKeys.includes(String(k).toLowerCase()))) {
-                  isDeleted = true;
-                } else if (serverUsers.length > 0 && user.role !== 'ADMIN') {
-                  const existsOnServer = serverUsers.some(su => 
-                    (su.id && su.id === user.id) ||
-                    (su.email && user.email && su.email.toLowerCase() === user.email.toLowerCase()) ||
-                    (su.username && user.username && su.username.toLowerCase() === user.username.toLowerCase())
-                  );
-                  if (!existsOnServer) {
-                    isDeleted = true;
-                  }
-                }
-              }
-            } catch (e) {}
-          }
-
-          // Step 4: Check Supabase cloud database if configured
-          if (!isDeleted && isSupabaseConfigured() && user.role !== 'ADMIN') {
-            try {
-              const cloudUsers = await fetchSupabaseUsers();
-              if (Array.isArray(cloudUsers)) {
-                const existsInCloud = cloudUsers.some(cu => 
-                  (cu.id && cu.id === user.id) ||
-                  (cu.email && user.email && cu.email.toLowerCase() === user.email.toLowerCase()) ||
-                  (cu.username && user.username && cu.username.toLowerCase() === user.username.toLowerCase())
-                );
-                if (!existsInCloud) {
                   isDeleted = true;
                 }
               }
