@@ -105,6 +105,7 @@ export default function AdminDashboard({
   // Modals state
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const [userToDelete, setUserToDelete] = useState(null);
   const [userFormData, setUserFormData] = useState({
     name: '',
     email: '',
@@ -1084,12 +1085,8 @@ export default function AdminDashboard({
                             <Edit3 size={12} /> Edit
                           </button>
                           <button 
-                            onClick={() => {
-                              if (window.confirm(`Delete ${user.name}'s account and credentials?`)) {
-                                onDeleteUser(user.id);
-                                showNotification(`Removed account for ${user.name}`);
-                              }
-                            }}
+                            type="button"
+                            onClick={() => setUserToDelete(user)}
                             className="btn-secondary btn-black-sm"
                             style={{ padding: '3px 8px', fontSize: '0.72rem', color: '#ef4444', borderColor: '#fca5a5' }}
                             title="Delete Account"
@@ -1173,6 +1170,15 @@ export default function AdminDashboard({
                         </button>
                         <button onClick={() => handleOpenEditUser(user)} className="btn-secondary btn-black-sm" style={{ padding: '2px 6px', fontSize: '0.7rem' }}>
                           Edit
+                        </button>
+                        <button 
+                          type="button" 
+                          onClick={() => setUserToDelete(user)}
+                          className="btn-secondary btn-black-sm" 
+                          style={{ padding: '2px 8px', fontSize: '0.7rem', color: '#ef4444', borderColor: '#fca5a5' }}
+                          title="Delete Employee Account"
+                        >
+                          <Trash2 size={11} color="#ef4444" /> Delete
                         </button>
                       </div>
                     </div>
@@ -2000,15 +2006,75 @@ export default function AdminDashboard({
                 )}
               </div>
 
-              <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', padding: '14px 20px', borderTop: '1px solid #e2e8f0' }}>
-                <button type="button" onClick={() => setIsUserModalOpen(false)} className="btn-secondary">
-                  Cancel
-                </button>
-                <button type="submit" className="btn-mustard" style={{ fontWeight: 800 }}>
-                  {editingUser ? 'Save Credentials' : 'Provision Account'}
-                </button>
+              <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', padding: '14px 20px', borderTop: '1px solid #e2e8f0', flexWrap: 'wrap' }}>
+                {editingUser && editingUser.role !== 'ADMIN' ? (
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      const u = editingUser;
+                      setIsUserModalOpen(false);
+                      setUserToDelete(u);
+                    }} 
+                    className="btn-secondary" 
+                    style={{ color: '#ef4444', borderColor: '#fca5a5', padding: '8px 12px', fontSize: '0.8rem', fontWeight: 700 }}
+                  >
+                    <Trash2 size={13} color="#ef4444" /> Delete Account
+                  </button>
+                ) : <div />}
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button type="button" onClick={() => setIsUserModalOpen(false)} className="btn-secondary">
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn-mustard" style={{ fontWeight: 800 }}>
+                    {editingUser ? 'Save Credentials' : 'Provision Account'}
+                  </button>
+                </div>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 1.5: CONFIRM DELETE EMPLOYEE (Zero window.confirm, 100% reliable) */}
+      {userToDelete && (
+        <div className="modal-overlay" style={{ zIndex: 9999 }} onClick={() => setUserToDelete(null)}>
+          <div className="modal-card" style={{ maxWidth: '440px' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header" style={{ borderBottom: '1px solid #fee2e2' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#fee2e2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Trash2 size={18} color="#ef4444" />
+                </div>
+                <div>
+                  <h3 className="modal-title" style={{ color: '#991b1b', fontSize: '1.05rem' }}>Delete Staff Account</h3>
+                  <p className="modal-subtitle">Permanent Access Revocation</p>
+                </div>
+              </div>
+              <button onClick={() => setUserToDelete(null)} className="modal-close-btn">&times;</button>
+            </div>
+            <div className="modal-body" style={{ padding: '16px 20px', fontSize: '0.88rem', color: '#334155', lineHeight: 1.5 }}>
+              Are you sure you want to permanently delete <strong>{userToDelete.name}</strong> (<code>{userToDelete.email}</code>)?
+              <div style={{ marginTop: '12px', padding: '10px 12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', fontSize: '0.8rem', color: '#991b1b' }}>
+                ⚠️ <strong>Immediate Revocation:</strong> Their login password, active device sessions, and all old WhatsApp 1-click invite links will be permanently blocked across all devices.
+              </div>
+            </div>
+            <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', padding: '12px 20px', borderTop: '1px solid #e2e8f0' }}>
+              <button type="button" onClick={() => setUserToDelete(null)} className="btn-secondary">
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                onClick={() => {
+                  const targetUser = userToDelete;
+                  setUserToDelete(null);
+                  onDeleteUser(targetUser.id);
+                  showNotification(`Permanently deleted ${targetUser.name}'s account and revoked all links.`);
+                }} 
+                className="btn-danger"
+                style={{ background: '#ef4444', color: '#ffffff', fontWeight: 800, padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer' }}
+              >
+                Yes, Delete Account & Revoke Links
+              </button>
+            </div>
           </div>
         </div>
       )}

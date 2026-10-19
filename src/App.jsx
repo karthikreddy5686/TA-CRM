@@ -236,6 +236,26 @@ export default function App() {
     }
   }, [users]);
 
+  // Validate active employee session on initial load against central server
+  useEffect(() => {
+    if (currentUser && currentUser.role !== 'ADMIN') {
+      fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: currentUser.email || currentUser.username,
+          password: currentUser.password
+        })
+      }).then(res => {
+        if (res.status === 403 || res.status === 401) {
+          console.warn('[AUTH REVOKED] Current employee session is no longer valid or was deleted.');
+          try { localStorage.removeItem('tacrm_auth_user'); } catch (e) {}
+          setCurrentUser(null);
+        }
+      }).catch(() => {});
+    }
+  }, []);
+
   // Pull latest users and database from centralized server storage & cloud on initial app load
   useEffect(() => {
     fetch('/api/storage')
@@ -2500,23 +2520,7 @@ export default function App() {
             </div>
           }>
           {activeTab === 'dashboard' && (
-            isMobile ? (
-              <MobileCallingHub 
-                currentUser={currentUser}
-                students={students}
-                tpos={tpos}
-                drives={drives}
-                followUps={followUps}
-                callSessions={callSessions}
-                onSelectTab={setActiveTab}
-                onStartCall={handleStartCall}
-                onOpenQuickCall={() => setIsGlobalQuickCallModalOpen(true)}
-                onOpenChat={handleOpenChat}
-                onOpenPhoneConnect={() => setIsPhoneConnectModalOpen(true)}
-                hrPhoneNumber={hrPhoneNumber}
-                unreadChatCount={unreadChatCount}
-              />
-            ) : currentUser.role === 'ADMIN' ? (
+            currentUser.role === 'ADMIN' ? (
               <AdminDashboard 
                 users={users}
                 drives={drives}
@@ -2548,6 +2552,22 @@ export default function App() {
                 onSelectTab={setActiveTab}
                 onLoadDemoData={handleLoadDemoData}
                 defaultTab="staff"
+              />
+            ) : isMobile ? (
+              <MobileCallingHub 
+                currentUser={currentUser}
+                students={students}
+                tpos={tpos}
+                drives={drives}
+                followUps={followUps}
+                callSessions={callSessions}
+                onSelectTab={setActiveTab}
+                onStartCall={handleStartCall}
+                onOpenQuickCall={() => setIsGlobalQuickCallModalOpen(true)}
+                onOpenChat={handleOpenChat}
+                onOpenPhoneConnect={() => setIsPhoneConnectModalOpen(true)}
+                hrPhoneNumber={hrPhoneNumber}
+                unreadChatCount={unreadChatCount}
               />
             ) : currentUser.role === 'MAIN_HR' ? (
               <MainHRDashboard 

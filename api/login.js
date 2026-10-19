@@ -70,9 +70,16 @@ export default async function handler(req, res) {
     try {
       const fs = await import('fs');
       const path = await import('path');
+      const tmpFile = path.resolve(process.env.TMPDIR || '/tmp', 'crm_storage_persisted.json');
       const dbFile = path.resolve(process.cwd(), 'src/data/crm_persisted_storage.json');
-      if (fs.existsSync(dbFile)) {
-        const db = JSON.parse(fs.readFileSync(dbFile, 'utf8'));
+      let db = null;
+      if (fs.existsSync(tmpFile)) {
+        try { db = JSON.parse(fs.readFileSync(tmpFile, 'utf8')); } catch (e) {}
+      }
+      if (!db && fs.existsSync(dbFile)) {
+        try { db = JSON.parse(fs.readFileSync(dbFile, 'utf8')); } catch (e) {}
+      }
+      if (db) {
         const deletedList = Array.isArray(db.deletedUserIds) ? db.deletedUserIds : [];
         const inputPrefix = cleanUser.includes('@') ? cleanUser.split('@')[0] : cleanUser;
         if (

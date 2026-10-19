@@ -23,40 +23,6 @@ export const INITIAL_USERS = [
     status: 'online',
     dailyTargetHours: 4,
     dailyTargetLeads: 25,
-  },
-  {
-    id: 'intern-1791972714546',
-    name: 'muni',
-    email: 'lokisg19@gmail.com',
-    password: '123456',
-    role: 'HR_INTERN',
-    title: 'Recruitment Intern',
-    avatar: 'IN',
-    status: 'online',
-    dailyTargetHours: 3.5,
-    dailyTargetLeads: 20,
-    username: 'lokisg19'
-  },
-  {
-    id: 'intern-1792141779508',
-    name: 'Suresh Kumar',
-    email: 'suresh@company.com',
-    username: 'suresh',
-    password: 'password123',
-    role: 'HR_INTERN',
-    title: 'Recruitment Intern',
-    avatar: 'IN',
-    status: 'online',
-    dailyTargetHours: 3.5,
-    dailyTargetLeads: 20
-  },
-  {
-    id: 'hr-test1',
-    name: 'Test User',
-    email: 'test@example.com',
-    password: 'pass123',
-    role: 'MAIN_HR',
-    username: 'test'
   }
 ];
 

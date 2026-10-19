@@ -1,32 +1,6 @@
 {
   "users": [
     {
-      "id": "intern-1791972714546",
-      "name": "muni",
-      "email": "lokisg19@gmail.com",
-      "password": "123456",
-      "role": "HR_INTERN",
-      "title": "Recruitment Intern",
-      "avatar": "IN",
-      "status": "online",
-      "dailyTargetHours": 3.5,
-      "dailyTargetLeads": 20,
-      "username": "lokisg19"
-    },
-    {
-      "id": "intern-1792141779508",
-      "name": "Suresh Kumar",
-      "email": "suresh@company.com",
-      "username": "suresh",
-      "password": "password123",
-      "role": "HR_INTERN",
-      "title": "Recruitment Intern",
-      "avatar": "IN",
-      "status": "online",
-      "dailyTargetHours": 3.5,
-      "dailyTargetLeads": 20
-    },
-    {
       "id": "hr-karthik",
       "name": "karthik",
       "role": "MAIN_HR",
@@ -53,7 +27,13 @@
   "deletedUserIds": [
     "hr-test1",
     "test@example.com",
-    "test"
+    "test",
+    "intern-1791972714546",
+    "lokisg19@gmail.com",
+    "lokisg19",
+    "intern-1792141779508",
+    "suresh@company.com",
+    "suresh"
   ],
   "drives": [
     {
@@ -152,5 +132,5 @@
       "formattedTime": "12:58 PM"
     }
   ],
-  "updatedAt": "2026-10-19T09:30:19.562Z"
+  "updatedAt": "2026-10-19T10:12:10.255Z"
 }

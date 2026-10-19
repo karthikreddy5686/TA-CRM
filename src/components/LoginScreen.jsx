@@ -34,37 +34,73 @@ export default function LoginScreen({ onLogin, users = [], onInstallApp, isAppIn
           // Step 1: Check local device blacklist
           let isDeleted = isUserDeletedLocally(user);
 
-          // Step 2: Authoritative real-time check against server storage
-          try {
-            const res = await fetch('/api/storage');
-            if (res.ok) {
-              const storageData = await res.json();
-              const serverDeleted = Array.isArray(storageData.deletedUserIds) ? storageData.deletedUserIds : [];
-              const serverUsers = Array.isArray(storageData.users) ? storageData.users : [];
-
-              // Persist server deleted list to device
-              try {
-                const localDeleted = JSON.parse(localStorage.getItem('tacrm_deleted_user_ids') || '[]');
-                const combined = Array.from(new Set([...localDeleted, ...serverDeleted.map(k => String(k).toLowerCase())]));
-                localStorage.setItem('tacrm_deleted_user_ids', JSON.stringify(combined));
-              } catch (e) {}
-
-              // Check if user is in server deleted list
-              if (serverDeleted.some(k => userKeys.includes(String(k).toLowerCase()))) {
+          // Step 2: Authoritative real-time check against /api/login endpoint
+          if (!isDeleted && user.role !== 'ADMIN') {
+            try {
+              const loginRes = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  username: user.email || user.username,
+                  password: user.password
+                })
+              });
+              if (loginRes.status === 403 || loginRes.status === 401) {
+                // Server explicitly rejected credentials as deleted or invalid
                 isDeleted = true;
-              } else if (serverUsers.length > 0 && user.role !== 'ADMIN') {
-                // If server has users provisioned, make sure this user exists in active users
-                const existsOnServer = serverUsers.some(su => 
-                  (su.id && su.id === user.id) ||
-                  (su.email && user.email && su.email.toLowerCase() === user.email.toLowerCase()) ||
-                  (su.username && user.username && su.username.toLowerCase() === user.username.toLowerCase())
+              }
+            } catch (e) {}
+          }
+
+          // Step 3: Check /api/storage blacklist & active users list
+          if (!isDeleted) {
+            try {
+              const res = await fetch('/api/storage');
+              if (res.ok) {
+                const storageData = await res.json();
+                const serverDeleted = Array.isArray(storageData.deletedUserIds) ? storageData.deletedUserIds : [];
+                const serverUsers = Array.isArray(storageData.users) ? storageData.users : [];
+
+                // Persist server deleted list to device
+                try {
+                  const localDeleted = JSON.parse(localStorage.getItem('tacrm_deleted_user_ids') || '[]');
+                  const combined = Array.from(new Set([...localDeleted, ...serverDeleted.map(k => String(k).toLowerCase())]));
+                  localStorage.setItem('tacrm_deleted_user_ids', JSON.stringify(combined));
+                } catch (e) {}
+
+                // Check if user is in server deleted list
+                if (serverDeleted.some(k => userKeys.includes(String(k).toLowerCase()))) {
+                  isDeleted = true;
+                } else if (serverUsers.length > 0 && user.role !== 'ADMIN') {
+                  const existsOnServer = serverUsers.some(su => 
+                    (su.id && su.id === user.id) ||
+                    (su.email && user.email && su.email.toLowerCase() === user.email.toLowerCase()) ||
+                    (su.username && user.username && su.username.toLowerCase() === user.username.toLowerCase())
+                  );
+                  if (!existsOnServer) {
+                    isDeleted = true;
+                  }
+                }
+              }
+            } catch (e) {}
+          }
+
+          // Step 4: Check Supabase cloud database if configured
+          if (!isDeleted && isSupabaseConfigured() && user.role !== 'ADMIN') {
+            try {
+              const cloudUsers = await fetchSupabaseUsers();
+              if (Array.isArray(cloudUsers)) {
+                const existsInCloud = cloudUsers.some(cu => 
+                  (cu.id && cu.id === user.id) ||
+                  (cu.email && user.email && cu.email.toLowerCase() === user.email.toLowerCase()) ||
+                  (cu.username && user.username && cu.username.toLowerCase() === user.username.toLowerCase())
                 );
-                if (!existsOnServer) {
+                if (!existsInCloud) {
                   isDeleted = true;
                 }
               }
-            }
-          } catch (e) {}
+            } catch (e) {}
+          }
 
           // If deleted, block and purge
           if (isDeleted && user.role !== 'ADMIN') {
@@ -72,6 +108,9 @@ export default function LoginScreen({ onLogin, users = [], onInstallApp, isAppIn
             cleanUrlTokens();
             try {
               localStorage.removeItem('tacrm_auth_user');
+              const curDeleted = JSON.parse(localStorage.getItem('tacrm_deleted_user_ids') || '[]');
+              const nextDeleted = Array.from(new Set([...curDeleted, ...userKeys]));
+              localStorage.setItem('tacrm_deleted_user_ids', JSON.stringify(nextDeleted));
               const localUsers = JSON.parse(localStorage.getItem('tacrm_users') || '[]');
               const cleaned = localUsers.filter(u => !userKeys.includes((u.id || '').toLowerCase()) && !userKeys.includes((u.email || '').toLowerCase()));
               localStorage.setItem('tacrm_users', JSON.stringify(cleaned));
