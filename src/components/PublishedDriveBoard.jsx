@@ -195,6 +195,8 @@ export default function PublishedDriveBoard({
   onAddStudentsBatch,
   onDeleteStudent,
   onDeleteDrive,
+  onClearAllDrives,
+  onClearAllStudents,
   onNavigateToBlast,
   onUpdateCandidateStage,
   onLoadDemoData,
@@ -208,6 +210,7 @@ export default function PublishedDriveBoard({
   users = []
 }) {
   const [selectedDriveId, setSelectedDriveId] = useState(initialDriveId || 'ALL');
+  const [deleteModalConfig, setDeleteModalConfig] = useState(null);
 
   useEffect(() => {
     if (initialDriveId !== undefined && initialDriveId !== null) {
@@ -991,10 +994,17 @@ export default function PublishedDriveBoard({
                 <button
                   type="button"
                   onClick={() => {
-                    if (window.confirm(`Are you sure you want to delete drive "${activeDrive.title}"? Associated candidate records will also be removed.`)) {
-                      onDeleteDrive(activeDrive.id);
-                      setSelectedDriveId('ALL');
-                    }
+                    setDeleteModalConfig({
+                      title: 'Delete Campus Recruitment Drive',
+                      subtitle: 'Permanent Drive Deletion',
+                      message: `Are you sure you want to delete drive "${activeDrive.title}" (${activeDrive.collegeName})? Associated candidate records will also be removed.`,
+                      dangerNote: 'All candidate records linked to this drive will be deleted immediately across all accounts.',
+                      confirmLabel: 'Yes, Delete Drive',
+                      onConfirm: () => {
+                        onDeleteDrive(activeDrive.id);
+                        setSelectedDriveId('ALL');
+                      }
+                    });
                   }}
                   className="btn-icon"
                   style={{
@@ -1013,6 +1023,55 @@ export default function PublishedDriveBoard({
                 >
                   <Trash2 size={13} color="#ef4444" />
                 </button>
+              )}
+              {selectedDriveId === 'ALL' && currentUser?.role === 'ADMIN' && (
+                <div style={{ display: 'inline-flex', gap: '4px' }}>
+                  {drives.length > 0 && onClearAllDrives && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDeleteModalConfig({
+                          title: 'Delete All Campus Recruitment Drives',
+                          subtitle: 'Bulk Permanent Deletion',
+                          message: `Are you sure you want to permanently delete all ${drives.length} campus recruitment drives? All associated student records will also be cleared.`,
+                          dangerNote: 'This action cannot be undone. All drives and linked candidates will be removed immediately.',
+                          confirmLabel: `Yes, Delete All Drives (${drives.length})`,
+                          onConfirm: () => {
+                            onClearAllDrives();
+                            setSelectedDriveId('ALL');
+                          }
+                        });
+                      }}
+                      className="btn-secondary btn-black-sm"
+                      style={{ fontSize: '0.7rem', padding: '3px 8px', color: '#ef4444', borderColor: '#fca5a5' }}
+                      title="Delete all campus recruitment drives"
+                    >
+                      <Trash2 size={11} color="#ef4444" /> Delete All Drives
+                    </button>
+                  )}
+                  {students.length > 0 && onClearAllStudents && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDeleteModalConfig({
+                          title: 'Delete All Student Candidates',
+                          subtitle: 'Bulk Candidate Removal',
+                          message: `Are you sure you want to delete all ${students.length} student candidate records across all drives?`,
+                          dangerNote: 'All candidate entries will be permanently removed from all rosters.',
+                          confirmLabel: `Yes, Delete All Candidates (${students.length})`,
+                          onConfirm: () => {
+                            onClearAllStudents();
+                          }
+                        });
+                      }}
+                      className="btn-secondary btn-black-sm"
+                      style={{ fontSize: '0.7rem', padding: '3px 8px', color: '#ef4444', borderColor: '#fca5a5' }}
+                      title="Delete all student candidates"
+                    >
+                      <Trash2 size={11} color="#ef4444" /> Clear All Students
+                    </button>
+                  )}
+                </div>
               )}
             </div>
             {activeDrive ? (
@@ -1374,7 +1433,18 @@ export default function PublishedDriveBoard({
 
                         {onDeleteStudent && (
                           <button
-                            onClick={() => onDeleteStudent(student.id)}
+                            onClick={() => {
+                              setDeleteModalConfig({
+                                title: 'Delete Candidate Record',
+                                subtitle: 'Candidate Removal',
+                                message: `Are you sure you want to delete candidate "${student.name}" (${student.rollNumber || student.email})?`,
+                                dangerNote: 'This candidate will be removed from all candidate rosters and hiring pipelines.',
+                                confirmLabel: 'Yes, Delete Candidate',
+                                onConfirm: () => {
+                                  onDeleteStudent(student.id);
+                                }
+                              });
+                            }}
                             className="btn-icon"
                             style={{ width: '24px', height: '24px', color: '#ef4444' }}
                             title="Delete candidate"
@@ -1579,7 +1649,18 @@ export default function PublishedDriveBoard({
 
                           {onDeleteStudent && (
                             <button
-                              onClick={() => onDeleteStudent(student.id)}
+                              onClick={() => {
+                                setDeleteModalConfig({
+                                  title: 'Delete Candidate Record',
+                                  subtitle: 'Candidate Removal',
+                                  message: `Are you sure you want to delete candidate "${student.name}" (${student.rollNumber || student.email})?`,
+                                  dangerNote: 'This candidate will be removed from all candidate rosters and hiring pipelines.',
+                                  confirmLabel: 'Yes, Delete Candidate',
+                                  onConfirm: () => {
+                                    onDeleteStudent(student.id);
+                                  }
+                                });
+                              }}
                               className="btn-icon"
                               style={{ width: '22px', height: '22px', color: '#ef4444', flexShrink: 0 }}
                               title="Delete candidate"
@@ -2854,6 +2935,51 @@ export default function PublishedDriveBoard({
                 style={{ fontWeight: 800, padding: '7px 20px', fontSize: '0.85rem' }}
               >
                 Done • View Student Board
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* UNIVERSAL IN-APP DELETE MODAL (Zero window.confirm, 100% reliable) */}
+      {deleteModalConfig && (
+        <div className="modal-overlay" style={{ zIndex: 9999 }} onClick={() => setDeleteModalConfig(null)}>
+          <div className="modal-card" style={{ maxWidth: '440px' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header" style={{ borderBottom: '1px solid #fee2e2' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#fee2e2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Trash2 size={18} color="#ef4444" />
+                </div>
+                <div>
+                  <h3 className="modal-title" style={{ color: '#991b1b', fontSize: '1.05rem' }}>{deleteModalConfig.title}</h3>
+                  <p className="modal-subtitle">{deleteModalConfig.subtitle || 'Confirm Permanent Deletion'}</p>
+                </div>
+              </div>
+              <button onClick={() => setDeleteModalConfig(null)} className="modal-close-btn">&times;</button>
+            </div>
+            <div className="modal-body" style={{ padding: '16px 20px', fontSize: '0.88rem', color: '#334155', lineHeight: 1.5 }}>
+              {deleteModalConfig.message}
+              {deleteModalConfig.dangerNote && (
+                <div style={{ marginTop: '12px', padding: '10px 12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', fontSize: '0.8rem', color: '#991b1b' }}>
+                  ⚠️ <strong>Notice:</strong> {deleteModalConfig.dangerNote}
+                </div>
+              )}
+            </div>
+            <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', padding: '12px 20px', borderTop: '1px solid #e2e8f0' }}>
+              <button type="button" onClick={() => setDeleteModalConfig(null)} className="btn-secondary">
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                onClick={() => {
+                  const action = deleteModalConfig.onConfirm;
+                  setDeleteModalConfig(null);
+                  if (action) action();
+                }} 
+                className="btn-danger"
+                style={{ background: '#ef4444', color: '#ffffff', fontWeight: 800, padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer' }}
+              >
+                {deleteModalConfig.confirmLabel || 'Yes, Delete'}
               </button>
             </div>
           </div>

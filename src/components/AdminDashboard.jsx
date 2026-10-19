@@ -71,6 +71,7 @@ export default function AdminDashboard({
   onAddStudent,
   onUpdateStudent,
   onDeleteStudent,
+  onClearAllStudents,
   onAddTpo,
   onUpdateTpo,
   onDeleteTpo,
@@ -101,6 +102,9 @@ export default function AdminDashboard({
   const toggleStaffExpand = (id) => {
     setExpandedStaffIds(prev => ({ ...prev, [id]: !prev[id] }));
   };
+
+  // Universal In-App Delete Confirmation Modal State (Zero native confirm, 100% reliable)
+  const [deleteModalConfig, setDeleteModalConfig] = useState(null);
 
   // Modals state
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
@@ -1209,10 +1213,17 @@ export default function AdminDashboard({
                 <button 
                   type="button" 
                   onClick={() => {
-                    if (window.confirm(`Are you sure you want to delete all ${drives.length} campus recruitment drives? This cannot be undone.`)) {
-                      onClearAllDrives();
-                      showNotification('All campus recruitment drives deleted');
-                    }
+                    setDeleteModalConfig({
+                      title: 'Delete All Campus Recruitment Drives',
+                      subtitle: 'Bulk Permanent Deletion',
+                      message: `Are you sure you want to permanently delete all ${drives.length} campus recruitment drives? All associated student candidate records and registration data will also be purged immediately.`,
+                      dangerNote: 'This action cannot be undone. All drives and linked candidates will be removed from all staff and mobile devices.',
+                      confirmLabel: `Yes, Delete All Drives (${drives.length})`,
+                      onConfirm: () => {
+                        onClearAllDrives();
+                        showNotification('All campus recruitment drives deleted');
+                      }
+                    });
                   }} 
                   className="btn-secondary btn-black-sm"
                   style={{ color: '#ef4444', borderColor: '#fca5a5' }}
@@ -1280,10 +1291,17 @@ export default function AdminDashboard({
                             {onDeleteDrive && (
                               <button 
                                 onClick={() => {
-                                  if (window.confirm(`Delete drive "${drive.title}"? Associated candidate records will also be removed.`)) {
-                                    onDeleteDrive(drive.id);
-                                    showNotification(`Deleted drive "${drive.title}"`);
-                                  }
+                                  setDeleteModalConfig({
+                                    title: 'Delete Campus Recruitment Drive',
+                                    subtitle: 'Permanent Drive Deletion',
+                                    message: `Are you sure you want to delete drive "${drive.title}" (${drive.collegeName})? Associated candidate records will also be removed.`,
+                                    dangerNote: 'All candidate records linked to this drive will be deleted immediately across all accounts.',
+                                    confirmLabel: 'Yes, Delete Drive',
+                                    onConfirm: () => {
+                                      onDeleteDrive(drive.id);
+                                      showNotification(`Deleted drive "${drive.title}"`);
+                                    }
+                                  });
                                 }}
                                 className="btn-secondary btn-black-sm"
                                 style={{ padding: '3px 8px', fontSize: '0.72rem', color: '#ef4444', borderColor: '#fca5a5' }}
@@ -1352,10 +1370,17 @@ export default function AdminDashboard({
                       {onDeleteDrive && (
                         <button 
                           onClick={() => {
-                            if (window.confirm(`Delete drive "${drive.title}"? Associated candidate records will also be removed.`)) {
-                              onDeleteDrive(drive.id);
-                              showNotification(`Deleted drive "${drive.title}"`);
-                            }
+                            setDeleteModalConfig({
+                              title: 'Delete Campus Recruitment Drive',
+                              subtitle: 'Permanent Drive Deletion',
+                              message: `Are you sure you want to delete drive "${drive.title}" (${drive.collegeName})? Associated candidate records will also be removed.`,
+                              dangerNote: 'All candidate records linked to this drive will be deleted immediately across all accounts.',
+                              confirmLabel: 'Yes, Delete Drive',
+                              onConfirm: () => {
+                                onDeleteDrive(drive.id);
+                                showNotification(`Deleted drive "${drive.title}"`);
+                              }
+                            });
                           }}
                           className="btn-secondary btn-black-sm"
                           style={{ padding: '4px 10px', fontSize: '0.74rem', color: '#ef4444', borderColor: '#fca5a5' }}
@@ -1387,9 +1412,34 @@ export default function AdminDashboard({
                 Edit candidate contact details, change recruitment stages, or post new candidates directly.
               </p>
             </div>
-            <button onClick={handleOpenAddStudent} className="btn-mustard btn-black-sm" style={{ fontWeight: 800 }}>
-              <UserPlus size={14} color="#154360" /> Post New Student
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {students.length > 0 && onClearAllStudents && (
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setDeleteModalConfig({
+                      title: 'Delete All Student Candidates',
+                      subtitle: 'Bulk Candidate Purge',
+                      message: `Are you sure you want to delete all ${students.length} student candidate records across all drives?`,
+                      dangerNote: 'This will wipe candidate rosters on all devices. Drive records will remain intact.',
+                      confirmLabel: `Yes, Delete All Candidates (${students.length})`,
+                      onConfirm: () => {
+                        onClearAllStudents();
+                        showNotification('All student candidate records cleared');
+                      }
+                    });
+                  }} 
+                  className="btn-secondary btn-black-sm"
+                  style={{ color: '#ef4444', borderColor: '#fca5a5' }}
+                  title="Delete all student candidates"
+                >
+                  <Trash2 size={13} /> Delete All Students ({students.length})
+                </button>
+              )}
+              <button onClick={handleOpenAddStudent} className="btn-mustard btn-black-sm" style={{ fontWeight: 800 }}>
+                <UserPlus size={14} color="#154360" /> Post New Student
+              </button>
+            </div>
           </div>
 
           <div className="desktop-only" style={{ width: '100%', overflowX: 'hidden' }}>
@@ -1496,10 +1546,17 @@ export default function AdminDashboard({
                           </button>
                           <button 
                             onClick={() => {
-                              if (window.confirm(`Delete candidate ${student.name}?`)) {
-                                onDeleteStudent(student.id);
-                                showNotification(`Deleted candidate ${student.name}`);
-                              }
+                              setDeleteModalConfig({
+                                title: 'Delete Candidate Record',
+                                subtitle: 'Candidate Removal',
+                                message: `Delete candidate "${student.name}" (${student.rollNumber || student.email})?`,
+                                dangerNote: 'This candidate will be removed from all candidate rosters and hiring pipelines.',
+                                confirmLabel: 'Yes, Delete Candidate',
+                                onConfirm: () => {
+                                  onDeleteStudent(student.id);
+                                  showNotification(`Deleted candidate ${student.name}`);
+                                }
+                              });
                             }}
                             className="btn-secondary btn-black-sm"
                             style={{ padding: '3px 8px', fontSize: '0.72rem', color: '#ef4444', borderColor: '#fca5a5' }}
@@ -1514,6 +1571,108 @@ export default function AdminDashboard({
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile View: Master Student Candidate Cards */}
+          <div className="mobile-only" style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {students.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '24px', color: '#71717a', fontSize: '0.8rem' }}>
+                No student candidates found. Click "Post New Student" above.
+              </div>
+            ) : (
+              students.map(student => (
+                <div 
+                  key={student.id}
+                  style={{
+                    background: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    padding: '10px 12px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                    <div>
+                      <div style={{ fontWeight: 700, color: '#154360', fontSize: '0.86rem' }}>{student.name}</div>
+                      <div style={{ fontSize: '0.74rem', color: '#52525b' }}>
+                        Roll: {student.rollNumber || 'N/A'} • {student.collegeName}
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: '#71717a' }}>{student.branch || 'Engg'} • CGPA: <strong>{student.cgpa || 'N/A'}</strong></div>
+                    </div>
+                    <select
+                      className="form-select"
+                      value={student.stage || 'APPLIED'}
+                      onChange={(e) => {
+                        onUpdateStudent({ ...student, stage: e.target.value });
+                        showNotification(`Updated ${student.name}'s stage to ${e.target.value}!`);
+                      }}
+                      style={{ fontSize: '0.7rem', padding: '2px 6px', fontWeight: 700, width: 'auto' }}
+                    >
+                      <option value="APPLIED">Applied</option>
+                      <option value="SCREENING">Screening</option>
+                      <option value="TECH_INTERVIEW">Tech</option>
+                      <option value="HR_INTERVIEW">HR</option>
+                      <option value="SELECTED">Selected</option>
+                      <option value="REJECTED">Rejected</option>
+                    </select>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', background: '#ffffff', padding: '6px 10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                    <a href={normalizePhoneNumber(student.phone).telUrl || `tel:${student.phone}`} style={{ color: '#154360', fontWeight: 600 }}>📞 {student.phone}</a>
+                    <span style={{ color: '#64748b', fontSize: '0.7rem' }}>{student.email}</span>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', paddingTop: '4px' }}>
+                    {onStartCall && (
+                      <button 
+                        type="button"
+                        onClick={() => onStartCall({
+                          recipientType: 'STUDENT',
+                          recipientName: student.name,
+                          recipientDetail: `${student.branch || 'Engg'} • ${student.phone}`,
+                          recipientPhone: student.phone,
+                          type: 'AUDIO',
+                          studentId: student.id,
+                          student
+                        })}
+                        className="btn-mustard btn-black-sm"
+                        style={{ padding: '3px 8px', fontSize: '0.72rem' }}
+                      >
+                        <Phone size={11} color="#154360" /> Call
+                      </button>
+                    )}
+                    <button 
+                      onClick={() => handleOpenEditStudent(student)}
+                      className="btn-secondary btn-black-sm"
+                      style={{ padding: '3px 8px', fontSize: '0.72rem' }}
+                    >
+                      <Edit3 size={12} /> Edit
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setDeleteModalConfig({
+                          title: 'Delete Candidate Record',
+                          subtitle: 'Candidate Removal',
+                          message: `Delete candidate "${student.name}" (${student.rollNumber || student.email})?`,
+                          dangerNote: 'This candidate will be removed from all candidate rosters and hiring pipelines.',
+                          confirmLabel: 'Yes, Delete Candidate',
+                          onConfirm: () => {
+                            onDeleteStudent(student.id);
+                            showNotification(`Deleted candidate ${student.name}`);
+                          }
+                        });
+                      }}
+                      className="btn-secondary btn-black-sm"
+                      style={{ padding: '3px 8px', fontSize: '0.72rem', color: '#ef4444', borderColor: '#fca5a5' }}
+                    >
+                      <Trash2 size={12} /> Delete
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}
@@ -1630,10 +1789,17 @@ export default function AdminDashboard({
                           </button>
                           <button 
                             onClick={() => {
-                              if (window.confirm(`Delete TPO ${tpo.name}?`)) {
-                                onDeleteTpo(tpo.id);
-                                showNotification(`Deleted TPO ${tpo.name}`);
-                              }
+                              setDeleteModalConfig({
+                                title: 'Delete College TPO',
+                                subtitle: 'Placement Officer Deletion',
+                                message: `Are you sure you want to delete college placement officer "${tpo.name}" (${tpo.collegeName})?`,
+                                dangerNote: 'This officer record and contact history will be removed.',
+                                confirmLabel: 'Yes, Delete TPO',
+                                onConfirm: () => {
+                                  onDeleteTpo(tpo.id);
+                                  showNotification(`Deleted TPO ${tpo.name}`);
+                                }
+                              });
                             }}
                             className="btn-secondary btn-black-sm"
                             style={{ padding: '3px 8px', fontSize: '0.72rem', color: '#ef4444', borderColor: '#fca5a5' }}
@@ -1757,10 +1923,16 @@ export default function AdminDashboard({
                           </button>
                           <button 
                             onClick={() => {
-                              if (window.confirm(`Delete follow-up for ${fup.entityTitle}?`)) {
-                                onDeleteFollowUp(fup.id);
-                                showNotification(`Deleted follow-up`);
-                              }
+                              setDeleteModalConfig({
+                                title: 'Delete Scheduled Follow-Up',
+                                subtitle: 'Follow-Up Task Removal',
+                                message: `Are you sure you want to delete the scheduled follow-up for "${fup.entityTitle}"?`,
+                                confirmLabel: 'Yes, Delete Follow-Up',
+                                onConfirm: () => {
+                                  onDeleteFollowUp(fup.id);
+                                  showNotification(`Deleted follow-up`);
+                                }
+                              });
                             }}
                             className="btn-secondary btn-black-sm"
                             style={{ padding: '3px 8px', fontSize: '0.72rem', color: '#ef4444', borderColor: '#fca5a5' }}
@@ -1854,10 +2026,16 @@ export default function AdminDashboard({
                           </button>
                           <button 
                             onClick={() => {
-                              if (window.confirm(`Delete call record for ${call.recipientName}?`)) {
-                                onDeleteCallSession(call.id);
-                                showNotification(`Deleted call record`);
-                              }
+                              setDeleteModalConfig({
+                                title: 'Delete Call History Record',
+                                subtitle: 'Call Log Removal',
+                                message: `Are you sure you want to delete the call record for "${call.recipientName}"?`,
+                                confirmLabel: 'Yes, Delete Call Log',
+                                onConfirm: () => {
+                                  onDeleteCallSession(call.id);
+                                  showNotification(`Deleted call record`);
+                                }
+                              });
                             }}
                             className="btn-secondary btn-black-sm"
                             style={{ padding: '3px 8px', fontSize: '0.72rem', color: '#ef4444', borderColor: '#fca5a5' }}
@@ -2073,6 +2251,51 @@ export default function AdminDashboard({
                 style={{ background: '#ef4444', color: '#ffffff', fontWeight: 800, padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer' }}
               >
                 Yes, Delete Account & Revoke Links
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* UNIVERSAL IN-APP DELETE MODAL (Zero window.confirm, 100% reliable) */}
+      {deleteModalConfig && (
+        <div className="modal-overlay" style={{ zIndex: 9999 }} onClick={() => setDeleteModalConfig(null)}>
+          <div className="modal-card" style={{ maxWidth: '440px' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header" style={{ borderBottom: '1px solid #fee2e2' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#fee2e2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Trash2 size={18} color="#ef4444" />
+                </div>
+                <div>
+                  <h3 className="modal-title" style={{ color: '#991b1b', fontSize: '1.05rem' }}>{deleteModalConfig.title}</h3>
+                  <p className="modal-subtitle">{deleteModalConfig.subtitle || 'Confirm Permanent Deletion'}</p>
+                </div>
+              </div>
+              <button onClick={() => setDeleteModalConfig(null)} className="modal-close-btn">&times;</button>
+            </div>
+            <div className="modal-body" style={{ padding: '16px 20px', fontSize: '0.88rem', color: '#334155', lineHeight: 1.5 }}>
+              {deleteModalConfig.message}
+              {deleteModalConfig.dangerNote && (
+                <div style={{ marginTop: '12px', padding: '10px 12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', fontSize: '0.8rem', color: '#991b1b' }}>
+                  ⚠️ <strong>Notice:</strong> {deleteModalConfig.dangerNote}
+                </div>
+              )}
+            </div>
+            <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', padding: '12px 20px', borderTop: '1px solid #e2e8f0' }}>
+              <button type="button" onClick={() => setDeleteModalConfig(null)} className="btn-secondary">
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                onClick={() => {
+                  const action = deleteModalConfig.onConfirm;
+                  setDeleteModalConfig(null);
+                  if (action) action();
+                }} 
+                className="btn-danger"
+                style={{ background: '#ef4444', color: '#ffffff', fontWeight: 800, padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer' }}
+              >
+                {deleteModalConfig.confirmLabel || 'Yes, Delete'}
               </button>
             </div>
           </div>

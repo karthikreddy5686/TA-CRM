@@ -35,41 +35,8 @@
     "suresh@company.com",
     "suresh"
   ],
-  "drives": [
-    {
-      "id": "drv-1792393906460",
-      "title": "Campus Drive 2026",
-      "collegeId": "col-1792393906460",
-      "collegeName": "NIT Trichy",
-      "jobRole": "Software Engineer",
-      "ctc": "Competitive",
-      "criteria": "Eligible candidates",
-      "driveDate": "2026-10-19",
-      "status": "CONFIRMED",
-      "registeredStudents": 0,
-      "shortlistedStudents": 0,
-      "createdById": "admin"
-    }
-  ],
-  "students": [
-    {
-      "id": "stu-1792395885503",
-      "driveId": "drv-1792393906460",
-      "driveTitle": "Campus Drive 2026",
-      "collegeId": "col-1792393906460",
-      "collegeName": "NIT Trichy",
-      "name": "Aarav Sharma",
-      "rollNumber": "CS2026-001",
-      "email": "aarav.sharma@example.com",
-      "phone": "9876543210",
-      "branch": "Computer Science",
-      "cgpa": 8.8,
-      "stage": "APPLIED",
-      "internId": "intern-1791972714546",
-      "internName": "muni",
-      "notes": "Manually added candidate"
-    }
-  ],
+  "drives": [],
+  "students": [],
   "tpos": [],
   "followUps": [],
   "callSessions": [],
@@ -132,5 +99,6 @@
       "formattedTime": "12:58 PM"
     }
   ],
-  "updatedAt": "2026-10-19T10:12:10.255Z"
+  "updatedAt": "2026-10-19T12:15:32.849Z",
+  "formResponses": []
 }

@@ -1656,51 +1656,52 @@ export default function App() {
 
   // Individual Item Deletion Handlers with Full Multi-Account & Server Sync
   const handleDeleteStudent = (studentId) => {
-    setStudents(prev => {
-      const next = prev.filter(s => s.id !== studentId);
-      try { localStorage.setItem('tacrm_students', JSON.stringify(next)); } catch (e) {}
-      fetch('/api/storage', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ students: next })
-      }).catch(() => {});
-      return next;
-    });
+    const nextStudents = students.filter(s => s.id !== studentId);
+    setStudents(nextStudents);
+    try { localStorage.setItem('tacrm_students', JSON.stringify(nextStudents)); } catch (e) {}
+    fetch('/api/storage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ students: nextStudents })
+    }).catch(() => {});
     addToast('Candidate removed from roster & synced across accounts', 'info');
   };
 
+  const handleClearAllStudents = () => {
+    setStudents([]);
+    try { localStorage.setItem('tacrm_students', JSON.stringify([])); } catch (e) {}
+    fetch('/api/storage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ students: [] })
+    }).catch(() => {});
+    addToast('All student candidates cleared (0 candidates)', 'info');
+  };
+
   const handleDeleteDrive = (driveId) => {
-    let nextStudents = [];
-    setDrives(prevDrives => {
-      const nextDrives = prevDrives.filter(d => d.id !== driveId);
-      try { localStorage.setItem('tacrm_drives', JSON.stringify(nextDrives)); } catch (e) {}
-      setStudents(prevStudents => {
-        nextStudents = prevStudents.filter(s => s.driveId !== driveId);
-        try { localStorage.setItem('tacrm_students', JSON.stringify(nextStudents)); } catch (e) {}
-        return nextStudents;
-      });
-      fetch('/api/storage', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ drives: nextDrives, students: nextStudents })
-      }).catch(() => {});
-      return nextDrives;
-    });
-    setFormResponses(prev => {
-      const next = prev.filter(r => r.driveId !== driveId);
-      try { localStorage.setItem('tacrm_form_responses', JSON.stringify(next)); } catch (e) {}
-      fetch('/api/storage', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ formResponses: next })
-      }).catch(() => {});
-      return next;
-    });
-    setBlastLogs(prev => {
-      const next = prev.filter(b => b.driveId !== driveId);
-      try { localStorage.setItem('tacrm_blast_logs', JSON.stringify(next)); } catch (e) {}
-      return next;
-    });
+    const nextDrives = drives.filter(d => d.id !== driveId);
+    const nextStudents = students.filter(s => s.driveId !== driveId);
+    const nextResponses = formResponses.filter(r => r.driveId !== driveId);
+    const nextBlastLogs = blastLogs.filter(b => b.driveId !== driveId);
+
+    setDrives(nextDrives);
+    setStudents(nextStudents);
+    setFormResponses(nextResponses);
+    setBlastLogs(nextBlastLogs);
+
+    try {
+      localStorage.setItem('tacrm_drives', JSON.stringify(nextDrives));
+      localStorage.setItem('tacrm_students', JSON.stringify(nextStudents));
+      localStorage.setItem('tacrm_form_responses', JSON.stringify(nextResponses));
+      localStorage.setItem('tacrm_blast_logs', JSON.stringify(nextBlastLogs));
+    } catch (e) {}
+
+    fetch('/api/storage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ drives: nextDrives, students: nextStudents, formResponses: nextResponses })
+    }).catch(() => {});
+
     addToast('Campus drive and linked candidate records removed', 'info');
   };
 
@@ -2538,6 +2539,7 @@ export default function App() {
                 onAddStudent={handleAddStudentsBatch}
                 onUpdateStudent={handleUpdateStudent}
                 onDeleteStudent={handleDeleteStudent}
+                onClearAllStudents={handleClearAllStudents}
                 onAddTpo={handleAddTpo}
                 onAddTposBatch={handleAddTposBatch}
                 onUpdateTpo={handleUpdateTpo}
@@ -2662,6 +2664,7 @@ export default function App() {
               onDeleteStudent={currentUser?.role === 'ADMIN' ? handleDeleteStudent : null}
               onDeleteDrive={currentUser?.role === 'ADMIN' ? handleDeleteDrive : null}
               onClearAllDrives={currentUser?.role === 'ADMIN' ? handleClearAllDrives : null}
+              onClearAllStudents={currentUser?.role === 'ADMIN' ? handleClearAllStudents : null}
               onLoadDemoData={handleLoadDemoData}
               defaultTab="drives"
               hrPhoneNumber={hrPhoneNumber}
@@ -2682,6 +2685,8 @@ export default function App() {
               onStartCall={handleStartCall}
               onDeleteStudent={currentUser?.role === 'ADMIN' ? handleDeleteStudent : null}
               onDeleteDrive={currentUser?.role === 'ADMIN' ? handleDeleteDrive : null}
+              onClearAllDrives={currentUser?.role === 'ADMIN' ? handleClearAllDrives : null}
+              onClearAllStudents={currentUser?.role === 'ADMIN' ? handleClearAllStudents : null}
               onAddStudentsBatch={handleAddStudentsBatch}
               onUpdateCandidateStage={handleUpdateCandidateStage}
               onLoadDemoData={handleLoadDemoData}
