@@ -1989,7 +1989,7 @@ export default function PublishedDriveBoard({
           <div 
             className="modal-container" 
             onClick={e => e.stopPropagation()} 
-            style={{ maxWidth: '480px', width: '92%', borderRadius: '12px' }}
+            style={{ maxWidth: '480px', width: '92%', borderRadius: 'var(--radius-lg)' }}
           >
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -2747,8 +2747,8 @@ export default function PublishedDriveBoard({
             background: '#ffffff',
             maxWidth: '620px',
             width: '94%',
-            borderRadius: '12px',
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2)',
+            borderRadius: 'var(--radius-lg)',
+            boxShadow: 'var(--shadow-floating)',
             border: '1px solid #cbd5e1',
             overflow: 'hidden',
             display: 'flex',

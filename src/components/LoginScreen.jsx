@@ -409,9 +409,9 @@ export default function LoginScreen({ onLogin, users = [], onInstallApp, isAppIn
         width: '100%',
         background: '#ffffff',
         border: '1px solid #e2e8f0',
-        borderRadius: '16px',
-        padding: '36px 30px',
-        boxShadow: '0 20px 25px -5px rgba(21, 67, 96, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.02)'
+        borderRadius: 'var(--radius-lg)',
+        padding: '32px 28px',
+        boxShadow: 'var(--shadow-floating)'
       }}>
         {/* Brand Header */}
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>

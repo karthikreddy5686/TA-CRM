@@ -685,9 +685,9 @@ export default function AdminDashboard({
       <div style={{
         background: '#ffffff',
         border: '1px solid #e2e8f0',
-        borderRadius: '12px',
-        padding: '20px 24px',
-        marginBottom: '20px',
+        borderRadius: 'var(--radius-sm)',
+        padding: '16px 20px',
+        marginBottom: '16px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -2879,9 +2879,9 @@ export default function AdminDashboard({
               {/* QR Code Display */}
               <div style={{
                 background: '#ffffff',
-                border: '2px dashed #bae6fd',
-                borderRadius: '12px',
-                padding: '16px',
+                border: '1.5px dashed #bae6fd',
+                borderRadius: 'var(--radius-sm)',
+                padding: '14px',
                 display: 'inline-flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -3010,9 +3010,9 @@ export default function AdminDashboard({
             <div className="modal-body" style={{ padding: '20px' }}>
               <div style={{
                 background: '#ffffff',
-                border: '2px dashed #bae6fd',
-                borderRadius: '12px',
-                padding: '16px',
+                border: '1.5px dashed #bae6fd',
+                borderRadius: 'var(--radius-sm)',
+                padding: '14px',
                 display: 'inline-flex',
                 flexDirection: 'column',
                 alignItems: 'center',

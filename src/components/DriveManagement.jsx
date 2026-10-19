@@ -1007,7 +1007,7 @@ export default function DriveManagement({
                   <div key={stage.id} style={{ 
                     background: '#f8fafc', 
                     border: '1px solid #e2e8f0', 
-                    borderRadius: '12px', 
+                    borderRadius: 'var(--radius-sm)', 
                     padding: '14px',
                     minHeight: '380px',
                     display: 'flex',
@@ -1026,7 +1026,8 @@ export default function DriveManagement({
                         fontWeight: 700, 
                         fontSize: '0.78rem', 
                         padding: '2px 8px', 
-                        borderRadius: '10px' 
+                        borderRadius: 'var(--radius-xs)',
+                        fontVariantNumeric: 'tabular-nums'
                       }}>
                         {stageStudents.length}
                       </span>
@@ -1042,7 +1043,7 @@ export default function DriveManagement({
                           <div key={student.id} style={{ 
                             background: '#ffffff', 
                             border: '1px solid #e2e8f0', 
-                            borderRadius: '10px', 
+                            borderRadius: 'var(--radius-sm)', 
                             padding: '12px',
                             boxShadow: 'var(--shadow-sm)'
                           }}>

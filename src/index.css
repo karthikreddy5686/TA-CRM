@@ -71,24 +71,24 @@
   --mustard-border: #f8df72;
   --mustard-text: #154360;
 
-  /* Shadows */
+  /* Shadows: Crisp 1px Keylines over Fluffy Blurs */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
-  --shadow-floating: 0 20px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.06);
+  --shadow-card: 0 1px 2px 0 rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(15, 23, 42, 0.04);
+  --shadow-floating: 0 16px 32px -4px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(15, 23, 42, 0.08);
 
-  /* Radius */
-  --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  --radius-full: 9999px;
+  /* Radius: Enterprise High-Density Standard (Linear / Stripe / Retool) */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
+  --radius-full: 4px; /* Eliminates AI oversized pill bubbles */
 
-  /* Transitions */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  /* Transitions: High-Velocity Operator Speed (< 180ms) */
+  --transition-fast: 120ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-normal: 180ms cubic-bezier(0.16, 1, 0.3, 1);
 
   /* ==========================================================================
      EXACT TAILWIND CSS V4 TYPOGRAPHY SCALE & LINE HEIGHTS (Photos Spec)
@@ -154,6 +154,8 @@ body {
   line-height: var(--lh-sm);  /* 20px */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "tnum" on, "cv05" on;
+  font-variant-numeric: tabular-nums;
 }
 
 h1, .page-title, .h1-title {
@@ -884,20 +886,22 @@ input, select, textarea, button {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  font-size: var(--font-sm); /* 14px */
-  line-height: var(--lh-sm);  /* 20px */
+  font-size: 13px;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
 }
 
 .crm-table th {
-  background: #154360;
-  color: #ffffff;
-  font-weight: 700;
-  padding: 8px 12px;
-  border-bottom: 2px solid #0e2e42;
-  font-size: var(--font-xs); /* 12px */
-  line-height: var(--lh-xs);  /* 16px */
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+  padding: 7px 10px;
+  border-top: 1px solid var(--border-default);
+  border-bottom: 1px solid var(--border-strong);
+  font-size: 11px;
+  line-height: 15px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   white-space: nowrap;
   position: sticky;
   top: 0;
@@ -905,38 +909,42 @@ input, select, textarea, button {
 }
 
 .crm-table td {
-  padding: 8px 12px;
+  padding: 6px 10px;
   border-bottom: 1px solid var(--border-subtle);
   color: var(--text-primary);
   vertical-align: middle;
-  font-size: var(--font-sm); /* 14px */
-  line-height: var(--lh-sm);  /* 20px */
+  font-size: 13px;
+  line-height: 18px;
+  background-color: #ffffff;
 }
 
 .crm-table tr:hover td {
-  background-color: var(--bg-card-subtle);
+  background-color: #f8fafc;
 }
 
-/* Status Badges & Pills (12px / 16px) */
+/* Status Badges & Pills (Rectilinear 2px Enterprise Architecture) */
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 2px 8px;
-  border-radius: var(--radius-full);
-  font-size: var(--font-xs); /* 12px */
-  line-height: var(--lh-xs);  /* 16px */
+  gap: 4px;
+  padding: 1px 6px;
+  border-radius: var(--radius-xs); /* 2px */
+  font-size: 11px;
+  line-height: 14px;
   font-weight: 600;
   white-space: nowrap;
+  border: 1px solid transparent;
+  font-variant-numeric: tabular-nums;
 }
 
 .badge-micro,
 .kbd-chip {
-  font-size: var(--font-10); /* 10px */
-  line-height: var(--lh-10); /* 14px */
-  padding: 1px 5px;
-  border-radius: 4px;
+  font-size: 10px;
+  line-height: 13px;
+  padding: 1px 4px;
+  border-radius: 2px;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .badge-green {
@@ -1234,15 +1242,15 @@ input[type="checkbox"] {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(9, 9, 11, 0.75);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1100;
   padding: 14px;
-  animation: fadeIn 0.15s ease-out;
+  animation: fadeIn 0.12s ease-out;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -1250,7 +1258,7 @@ input[type="checkbox"] {
 .modal-card {
   background: #ffffff;
   color: var(--text-primary);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-lg); /* 6px */
   border: 1px solid var(--border-default);
   box-shadow: var(--shadow-floating);
   width: 100%;
@@ -1259,14 +1267,14 @@ input[type="checkbox"] {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation: modalScaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: modalScaleIn 0.16s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
 }
 
-/* Slide-out Side Sheet (Lead Details & Notes): sm:max-w-xl (576px / 36rem) */
+/* Slide-out Side Sheet (Lead Details & Notes): Expanded to 680px for high-density record view */
 .modal-card.modal-card-lg,
 .modal-card.modal-card-sheet {
-  max-width: var(--sheet-max-xl); /* 576px / 36rem */
+  max-width: 680px;
 }
 
 /* Integrations & Settings: max-w-4xl (896px / 56rem) */

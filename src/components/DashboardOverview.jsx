@@ -361,26 +361,55 @@ export default function DashboardOverview({
         </div>
       )}
 
-      {/* Header Banner - Only Recruitment & Placement Overview Title */}
+      {/* Enterprise Header Toolbar */}
       <div style={{
-        background: 'linear-gradient(135deg, #154360 0%, #0e2e42 100%)',
-        color: '#ffffff',
-        borderRadius: '10px',
-        padding: '14px 20px',
-        boxShadow: 'var(--shadow-card)',
+        background: '#ffffff',
+        border: '1px solid var(--border-default)',
+        borderRadius: 'var(--radius-sm)',
+        padding: '10px 16px',
         display: 'flex',
-        alignItems: 'center'
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '12px',
+        boxShadow: 'var(--shadow-card)'
       }}>
-        <h1 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#ffffff' }}>
-          Recruitment & Placement Overview
-        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <h1 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#0f172a' }}>
+            Recruitment & Placement Overview
+          </h1>
+          <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600, background: '#f1f5f9', padding: '2px 6px', borderRadius: '2px', border: '1px solid #e2e8f0' }}>
+            OPERATIONAL
+          </span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {['ALL', 'PAST_30', 'PAST_90'].map(f => (
+            <button
+              key={f}
+              onClick={() => setDateFilter(f)}
+              style={{
+                fontSize: '0.72rem',
+                fontWeight: 600,
+                padding: '4px 8px',
+                borderRadius: 'var(--radius-xs)',
+                border: dateFilter === f ? '1px solid #0f172a' : '1px solid var(--border-default)',
+                background: dateFilter === f ? '#0f172a' : '#ffffff',
+                color: dateFilter === f ? '#ffffff' : '#475569',
+                cursor: 'pointer',
+                transition: 'all 120ms ease'
+              }}
+            >
+              {f === 'ALL' ? 'All Time' : f === 'PAST_30' ? 'Past 30 Days' : 'Past 90 Days'}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Top 5 Real Metric Cards (Zero Targets, Zero Hardcoding, Clean without accent lines or icons) */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '12px'
+        gap: '10px'
       }}>
         {realMetricCards.map(metric => {
           return (
@@ -394,43 +423,46 @@ export default function DashboardOverview({
               }}
               style={{ 
                 cursor: 'pointer',
-                padding: '12px 14px',
+                padding: '10px 14px',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
-                transition: 'all 0.18s ease',
-                border: '1px solid #e2e8f0',
-                borderRadius: '10px'
+                transition: 'all 120ms ease',
+                border: '1px solid var(--border-default)',
+                borderRadius: 'var(--radius-sm)',
+                background: '#ffffff',
+                boxShadow: 'var(--shadow-card)'
               }}
             >
               <div>
-                <div style={{ marginBottom: '6px' }}>
-                  <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569' }}>
+                <div style={{ marginBottom: '4px' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
                     {metric.title}
                   </span>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '3px' }}>
-                  <span style={{ fontSize: '1.75rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em', lineHeight: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '2px' }}>
+                  <span style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>
                     {metric.value}
                   </span>
                 </div>
 
-                <div style={{ fontSize: '0.72rem', color: '#64748b', marginBottom: '8px' }}>
+                <div style={{ fontSize: '0.72rem', color: '#64748b', marginBottom: '6px' }}>
                   {metric.subtext}
                 </div>
               </div>
 
               <div>
                 <span style={{ 
-                  fontSize: '0.7rem', 
-                  padding: '2px 7px', 
-                  borderRadius: '5px',
+                  fontSize: '0.68rem', 
+                  padding: '1px 6px', 
+                  borderRadius: 'var(--radius-xs)',
                   background: metric.badgeBg,
                   color: metric.accentColor,
-                  fontWeight: 800,
+                  fontWeight: 700,
                   border: `1px solid ${metric.badgeBorder}`,
-                  display: 'inline-block'
+                  display: 'inline-block',
+                  fontVariantNumeric: 'tabular-nums'
                 }}>
                   {metric.badge}
                 </span>

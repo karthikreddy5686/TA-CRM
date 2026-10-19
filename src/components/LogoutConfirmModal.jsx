@@ -44,10 +44,10 @@ export default function LogoutConfirmModal({
         style={{ 
           maxWidth: '420px', 
           width: '92vw', 
-          borderRadius: '16px', 
+          borderRadius: 'var(--radius-lg)', 
           overflow: 'hidden',
-          boxShadow: '0 25px 50px -12px rgba(21, 67, 96, 0.25), 0 0 0 1px rgba(21, 67, 96, 0.1)',
-          animation: 'scaleIn 0.18s cubic-bezier(0.16, 1, 0.3, 1)'
+          boxShadow: 'var(--shadow-floating)',
+          animation: 'scaleIn 0.16s cubic-bezier(0.16, 1, 0.3, 1)'
         }}
       >
         {/* Modal Header */}
@@ -111,7 +111,7 @@ export default function LogoutConfirmModal({
               gap: '12px',
               padding: '12px 14px',
               background: '#f8fafc',
-              borderRadius: '12px',
+              borderRadius: 'var(--radius-sm)',
               border: '1px solid #e2e8f0',
               marginBottom: '16px'
             }}>

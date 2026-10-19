@@ -726,7 +726,7 @@ export default function TPODirectory({
                           fontSize: '0.75rem',
                           fontWeight: 700,
                           padding: '3px 8px',
-                          borderRadius: '12px',
+                          borderRadius: 'var(--radius-xs)',
                           cursor: 'pointer',
                           ...getStatusBadgeStyle(tpo.status)
                         }}

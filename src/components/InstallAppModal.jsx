@@ -70,15 +70,15 @@ export default function InstallAppModal({
       <div 
         className="modal-card" 
         onClick={(e) => e.stopPropagation()} 
-        style={{ maxWidth: '540px', width: '94vw', borderRadius: '16px', overflow: 'hidden' }}
+        style={{ maxWidth: '540px', width: '94vw', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}
       >
         {/* Header */}
-        <div className="modal-header" style={{ padding: '16px 20px', background: '#154360', color: '#ffffff' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className="modal-header" style={{ padding: '14px 18px', background: '#154360', color: '#ffffff' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{ 
-              width: '38px', 
-              height: '38px', 
-              borderRadius: '10px', 
+              width: '32px', 
+              height: '32px', 
+              borderRadius: 'var(--radius-sm)', 
               background: 'rgba(255, 255, 255, 0.15)', 
               display: 'flex', 
               alignItems: 'center', 
