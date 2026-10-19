@@ -1,6 +1,6 @@
 // Flux TA CRM Progressive Web App Service Worker
 // Designed for reliable cold-starts, zero white-screens, and offline resilience
-const CACHE_NAME = 'flux-ta-crm-v4';
+const CACHE_NAME = 'flux-ta-crm-v5';
 const SHELL_ASSETS = [
   '/',
   '/index.html',

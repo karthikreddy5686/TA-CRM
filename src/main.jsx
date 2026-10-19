@@ -26,6 +26,8 @@ if ('serviceWorker' in navigator) {
       navigator.serviceWorker
         .register('/sw.js')
         .then((reg) => {
+          // Immediately query server for latest service worker update on every load
+          reg.update().catch(() => {});
           // Listen for new version waiting in background
           reg.addEventListener('updatefound', () => {
             const newWorker = reg.installing;

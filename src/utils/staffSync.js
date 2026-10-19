@@ -187,13 +187,23 @@ export function cleanUrlTokens() {
 // Helper to verify if an account is registered in the deleted/blacklisted records
 export function isUserDeletedLocally(user) {
   if (!user) return false;
+  // Master Super Admin and Primary HR Manager Karthik can never be revoked or marked deleted
+  if (
+    user.role === 'ADMIN' || 
+    user.id === 'user-admin' || 
+    user.id === 'hr-karthik' || 
+    (user.email && user.email.toLowerCase() === 'karthikreddy5686@gmail.com') ||
+    (user.username && user.username.toLowerCase() === 'karthikreddy5686')
+  ) {
+    return false;
+  }
   try {
     const raw = localStorage.getItem('tacrm_deleted_user_ids');
     if (!raw) return false;
     const deletedList = JSON.parse(raw);
     if (!Array.isArray(deletedList)) return false;
     const keys = [user.id, user.email, user.username].filter(Boolean).map(s => String(s).toLowerCase());
-    return deletedList.some(d => keys.includes(String(d).toLowerCase()));
+    return deletedList.some(d => d && keys.includes(String(d).toLowerCase()));
   } catch (e) {
     return false;
   }

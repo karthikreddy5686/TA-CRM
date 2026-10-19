@@ -73,6 +73,18 @@ import {
 import { parseUrlTokens, cleanUrlTokens, persistUserToDevice, persistBulkUsersToDevice } from './utils/staffSync';
 import { fetchSupabaseUsers, upsertSupabaseUser, deleteSupabaseUser, isSupabaseConfigured } from './services/supabaseSync';
 
+// Protected accounts that must NEVER be revoked or logged out automatically on refresh
+const isProtectedRole = (u) => {
+  if (!u) return false;
+  return (
+    u.role === 'ADMIN' ||
+    u.id === 'user-admin' ||
+    u.id === 'hr-karthik' ||
+    (u.email && u.email.toLowerCase() === 'karthikreddy5686@gmail.com') ||
+    (u.username && u.username.toLowerCase() === 'karthikreddy5686')
+  );
+};
+
 export default function App() {
   // Authentication State - persists login session across page refreshes
   const [currentUser, setCurrentUser] = useState(() => {
@@ -89,14 +101,16 @@ export default function App() {
     if (savedUser) {
       try {
         let user = JSON.parse(savedUser);
-        if (user && user.role !== 'ADMIN') {
+        if (user && !isProtectedRole(user)) {
           const deletedRaw = localStorage.getItem('tacrm_deleted_user_ids');
           if (deletedRaw) {
             const deletedList = JSON.parse(deletedRaw);
-            const uKeys = [user.id, user.email, user.username].filter(Boolean).map(s => String(s).toLowerCase());
-            if (deletedList.some(d => uKeys.includes(String(d).toLowerCase()))) {
-              localStorage.removeItem('tacrm_auth_user');
-              return null;
+            if (Array.isArray(deletedList) && deletedList.length > 0) {
+              const uKeys = [user.id, user.email, user.username].filter(Boolean).map(s => String(s).toLowerCase());
+              if (deletedList.some(d => d && uKeys.includes(String(d).toLowerCase()))) {
+                localStorage.removeItem('tacrm_auth_user');
+                return null;
+              }
             }
           }
         }
@@ -291,9 +305,9 @@ export default function App() {
           } catch (e) {}
 
           // Real-time security revocation: if logged in user is deleted, terminate session
-          if (currentUser && currentUser.role !== 'ADMIN') {
+          if (currentUser && !isProtectedRole(currentUser)) {
             const currentKeys = [currentUser.id, currentUser.email, currentUser.username].filter(Boolean).map(s => String(s).toLowerCase());
-            const isRevoked = deletedIds.some(d => currentKeys.includes(d));
+            const isRevoked = deletedIds.some(d => d && currentKeys.includes(d));
             if (isRevoked) {
               console.warn('[AUTH REVOKED] Current employee session was deleted by Administrator. Logging out.');
               try { localStorage.removeItem('tacrm_auth_user'); } catch (e) {}
@@ -439,9 +453,12 @@ export default function App() {
             try { localStorage.setItem('tacrm_users', JSON.stringify(next)); } catch (e) {}
 
             // Real-time security revocation: if logged in user is deleted, terminate session
-            if (currentUser && currentUser.role !== 'ADMIN') {
-              const currentKeys = [currentUser.id, currentUser.email, currentUser.username].filter(Boolean).map(s => String(s).toLowerCase());
-              const isRevoked = deletedIds.some(d => currentKeys.includes(d));
+            const curSession = (() => {
+              try { return JSON.parse(localStorage.getItem('tacrm_auth_user')); } catch { return currentUser; }
+            })();
+            if (curSession && !isProtectedRole(curSession)) {
+              const currentKeys = [curSession.id, curSession.email, curSession.username].filter(Boolean).map(s => String(s).toLowerCase());
+              const isRevoked = deletedIds.some(d => d && currentKeys.includes(d));
               if (isRevoked) {
                 console.warn('[AUTH REVOKED] Current employee session was deleted by Administrator. Logging out.');
                 try { localStorage.removeItem('tacrm_auth_user'); } catch (e) {}
