@@ -74,7 +74,25 @@
       "createdById": "admin"
     }
   ],
-  "students": [],
+  "students": [
+    {
+      "id": "stu-1792395885503",
+      "driveId": "drv-1792393906460",
+      "driveTitle": "Campus Drive 2026",
+      "collegeId": "col-1792393906460",
+      "collegeName": "NIT Trichy",
+      "name": "Aarav Sharma",
+      "rollNumber": "CS2026-001",
+      "email": "aarav.sharma@example.com",
+      "phone": "9876543210",
+      "branch": "Computer Science",
+      "cgpa": 8.8,
+      "stage": "APPLIED",
+      "internId": "intern-1791972714546",
+      "internName": "muni",
+      "notes": "Manually added candidate"
+    }
+  ],
   "tpos": [],
   "followUps": [],
   "callSessions": [],
@@ -121,7 +139,21 @@
       "tag": null,
       "timestamp": "2026-10-18T12:21:55.234Z",
       "formattedTime": "05:51 PM"
+    },
+    {
+      "id": "msg-1792394925509-vu6h43",
+      "channel": "team",
+      "recipientId": null,
+      "recipientName": null,
+      "senderId": "user-admin",
+      "senderName": "Geonixa Admin",
+      "senderRole": "ADMIN",
+      "avatar": "AD",
+      "text": "QA Automated Verification Message",
+      "tag": null,
+      "timestamp": "2026-10-19T07:28:45.463Z",
+      "formattedTime": "12:58 PM"
     }
   ],
-  "updatedAt": "2026-10-19T07:12:22.897Z"
+  "updatedAt": "2026-10-19T07:44:45.558Z"
 }

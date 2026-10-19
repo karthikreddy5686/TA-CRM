@@ -2382,12 +2382,15 @@ export default function App() {
             </div>
 
             <button 
-              onClick={() => setIsLogoutModalOpen(true)} 
+              onClick={() => {
+                setIsMobileSidebarOpen(false);
+                setIsLogoutModalOpen(true);
+              }} 
               className="btn-icon" 
-              style={{ width: '26px', height: '26px', flexShrink: 0 }}
+              style={{ width: '32px', height: '32px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               title="Sign Out"
             >
-              <LogOut size={12} color="#71717a" />
+              <LogOut size={14} color="#71717a" />
             </button>
           </div>
         </div>
@@ -3143,8 +3146,7 @@ export default function App() {
         isOpen={isGlobalStudentModalOpen}
         onClose={() => setIsGlobalStudentModalOpen(false)}
         onSubmit={(newStudent) => {
-          setStudents(prev => [newStudent, ...prev]);
-          addToast(`Candidate "${newStudent.name}" added to drive!`, 'success');
+          handleAddStudentsBatch([newStudent]);
         }}
         drives={drives}
         users={users}
