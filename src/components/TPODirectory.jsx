@@ -779,6 +779,22 @@ export default function TPODirectory({
                         >
                           <Edit3 size={14} />
                         </button>
+
+                        {onDeleteTpo && (
+                          <button 
+                            onClick={() => {
+                              if (window.confirm(`Delete placement officer ${tpo.name} (${tpo.collegeName})?`)) {
+                                onDeleteTpo(tpo.id);
+                              }
+                            }}
+                            className="btn-icon"
+                            style={{ width: '30px', height: '30px', color: '#ef4444' }}
+                            title="Delete TPO"
+                            aria-label="Delete TPO"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -933,6 +949,22 @@ export default function TPODirectory({
                           >
                             <Edit3 size={13} />
                           </button>
+
+                          {onDeleteTpo && (
+                            <button 
+                              onClick={() => {
+                                if (window.confirm(`Delete placement officer ${tpo.name} (${tpo.collegeName})?`)) {
+                                  onDeleteTpo(tpo.id);
+                                }
+                              }}
+                              className="btn-icon"
+                              style={{ width: '28px', height: '28px', color: '#ef4444' }}
+                              title="Delete TPO"
+                              aria-label="Delete TPO"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>

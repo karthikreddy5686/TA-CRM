@@ -1489,7 +1489,16 @@ export default function App() {
       notes,
     };
 
-    setCallSessions(prev => [newSession, ...prev]);
+    setCallSessions(prev => {
+      const next = [newSession, ...prev];
+      try { localStorage.setItem('tacrm_calls', JSON.stringify(next)); } catch (e) {}
+      fetch('/api/storage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ callSessions: next })
+      }).catch(() => {});
+      return next;
+    });
 
     // 2. If follow-up requested, append to follow-ups with preserved phone
     if (needFollowUp && followUpDate) {
@@ -1506,7 +1515,16 @@ export default function App() {
         status: 'PENDING',
         notes: `Follow-up from call: ${notes}`,
       };
-      setFollowUps(prev => [newFup, ...prev]);
+      setFollowUps(prev => {
+        const next = [newFup, ...prev];
+        try { localStorage.setItem('tacrm_followups', JSON.stringify(next)); } catch (e) {}
+        fetch('/api/storage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ followUps: next })
+        }).catch(() => {});
+        return next;
+      });
     }
 
     // 3. Update TPO status if applicable
@@ -1553,18 +1571,27 @@ export default function App() {
 
     // 4. Update Candidate Stage and Notes if applicable
     if (dispositionData.recipientType === 'STUDENT' && dispositionData.relatedEntityId) {
-      setStudents(prev => prev.map(s => {
-        if (s.id === dispositionData.relatedEntityId) {
-          const updatedStage = (candidateStage && candidateStage !== 'UNCHANGED') ? candidateStage : s.stage;
-          const updatedNotes = notes ? `${s.notes ? s.notes + ' • ' : ''}${notes}` : s.notes;
-          return {
-            ...s,
-            stage: updatedStage,
-            notes: updatedNotes
-          };
-        }
-        return s;
-      }));
+      setStudents(prev => {
+        const next = prev.map(s => {
+          if (s.id === dispositionData.relatedEntityId) {
+            const updatedStage = (candidateStage && candidateStage !== 'UNCHANGED') ? candidateStage : s.stage;
+            const updatedNotes = notes ? `${s.notes ? s.notes + ' • ' : ''}${notes}` : s.notes;
+            return {
+              ...s,
+              stage: updatedStage,
+              notes: updatedNotes
+            };
+          }
+          return s;
+        });
+        try { localStorage.setItem('tacrm_students', JSON.stringify(next)); } catch (e) {}
+        fetch('/api/storage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ students: next })
+        }).catch(() => {});
+        return next;
+      });
       if (candidateStage && candidateStage !== 'UNCHANGED') {
         addToast(`Candidate updated to stage: ${candidateStage.replace(/_/g, ' ')}`, 'success');
       }
