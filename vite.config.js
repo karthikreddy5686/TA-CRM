@@ -97,6 +97,23 @@ function crmServerStoragePlugin() {
             return
           }
 
+          // Check if user is in deletedUserIds blacklist
+          const db = readDb()
+          const deletedList = Array.isArray(db.deletedUserIds) ? db.deletedUserIds : []
+          const inputPrefix = cleanUser.includes('@') ? cleanUser.split('@')[0] : cleanUser
+          if (
+            deletedList.some(d => {
+              const dl = (d || '').toLowerCase()
+              return dl === cleanUser || dl === inputPrefix
+            })
+          ) {
+            console.log(`[AUTH REJECTED] Account is deactivated/deleted: ${cleanUser}`)
+            res.statusCode = 403
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ error: 'This employee account has been deleted by the Administrator. Access denied.' }))
+            return
+          }
+
           // Check Master Super Admin credentials
           if (
             (cleanUser === 'admin@geonixa' || 
@@ -152,10 +169,7 @@ function crmServerStoragePlugin() {
           }
 
           // Check against persisted staff users
-          const db = readDb()
           const usersList = Array.isArray(db.users) ? db.users : []
-
-          const inputPrefix = cleanUser.includes('@') ? cleanUser.split('@')[0] : cleanUser
 
           const matched = usersList.find(u => {
             if (!u) return false
@@ -234,6 +248,13 @@ function crmServerStoragePlugin() {
               password: cleanPassword
             }
 
+            if (Array.isArray(current.deletedUserIds)) {
+              current.deletedUserIds = current.deletedUserIds.filter(d => {
+                const dl = (d || '').toLowerCase()
+                return dl !== (user.id || '').toLowerCase() && dl !== targetEmail && dl !== targetUsername
+              })
+            }
+
             if (idx >= 0) {
               existingUsers[idx] = { ...existingUsers[idx], ...sanitizedUser }
             } else {
@@ -272,11 +293,24 @@ function crmServerStoragePlugin() {
           }
           const current = readDb()
           const existing = Array.isArray(current.users) ? current.users : []
-          current.users = existing.filter(u => u.id !== userId && u.email !== userId)
+          if (!Array.isArray(current.deletedUserIds)) {
+            current.deletedUserIds = []
+          }
+          const target = existing.find(u => u.id === userId || (u.email && u.email.toLowerCase() === userId.toLowerCase()))
+          if (userId && !current.deletedUserIds.includes(userId)) {
+            current.deletedUserIds.push(userId)
+          }
+          if (target?.email && !current.deletedUserIds.includes(target.email.toLowerCase())) {
+            current.deletedUserIds.push(target.email.toLowerCase())
+          }
+          if (target?.username && !current.deletedUserIds.includes(target.username.toLowerCase())) {
+            current.deletedUserIds.push(target.username.toLowerCase())
+          }
+          current.users = existing.filter(u => u.id !== userId && (u.email || '').toLowerCase() !== userId.toLowerCase())
           current.updatedAt = new Date().toISOString()
           writeDb(current)
           res.setHeader('Content-Type', 'application/json')
-          res.end(JSON.stringify({ success: true, remaining: current.users.length }))
+          res.end(JSON.stringify({ success: true, remaining: current.users.length, deletedUserIds: current.deletedUserIds }))
         } catch (err) {
           res.statusCode = 500
           res.end(JSON.stringify({ error: err.message }))
@@ -440,25 +474,37 @@ function crmServerStoragePlugin() {
             const incoming = JSON.parse(body || '{}')
             const current = readDb()
             
-            // Smart merge users to never wipe custom provisioned staff
+            let deletedIds = Array.isArray(current.deletedUserIds) ? [...current.deletedUserIds] : []
+            if (Array.isArray(incoming.deletedUserIds)) {
+              incoming.deletedUserIds.forEach(id => {
+                const cleanId = (id || '').trim().toLowerCase()
+                if (cleanId && !deletedIds.includes(cleanId)) deletedIds.push(cleanId)
+              })
+            }
+
             let mergedUsers = current.users || []
-            if (Array.isArray(incoming.users) && incoming.users.length > 0) {
-              const uMap = new Map()
-              mergedUsers.forEach(u => {
-                const k = u.id || (u.email && u.email.toLowerCase())
-                if (k) uMap.set(k, u)
+            if (Array.isArray(incoming.users)) {
+              mergedUsers = incoming.users
+            }
+
+            // Always purge deleted users from mergedUsers
+            if (deletedIds.length > 0) {
+              mergedUsers = mergedUsers.filter(u => {
+                const kId = (u.id || '').toLowerCase()
+                const kEmail = (u.email || '').toLowerCase()
+                const kUser = (u.username || '').toLowerCase()
+                return !deletedIds.some(d => {
+                  const dl = (d || '').toLowerCase()
+                  return dl === kId || dl === kEmail || dl === kUser
+                })
               })
-              incoming.users.forEach(u => {
-                const k = u.id || (u.email && u.email.toLowerCase())
-                if (k) uMap.set(k, { ...(uMap.get(k) || {}), ...u })
-              })
-              mergedUsers = Array.from(uMap.values())
             }
 
             const updated = {
               ...current,
               ...incoming,
               users: mergedUsers,
+              deletedUserIds: deletedIds,
               updatedAt: new Date().toISOString(),
             }
             writeDb(updated)
@@ -502,7 +548,16 @@ function crmServerStoragePlugin() {
                 if (k) uMap.set(k, { ...(uMap.get(k) || {}), ...u })
               })
               
-              current.users = Array.from(uMap.values())
+              const deletedIds = Array.isArray(current.deletedUserIds) ? current.deletedUserIds : []
+              current.users = Array.from(uMap.values()).filter(u => {
+                const kId = (u.id || '').toLowerCase()
+                const kEmail = (u.email || '').toLowerCase()
+                const kUser = (u.username || '').toLowerCase()
+                return !deletedIds.some(d => {
+                  const dl = (d || '').toLowerCase()
+                  return dl === kId || dl === kEmail || dl === kUser
+                })
+              })
               current.updatedAt = new Date().toISOString()
               writeDb(current)
               res.setHeader('Content-Type', 'application/json')

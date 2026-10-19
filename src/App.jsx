@@ -84,19 +84,29 @@ export default function App() {
       return null;
     }
 
-    // 1. Check if URL contains 1-click mobile login token (?auth=...)
+    // 1. If URL contains 1-click mobile invite token (?auth=...), defer to LoginScreen for authoritative server-side validation against deleted status!
     const tokenResult = parseUrlTokens();
     if (tokenResult?.type === 'AUTH_USER' && tokenResult.user) {
-      persistUserToDevice(tokenResult.user);
-      try { localStorage.setItem('tacrm_auth_user', JSON.stringify(tokenResult.user)); } catch (e) {}
-      cleanUrlTokens();
-      return tokenResult.user;
+      // Return null so LoginScreen mounts and asynchronously validates against /api/storage deleted records.
+      // If deleted, LoginScreen immediately rejects with a clear error notice.
+      return null;
     }
 
     const savedUser = localStorage.getItem('tacrm_auth_user');
     if (!savedUser) return null;
     try {
       let user = JSON.parse(savedUser);
+      if (user && user.role !== 'ADMIN') {
+        const deletedRaw = localStorage.getItem('tacrm_deleted_user_ids');
+        if (deletedRaw) {
+          const deletedList = JSON.parse(deletedRaw);
+          const uKeys = [user.id, user.email, user.username].filter(Boolean).map(s => String(s).toLowerCase());
+          if (deletedList.some(d => uKeys.includes(String(d).toLowerCase()))) {
+            localStorage.removeItem('tacrm_auth_user');
+            return null;
+          }
+        }
+      }
       if (user && (user.name === 'Main HR Manager' || user.name === 'Main HR')) {
         user = { ...user, name: 'HR Manager' };
         localStorage.setItem('tacrm_auth_user', JSON.stringify(user));
@@ -232,35 +242,42 @@ export default function App() {
       .then(res => res.ok ? res.json() : null)
       .then(data => {
         if (!data) return;
-        if (Array.isArray(data.users) && data.users.length > 0) {
-          const sanitized = sanitizeUsers(data.users);
-          
-          // Cross-merge with any local users that might be in localStorage from this device
-          const localSaved = localStorage.getItem('tacrm_users');
-          let merged = [...sanitized];
-          if (localSaved) {
-            try {
-              const localUsers = JSON.parse(localSaved);
-              if (Array.isArray(localUsers)) {
-                localUsers.forEach(lu => {
-                  if (lu && (lu.email || lu.name) && !merged.some(su => su.id === lu.id || (su.email && lu.email && su.email.toLowerCase() === lu.email.toLowerCase()))) {
-                    merged.push(lu);
-                    // Upload this newly found local user to central server so all other devices see them
-                    fetch('/api/users/add', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ user: lu })
-                    }).catch(() => {});
-                  }
-                });
-              }
-            } catch (e) {}
-          }
-
-          setUsers(merged);
+        const deletedIds = Array.isArray(data.deletedUserIds) ? data.deletedUserIds.map(d => String(d).toLowerCase()) : [];
+        if (deletedIds.length > 0) {
           try {
-            localStorage.setItem('tacrm_users', JSON.stringify(merged));
+            const curLocalDeleted = JSON.parse(localStorage.getItem('tacrm_deleted_user_ids') || '[]');
+            const comb = Array.from(new Set([...curLocalDeleted, ...deletedIds]));
+            localStorage.setItem('tacrm_deleted_user_ids', JSON.stringify(comb));
           } catch (e) {}
+        }
+
+        if (Array.isArray(data.users) && data.users.length > 0) {
+          // Server users is the authoritative ground truth - purge any deleted accounts
+          const activeUsers = data.users.filter(u => {
+            if (!u) return false;
+            const keys = [u.id, u.email, u.username].filter(Boolean).map(s => String(s).toLowerCase());
+            return !deletedIds.some(d => keys.includes(d));
+          });
+          const sanitized = sanitizeUsers(activeUsers);
+          setUsers(sanitized);
+          try {
+            localStorage.setItem('tacrm_users', JSON.stringify(sanitized));
+          } catch (e) {}
+
+          // Real-time security revocation: if logged in user is deleted, terminate session
+          if (currentUser && currentUser.role !== 'ADMIN') {
+            const currentKeys = [currentUser.id, currentUser.email, currentUser.username].filter(Boolean).map(s => String(s).toLowerCase());
+            const isRevoked = deletedIds.some(d => currentKeys.includes(d)) ||
+              !sanitized.some(u => {
+                const uKeys = [u.id, u.email, u.username].filter(Boolean).map(s => String(s).toLowerCase());
+                return currentKeys.some(ck => uKeys.includes(ck));
+              });
+            if (isRevoked) {
+              console.warn('[AUTH REVOKED] Current employee session was deleted by Administrator. Logging out.');
+              try { localStorage.removeItem('tacrm_auth_user'); } catch (e) {}
+              setCurrentUser(null);
+            }
+          }
         }
         if (Array.isArray(data.drives)) {
           setDrives(sanitizeDrives(data.drives));
@@ -358,24 +375,40 @@ export default function App() {
             setCallSessions(cleanCalls);
             try { localStorage.setItem('tacrm_calls', JSON.stringify(cleanCalls)); } catch (e) {}
           }
-          if (data && Array.isArray(data.users) && data.users.length > 0) {
-            setUsers(prev => {
-              const uMap = new Map();
-              data.users.forEach(u => {
-                if (u && (u.email || u.id)) {
-                  uMap.set(u.id || u.email.toLowerCase(), u);
-                }
-              });
-              prev.forEach(u => {
-                const k = u.id || (u.email && u.email.toLowerCase());
-                if (k && !uMap.has(k)) {
-                  uMap.set(k, u);
-                }
-              });
-              const next = sanitizeUsers(Array.from(uMap.values()));
-              try { localStorage.setItem('tacrm_users', JSON.stringify(next)); } catch (e) {}
-              return next;
+          const deletedIds = Array.isArray(data.deletedUserIds) ? data.deletedUserIds.map(d => String(d).toLowerCase()) : [];
+          if (deletedIds.length > 0) {
+            try {
+              const curLocalDeleted = JSON.parse(localStorage.getItem('tacrm_deleted_user_ids') || '[]');
+              const comb = Array.from(new Set([...curLocalDeleted, ...deletedIds]));
+              localStorage.setItem('tacrm_deleted_user_ids', JSON.stringify(comb));
+            } catch (e) {}
+          }
+
+          if (data && Array.isArray(data.users)) {
+            // Ground truth server users - filter out deleted accounts
+            const activeUsers = data.users.filter(u => {
+              if (!u) return false;
+              const keys = [u.id, u.email, u.username].filter(Boolean).map(s => String(s).toLowerCase());
+              return !deletedIds.some(d => keys.includes(d));
             });
+            const next = sanitizeUsers(activeUsers);
+            setUsers(next);
+            try { localStorage.setItem('tacrm_users', JSON.stringify(next)); } catch (e) {}
+
+            // Real-time security revocation: if logged in user is deleted, terminate session
+            if (currentUser && currentUser.role !== 'ADMIN') {
+              const currentKeys = [currentUser.id, currentUser.email, currentUser.username].filter(Boolean).map(s => String(s).toLowerCase());
+              const isRevoked = deletedIds.some(d => currentKeys.includes(d)) ||
+                !next.some(u => {
+                  const uKeys = [u.id, u.email, u.username].filter(Boolean).map(s => String(s).toLowerCase());
+                  return currentKeys.some(ck => uKeys.includes(ck));
+                });
+              if (isRevoked) {
+                console.warn('[AUTH REVOKED] Current employee session was deleted by Administrator. Logging out.');
+                try { localStorage.removeItem('tacrm_auth_user'); } catch (e) {}
+                setCurrentUser(null);
+              }
+            }
           }
         })
         .catch(() => {});
@@ -2061,18 +2094,51 @@ export default function App() {
   };
 
   const handleDeleteUser = async (userId) => {
-    setUsers(prev => {
-      const next = sanitizeUsers(prev.filter(u => u.id !== userId));
-      try { localStorage.setItem('tacrm_users', JSON.stringify(next)); } catch (e) {}
-      return next;
-    });
+    const target = users.find(u => u.id === userId);
+    const targetEmail = target?.email || '';
+    const targetUsername = target?.username || '';
+    const targetKeys = [userId, targetEmail, targetUsername].filter(Boolean).map(s => String(s).toLowerCase());
 
-    // Cloud sync via Supabase if configured
+    // 1. Blacklist locally in localStorage
+    let curDeleted = [];
+    try {
+      curDeleted = JSON.parse(localStorage.getItem('tacrm_deleted_user_ids') || '[]');
+    } catch (e) {}
+    const nextDeleted = Array.from(new Set([...curDeleted, ...targetKeys]));
+    try { localStorage.setItem('tacrm_deleted_user_ids', JSON.stringify(nextDeleted)); } catch (e) {}
+
+    // 2. Filter out from users state and localStorage
+    const nextUsers = sanitizeUsers(users.filter(u => u.id !== userId && (!targetEmail || (u.email || '').toLowerCase() !== targetEmail.toLowerCase())));
+    setUsers(nextUsers);
+    try { localStorage.setItem('tacrm_users', JSON.stringify(nextUsers)); } catch (e) {}
+
+    // 3. Clear auth user session if it happens to be the deleted user
+    try {
+      const authUserRaw = localStorage.getItem('tacrm_auth_user');
+      if (authUserRaw) {
+        const authUser = JSON.parse(authUserRaw);
+        const authKeys = [authUser.id, authUser.email, authUser.username].filter(Boolean).map(s => String(s).toLowerCase());
+        if (targetKeys.some(tk => authKeys.includes(tk))) {
+          localStorage.removeItem('tacrm_auth_user');
+        }
+      }
+    } catch (e) {}
+
+    // 4. Cloud sync via Supabase if configured
     if (isSupabaseConfigured()) {
       deleteSupabaseUser(userId).catch(() => {});
     }
 
+    // 5. Send to server: persist to /api/storage with deletedUserIds, and call DELETE /api/users/${userId}
     try {
+      await fetch('/api/storage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          users: nextUsers,
+          deletedUserIds: nextDeleted
+        })
+      });
       const res = await fetch(`/api/users/${userId}`, { method: 'DELETE' });
       return res.ok;
     } catch (err) {

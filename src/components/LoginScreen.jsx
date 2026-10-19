@@ -11,7 +11,7 @@ import {
   Smartphone,
   Download
 } from 'lucide-react';
-import { parseUrlTokens, cleanUrlTokens, persistUserToDevice, persistBulkUsersToDevice } from '../utils/staffSync';
+import { parseUrlTokens, cleanUrlTokens, persistUserToDevice, persistBulkUsersToDevice, isUserDeletedLocally } from '../utils/staffSync';
 import { fetchSupabaseUsers, isSupabaseConfigured } from '../services/supabaseSync';
 
 export default function LoginScreen({ onLogin, users = [], onInstallApp, isAppInstalled = false }) {
@@ -28,19 +28,71 @@ export default function LoginScreen({ onLogin, users = [], onInstallApp, isAppIn
       const tokenResult = parseUrlTokens();
       if (tokenResult) {
         if (tokenResult.type === 'AUTH_USER' && tokenResult.user) {
-          // Instant 1-Click Mobile Login: Save to device and log in immediately
-          persistUserToDevice(tokenResult.user);
+          const user = tokenResult.user;
+          const userKeys = [user.id, user.email, user.username].filter(Boolean).map(s => String(s).toLowerCase());
+
+          // Step 1: Check local device blacklist
+          let isDeleted = isUserDeletedLocally(user);
+
+          // Step 2: Authoritative real-time check against server storage
           try {
-            localStorage.setItem('tacrm_auth_user', JSON.stringify(tokenResult.user));
+            const res = await fetch('/api/storage');
+            if (res.ok) {
+              const storageData = await res.json();
+              const serverDeleted = Array.isArray(storageData.deletedUserIds) ? storageData.deletedUserIds : [];
+              const serverUsers = Array.isArray(storageData.users) ? storageData.users : [];
+
+              // Persist server deleted list to device
+              try {
+                const localDeleted = JSON.parse(localStorage.getItem('tacrm_deleted_user_ids') || '[]');
+                const combined = Array.from(new Set([...localDeleted, ...serverDeleted.map(k => String(k).toLowerCase())]));
+                localStorage.setItem('tacrm_deleted_user_ids', JSON.stringify(combined));
+              } catch (e) {}
+
+              // Check if user is in server deleted list
+              if (serverDeleted.some(k => userKeys.includes(String(k).toLowerCase()))) {
+                isDeleted = true;
+              } else if (serverUsers.length > 0 && user.role !== 'ADMIN') {
+                // If server has users provisioned, make sure this user exists in active users
+                const existsOnServer = serverUsers.some(su => 
+                  (su.id && su.id === user.id) ||
+                  (su.email && user.email && su.email.toLowerCase() === user.email.toLowerCase()) ||
+                  (su.username && user.username && su.username.toLowerCase() === user.username.toLowerCase())
+                );
+                if (!existsOnServer) {
+                  isDeleted = true;
+                }
+              }
+            }
+          } catch (e) {}
+
+          // If deleted, block and purge
+          if (isDeleted && user.role !== 'ADMIN') {
+            console.warn(`[AUTH REJECTED] Token belongs to deleted employee: ${user.email || user.name}`);
+            cleanUrlTokens();
+            try {
+              localStorage.removeItem('tacrm_auth_user');
+              const localUsers = JSON.parse(localStorage.getItem('tacrm_users') || '[]');
+              const cleaned = localUsers.filter(u => !userKeys.includes((u.id || '').toLowerCase()) && !userKeys.includes((u.email || '').toLowerCase()));
+              localStorage.setItem('tacrm_users', JSON.stringify(cleaned));
+            } catch (e) {}
+            setErrorMessage('⛔ This employee account has been deleted by the Administrator. This invite link is no longer valid.');
+            return;
+          }
+
+          // Instant 1-Click Mobile Login: Save to device and log in immediately
+          persistUserToDevice(user);
+          try {
+            localStorage.setItem('tacrm_auth_user', JSON.stringify(user));
           } catch (e) {}
           cleanUrlTokens();
-          onLogin(tokenResult.user);
+          onLogin(user);
           return;
         } else if (tokenResult.type === 'SYNC_USERS' && Array.isArray(tokenResult.users)) {
-          // Master Staff Sync: Save all employees to this phone/PC
+          // Master Staff Sync: Save all non-deleted employees to this phone/PC
           persistBulkUsersToDevice(tokenResult.users);
           cleanUrlTokens();
-          setSyncNotice(`✅ Successfully synchronized ${tokenResult.users.length} staff accounts to this device! You can now log in.`);
+          setSyncNotice(`✅ Successfully synchronized staff accounts to this device! You can now log in.`);
         }
       }
 
@@ -147,6 +199,13 @@ export default function LoginScreen({ onLogin, users = [], onInstallApp, isAppIn
         body: JSON.stringify({ username: inputEmail, password: cleanPassword })
       });
 
+      if (response.status === 403) {
+        const errData = await response.json().catch(() => ({}));
+        setErrorMessage(errData.error || '⛔ This employee account has been deleted by the Administrator. Access denied.');
+        setIsLoading(false);
+        return;
+      }
+
       if (response.ok) {
         const data = await response.json();
         if (data && data.success && data.user) {
@@ -215,8 +274,29 @@ export default function LoginScreen({ onLogin, users = [], onInstallApp, isAppIn
       }
     } catch (err) {}
 
-    // Match provisioned staff by email, username prefix, full name, name without spaces, or ID
+    // Filter out blacklisted/deleted accounts from allAccounts
+    let deletedList = [];
+    try {
+      deletedList = JSON.parse(localStorage.getItem('tacrm_deleted_user_ids') || '[]');
+    } catch (e) {}
+
     const inputPrefix = normalizedInput.includes('@') ? normalizedInput.split('@')[0] : normalizedInput;
+
+    if (deletedList.some(d => {
+      const dl = String(d).toLowerCase();
+      return dl === normalizedInput || dl === inputPrefix;
+    })) {
+      setErrorMessage('⛔ This employee account has been deleted by the Administrator. Access denied.');
+      setIsLoading(false);
+      return;
+    }
+
+    allAccounts = allAccounts.filter(acc => {
+      if (!acc) return false;
+      if (acc.role === 'ADMIN') return true;
+      const keys = [acc.id, acc.email, acc.username].filter(Boolean).map(s => String(s).toLowerCase());
+      return !deletedList.some(dk => keys.includes(String(dk).toLowerCase()));
+    });
     const matched = allAccounts.find(acc => {
       if (!acc) return false;
       const accEmail = (acc.email || '').trim().toLowerCase();

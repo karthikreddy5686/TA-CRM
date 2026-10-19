@@ -184,9 +184,28 @@ export function cleanUrlTokens() {
   }
 }
 
+// Helper to verify if an account is registered in the deleted/blacklisted records
+export function isUserDeletedLocally(user) {
+  if (!user) return false;
+  try {
+    const raw = localStorage.getItem('tacrm_deleted_user_ids');
+    if (!raw) return false;
+    const deletedList = JSON.parse(raw);
+    if (!Array.isArray(deletedList)) return false;
+    const keys = [user.id, user.email, user.username].filter(Boolean).map(s => String(s).toLowerCase());
+    return deletedList.some(d => keys.includes(String(d).toLowerCase()));
+  } catch (e) {
+    return false;
+  }
+}
+
 // Save or merge a user into localStorage('tacrm_users') safely
 export function persistUserToDevice(user) {
   if (!user || (!user.email && !user.username)) return;
+  if (isUserDeletedLocally(user) && user.role !== 'ADMIN') {
+    console.warn(`[STAFF SYNC] Refusing to persist deleted account: ${user.email || user.id}`);
+    return;
+  }
   try {
     const saved = localStorage.getItem('tacrm_users');
     let list = [];
@@ -229,10 +248,11 @@ export function persistBulkUsersToDevice(newUsers) {
     const map = new Map();
     list.forEach(u => {
       const k = u.id || (u.email && u.email.toLowerCase());
-      if (k) map.set(k, u);
+      if (k && !isUserDeletedLocally(u)) map.set(k, u);
     });
 
     newUsers.forEach(u => {
+      if (isUserDeletedLocally(u) && u.role !== 'ADMIN') return;
       const k = u.id || (u.email && u.email.toLowerCase());
       if (k) map.set(k, { ...(map.get(k) || {}), ...u });
     });

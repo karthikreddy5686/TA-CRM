@@ -73,8 +73,17 @@ export default async function handler(req, res) {
       const dbFile = path.resolve(process.cwd(), 'src/data/crm_persisted_storage.json');
       if (fs.existsSync(dbFile)) {
         const db = JSON.parse(fs.readFileSync(dbFile, 'utf8'));
-        const usersList = Array.isArray(db.users) ? db.users : [];
+        const deletedList = Array.isArray(db.deletedUserIds) ? db.deletedUserIds : [];
         const inputPrefix = cleanUser.includes('@') ? cleanUser.split('@')[0] : cleanUser;
+        if (
+          deletedList.some(d => {
+            const dl = (d || '').toLowerCase();
+            return dl === cleanUser || dl === inputPrefix;
+          })
+        ) {
+          return res.status(403).json({ success: false, error: 'This employee account has been deleted by the Administrator. Access denied.' });
+        }
+        const usersList = Array.isArray(db.users) ? db.users : [];
 
         const matched = usersList.find(u => {
           if (!u) return false;
