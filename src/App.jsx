@@ -74,7 +74,7 @@ import { parseUrlTokens, cleanUrlTokens, persistUserToDevice, persistBulkUsersTo
 import { fetchSupabaseUsers, upsertSupabaseUser, deleteSupabaseUser, isSupabaseConfigured } from './services/supabaseSync';
 
 export default function App() {
-  // Authentication State - persists login session, supports 1-click mobile invite token
+  // Authentication State - persists login session across page refreshes
   const [currentUser, setCurrentUser] = useState(() => {
     if (typeof window !== 'undefined' && (window.location.search.includes('logout=true') || window.location.search.includes('logout=1'))) {
       try {
@@ -84,37 +84,42 @@ export default function App() {
       return null;
     }
 
-    // 1. If URL contains 1-click mobile invite token (?auth=...), defer to LoginScreen for authoritative server-side validation against deleted status!
+    // 1. Check existing saved user session in localStorage first (persists across all refreshes)
+    const savedUser = localStorage.getItem('tacrm_auth_user');
+    if (savedUser) {
+      try {
+        let user = JSON.parse(savedUser);
+        if (user && user.role !== 'ADMIN') {
+          const deletedRaw = localStorage.getItem('tacrm_deleted_user_ids');
+          if (deletedRaw) {
+            const deletedList = JSON.parse(deletedRaw);
+            const uKeys = [user.id, user.email, user.username].filter(Boolean).map(s => String(s).toLowerCase());
+            if (deletedList.some(d => uKeys.includes(String(d).toLowerCase()))) {
+              localStorage.removeItem('tacrm_auth_user');
+              return null;
+            }
+          }
+        }
+        if (user && (user.name === 'Main HR Manager' || user.name === 'Main HR')) {
+          user = { ...user, name: 'HR Manager' };
+          localStorage.setItem('tacrm_auth_user', JSON.stringify(user));
+        }
+        // Active session confirmed - clean any query tokens from address bar without reloading
+        cleanUrlTokens();
+        return user;
+      } catch (e) {
+        // Parse error, fall through
+      }
+    }
+
+    // 2. Only if no active session exists, check for 1-click mobile invite token (?auth=...)
     const tokenResult = parseUrlTokens();
     if (tokenResult?.type === 'AUTH_USER' && tokenResult.user) {
-      // Return null so LoginScreen mounts and asynchronously validates against /api/storage deleted records.
-      // If deleted, LoginScreen immediately rejects with a clear error notice.
+      // Defer to LoginScreen for authoritative server-side validation against deleted status
       return null;
     }
 
-    const savedUser = localStorage.getItem('tacrm_auth_user');
-    if (!savedUser) return null;
-    try {
-      let user = JSON.parse(savedUser);
-      if (user && user.role !== 'ADMIN') {
-        const deletedRaw = localStorage.getItem('tacrm_deleted_user_ids');
-        if (deletedRaw) {
-          const deletedList = JSON.parse(deletedRaw);
-          const uKeys = [user.id, user.email, user.username].filter(Boolean).map(s => String(s).toLowerCase());
-          if (deletedList.some(d => uKeys.includes(String(d).toLowerCase()))) {
-            localStorage.removeItem('tacrm_auth_user');
-            return null;
-          }
-        }
-      }
-      if (user && (user.name === 'Main HR Manager' || user.name === 'Main HR')) {
-        user = { ...user, name: 'HR Manager' };
-        localStorage.setItem('tacrm_auth_user', JSON.stringify(user));
-      }
-      return user;
-    } catch (e) {
-      return null;
-    }
+    return null;
   });
 
   // Navigation State
@@ -238,7 +243,7 @@ export default function App() {
 
   // Validate active employee session on initial load against central server
   useEffect(() => {
-    if (currentUser && currentUser.role !== 'ADMIN') {
+    if (currentUser && currentUser.role !== 'ADMIN' && currentUser.password) {
       fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -247,8 +252,8 @@ export default function App() {
           password: currentUser.password
         })
       }).then(res => {
-        if (res.status === 403 || res.status === 401) {
-          console.warn('[AUTH REVOKED] Current employee session is no longer valid or was deleted.');
+        if (res.status === 403) {
+          console.warn('[AUTH REVOKED] Current employee session was deleted by Administrator.');
           try { localStorage.removeItem('tacrm_auth_user'); } catch (e) {}
           setCurrentUser(null);
         }
@@ -287,11 +292,7 @@ export default function App() {
           // Real-time security revocation: if logged in user is deleted, terminate session
           if (currentUser && currentUser.role !== 'ADMIN') {
             const currentKeys = [currentUser.id, currentUser.email, currentUser.username].filter(Boolean).map(s => String(s).toLowerCase());
-            const isRevoked = deletedIds.some(d => currentKeys.includes(d)) ||
-              !sanitized.some(u => {
-                const uKeys = [u.id, u.email, u.username].filter(Boolean).map(s => String(s).toLowerCase());
-                return currentKeys.some(ck => uKeys.includes(ck));
-              });
+            const isRevoked = deletedIds.some(d => currentKeys.includes(d));
             if (isRevoked) {
               console.warn('[AUTH REVOKED] Current employee session was deleted by Administrator. Logging out.');
               try { localStorage.removeItem('tacrm_auth_user'); } catch (e) {}
@@ -418,11 +419,7 @@ export default function App() {
             // Real-time security revocation: if logged in user is deleted, terminate session
             if (currentUser && currentUser.role !== 'ADMIN') {
               const currentKeys = [currentUser.id, currentUser.email, currentUser.username].filter(Boolean).map(s => String(s).toLowerCase());
-              const isRevoked = deletedIds.some(d => currentKeys.includes(d)) ||
-                !next.some(u => {
-                  const uKeys = [u.id, u.email, u.username].filter(Boolean).map(s => String(s).toLowerCase());
-                  return currentKeys.some(ck => uKeys.includes(ck));
-                });
+              const isRevoked = deletedIds.some(d => currentKeys.includes(d));
               if (isRevoked) {
                 console.warn('[AUTH REVOKED] Current employee session was deleted by Administrator. Logging out.');
                 try { localStorage.removeItem('tacrm_auth_user'); } catch (e) {}
@@ -673,7 +670,10 @@ export default function App() {
   const handleLogin = (user) => {
     setCurrentUser(user);
     setUsers(prev => prev.some(u => u.id === user.id || (u.email && user.email && u.email.toLowerCase() === user.email.toLowerCase())) ? prev : [user, ...prev]);
-    localStorage.setItem('tacrm_auth_user', JSON.stringify(user));
+    try {
+      localStorage.setItem('tacrm_auth_user', JSON.stringify(user));
+    } catch (e) {}
+    cleanUrlTokens();
 
     // Immediately fetch latest centralized database state so the logged in account is 100% in sync
     fetch('/api/storage')
