@@ -424,18 +424,9 @@ export default function LoginScreen({ onLogin, users = [], onInstallApp, isAppIn
             <img 
               src="/flux-logo.png" 
               alt="Flux" 
-              style={{ height: '52px', width: 'auto', objectFit: 'contain', borderRadius: '10px', boxShadow: '0 4px 6px -1px rgba(21, 67, 96, 0.25)' }} 
+              style={{ height: '52px', width: 'auto', objectFit: 'contain', borderRadius: 'var(--radius-sm)' }} 
             />
           </div>
-          <h1 style={{ 
-            fontSize: '1.45rem', 
-            fontWeight: 800, 
-            color: '#154360', 
-            letterSpacing: '-0.02em', 
-            margin: 0 
-          }}>
-            Flux TA CRM
-          </h1>
           <p style={{ 
             fontSize: '0.85rem', 
             color: '#64748b', 
