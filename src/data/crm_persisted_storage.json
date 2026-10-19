@@ -58,7 +58,22 @@
       "status": "online"
     }
   ],
-  "drives": [],
+  "drives": [
+    {
+      "id": "drv-1792393906460",
+      "title": "Campus Drive 2026",
+      "collegeId": "col-1792393906460",
+      "collegeName": "NIT Trichy",
+      "jobRole": "Software Engineer",
+      "ctc": "Competitive",
+      "criteria": "Eligible candidates",
+      "driveDate": "2026-10-19",
+      "status": "CONFIRMED",
+      "registeredStudents": 0,
+      "shortlistedStudents": 0,
+      "createdById": "admin"
+    }
+  ],
   "students": [],
   "tpos": [],
   "followUps": [],
@@ -108,5 +123,5 @@
       "formattedTime": "05:51 PM"
     }
   ],
-  "updatedAt": "2026-10-18T12:45:00.000Z"
+  "updatedAt": "2026-10-19T07:12:22.897Z"
 }

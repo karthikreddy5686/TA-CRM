@@ -303,10 +303,10 @@ export default function App() {
     }
   }, []);
 
-  // Multi-device sync: Gentle sync when returning to the tab or on 60s interval
+  // Multi-device sync: Real-time sync across devices & accounts when returning to tab or on 15s interval
   useEffect(() => {
-    const refreshUsers = () => {
-      // 1. Supabase Cloud Sync
+    const refreshDatabase = () => {
+      // 1. Supabase Cloud Sync for Users
       if (isSupabaseConfigured()) {
         fetchSupabaseUsers().then(cloudUsers => {
           if (Array.isArray(cloudUsers) && cloudUsers.length > 0) {
@@ -328,10 +328,36 @@ export default function App() {
         }).catch(() => {});
       }
 
-      // 2. Local Vite Backend (when running dev server)
-      fetch('/api/users')
+      // 2. Centralized Server Storage Sync (/api/storage)
+      fetch('/api/storage')
         .then(res => res.ok ? res.json() : null)
         .then(data => {
+          if (!data) return;
+          if (Array.isArray(data.drives)) {
+            const cleanDrives = sanitizeDrives(data.drives);
+            setDrives(cleanDrives);
+            try { localStorage.setItem('tacrm_drives', JSON.stringify(cleanDrives)); } catch (e) {}
+          }
+          if (Array.isArray(data.students)) {
+            const cleanStudents = sanitizeStudents(data.students);
+            setStudents(cleanStudents);
+            try { localStorage.setItem('tacrm_students', JSON.stringify(cleanStudents)); } catch (e) {}
+          }
+          if (Array.isArray(data.tpos)) {
+            const cleanTpos = sanitizeTpos(data.tpos);
+            setTpos(cleanTpos);
+            try { localStorage.setItem('tacrm_tpos', JSON.stringify(cleanTpos)); } catch (e) {}
+          }
+          if (Array.isArray(data.followUps)) {
+            const cleanFollowUps = sanitizeFollowUps(data.followUps);
+            setFollowUps(cleanFollowUps);
+            try { localStorage.setItem('tacrm_followups', JSON.stringify(cleanFollowUps)); } catch (e) {}
+          }
+          if (Array.isArray(data.callSessions)) {
+            const cleanCalls = sanitizeCalls(data.callSessions);
+            setCallSessions(cleanCalls);
+            try { localStorage.setItem('tacrm_calls', JSON.stringify(cleanCalls)); } catch (e) {}
+          }
           if (data && Array.isArray(data.users) && data.users.length > 0) {
             setUsers(prev => {
               const uMap = new Map();
@@ -355,10 +381,18 @@ export default function App() {
         .catch(() => {});
     };
 
-    window.addEventListener('focus', refreshUsers);
-    const interval = setInterval(refreshUsers, 60000);
+    const handleFocusOrVisible = () => {
+      if (document.visibilityState === 'visible') {
+        refreshDatabase();
+      }
+    };
+
+    window.addEventListener('focus', refreshDatabase);
+    document.addEventListener('visibilitychange', handleFocusOrVisible);
+    const interval = setInterval(refreshDatabase, 15000);
     return () => {
-      window.removeEventListener('focus', refreshUsers);
+      window.removeEventListener('focus', refreshDatabase);
+      document.removeEventListener('visibilitychange', handleFocusOrVisible);
       clearInterval(interval);
     };
   }, []);
@@ -587,6 +621,39 @@ export default function App() {
     setCurrentUser(user);
     setUsers(prev => prev.some(u => u.id === user.id || (u.email && user.email && u.email.toLowerCase() === user.email.toLowerCase())) ? prev : [user, ...prev]);
     localStorage.setItem('tacrm_auth_user', JSON.stringify(user));
+
+    // Immediately fetch latest centralized database state so the logged in account is 100% in sync
+    fetch('/api/storage')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (!data) return;
+        if (Array.isArray(data.drives)) {
+          const cleanDrives = sanitizeDrives(data.drives);
+          setDrives(cleanDrives);
+          try { localStorage.setItem('tacrm_drives', JSON.stringify(cleanDrives)); } catch (e) {}
+        }
+        if (Array.isArray(data.students)) {
+          const cleanStudents = sanitizeStudents(data.students);
+          setStudents(cleanStudents);
+          try { localStorage.setItem('tacrm_students', JSON.stringify(cleanStudents)); } catch (e) {}
+        }
+        if (Array.isArray(data.tpos)) {
+          const cleanTpos = sanitizeTpos(data.tpos);
+          setTpos(cleanTpos);
+          try { localStorage.setItem('tacrm_tpos', JSON.stringify(cleanTpos)); } catch (e) {}
+        }
+        if (Array.isArray(data.followUps)) {
+          const cleanFollowUps = sanitizeFollowUps(data.followUps);
+          setFollowUps(cleanFollowUps);
+          try { localStorage.setItem('tacrm_followups', JSON.stringify(cleanFollowUps)); } catch (e) {}
+        }
+        if (Array.isArray(data.callSessions)) {
+          const cleanCalls = sanitizeCalls(data.callSessions);
+          setCallSessions(cleanCalls);
+          try { localStorage.setItem('tacrm_calls', JSON.stringify(cleanCalls)); } catch (e) {}
+        }
+      })
+      .catch(() => {});
   };
 
   const handleLogout = () => {
@@ -1085,6 +1152,21 @@ export default function App() {
     localStorage.setItem('tacrm_form_responses', JSON.stringify(WORKING_DEMO_DATA.formResponses));
     localStorage.setItem('tacrm_blast_logs', JSON.stringify(WORKING_DEMO_DATA.blastLogs));
 
+    fetch('/api/storage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        colleges: WORKING_DEMO_DATA.colleges,
+        tpos: WORKING_DEMO_DATA.tpos,
+        drives: WORKING_DEMO_DATA.drives,
+        students: WORKING_DEMO_DATA.students,
+        followUps: WORKING_DEMO_DATA.followUps,
+        callSessions: WORKING_DEMO_DATA.callSessions,
+        formResponses: WORKING_DEMO_DATA.formResponses,
+        blastLogs: WORKING_DEMO_DATA.blastLogs
+      })
+    }).catch(() => {});
+
     webAudio.playCallConnected();
     addToast('⚡ Working demo data loaded! All campus recruitment modules are live.', 'success');
   };
@@ -1492,17 +1574,53 @@ export default function App() {
     setDispositionData(null);
   };
 
-  // Individual Item Deletion Handlers with Web App Toast Feedback
+  // Individual Item Deletion Handlers with Full Multi-Account & Server Sync
   const handleDeleteStudent = (studentId) => {
-    setStudents(prev => prev.filter(s => s.id !== studentId));
-    addToast('Candidate removed from roster', 'info');
+    setStudents(prev => {
+      const next = prev.filter(s => s.id !== studentId);
+      try { localStorage.setItem('tacrm_students', JSON.stringify(next)); } catch (e) {}
+      fetch('/api/storage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ students: next })
+      }).catch(() => {});
+      return next;
+    });
+    addToast('Candidate removed from roster & synced across accounts', 'info');
   };
 
   const handleDeleteDrive = (driveId) => {
-    setDrives(prev => prev.filter(d => d.id !== driveId));
-    setStudents(prev => prev.filter(s => s.driveId !== driveId));
-    setFormResponses(prev => prev.filter(r => r.driveId !== driveId));
-    setBlastLogs(prev => prev.filter(b => b.driveId !== driveId));
+    let nextStudents = [];
+    setDrives(prevDrives => {
+      const nextDrives = prevDrives.filter(d => d.id !== driveId);
+      try { localStorage.setItem('tacrm_drives', JSON.stringify(nextDrives)); } catch (e) {}
+      setStudents(prevStudents => {
+        nextStudents = prevStudents.filter(s => s.driveId !== driveId);
+        try { localStorage.setItem('tacrm_students', JSON.stringify(nextStudents)); } catch (e) {}
+        return nextStudents;
+      });
+      fetch('/api/storage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ drives: nextDrives, students: nextStudents })
+      }).catch(() => {});
+      return nextDrives;
+    });
+    setFormResponses(prev => {
+      const next = prev.filter(r => r.driveId !== driveId);
+      try { localStorage.setItem('tacrm_form_responses', JSON.stringify(next)); } catch (e) {}
+      fetch('/api/storage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ formResponses: next })
+      }).catch(() => {});
+      return next;
+    });
+    setBlastLogs(prev => {
+      const next = prev.filter(b => b.driveId !== driveId);
+      try { localStorage.setItem('tacrm_blast_logs', JSON.stringify(next)); } catch (e) {}
+      return next;
+    });
     addToast('Campus drive and linked candidate records removed', 'info');
   };
 
@@ -1510,37 +1628,98 @@ export default function App() {
     setDrives([]);
     setStudents([]);
     setFormResponses([]);
+    try {
+      localStorage.setItem('tacrm_drives', JSON.stringify([]));
+      localStorage.setItem('tacrm_students', JSON.stringify([]));
+      localStorage.setItem('tacrm_form_responses', JSON.stringify([]));
+    } catch (e) {}
+    fetch('/api/storage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ drives: [], students: [], formResponses: [] })
+    }).catch(() => {});
     addToast('All campus recruitment drives cleared (0 drives)', 'info');
   };
 
   const handleDeleteFormResponse = (respId) => {
-    setFormResponses(prev => prev.filter(r => r.id !== respId));
+    setFormResponses(prev => {
+      const next = prev.filter(r => r.id !== respId);
+      try { localStorage.setItem('tacrm_form_responses', JSON.stringify(next)); } catch (e) {}
+      fetch('/api/storage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ formResponses: next })
+      }).catch(() => {});
+      return next;
+    });
     addToast('Student intake record removed', 'info');
   };
 
   const handleBatchDeleteFormResponses = (respIds) => {
     if (!respIds || respIds.length === 0) return;
-    setFormResponses(prev => prev.filter(r => !respIds.includes(r.id)));
+    setFormResponses(prev => {
+      const next = prev.filter(r => !respIds.includes(r.id));
+      try { localStorage.setItem('tacrm_form_responses', JSON.stringify(next)); } catch (e) {}
+      fetch('/api/storage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ formResponses: next })
+      }).catch(() => {});
+      return next;
+    });
     addToast(`${respIds.length} candidate intake records removed`, 'info');
   };
 
   const handleClearAllFormResponses = () => {
     setFormResponses([]);
+    try { localStorage.setItem('tacrm_form_responses', JSON.stringify([])); } catch (e) {}
+    fetch('/api/storage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ formResponses: [] })
+    }).catch(() => {});
     addToast('All student intake records cleared (0 intake)', 'info');
   };
 
   const handleDeleteTpo = (tpoId) => {
-    setTpos(prev => prev.filter(t => t.id !== tpoId));
+    setTpos(prev => {
+      const next = prev.filter(t => t.id !== tpoId);
+      try { localStorage.setItem('tacrm_tpos', JSON.stringify(next)); } catch (e) {}
+      fetch('/api/storage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tpos: next })
+      }).catch(() => {});
+      return next;
+    });
     addToast('TPO profile removed', 'info');
   };
 
   const handleDeleteFollowUp = (fupId) => {
-    setFollowUps(prev => prev.filter(f => f.id !== fupId));
+    setFollowUps(prev => {
+      const next = prev.filter(f => f.id !== fupId);
+      try { localStorage.setItem('tacrm_followups', JSON.stringify(next)); } catch (e) {}
+      fetch('/api/storage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ followUps: next })
+      }).catch(() => {});
+      return next;
+    });
     addToast('Follow-up task removed', 'info');
   };
 
   const handleDeleteCallSession = (sessionId) => {
-    setCallSessions(prev => prev.filter(c => c.id !== sessionId));
+    setCallSessions(prev => {
+      const next = prev.filter(c => c.id !== sessionId);
+      try { localStorage.setItem('tacrm_calls', JSON.stringify(next)); } catch (e) {}
+      fetch('/api/storage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ callSessions: next })
+      }).catch(() => {});
+      return next;
+    });
     addToast('Call session record removed', 'info');
   };
 
