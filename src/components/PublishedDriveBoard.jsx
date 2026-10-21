@@ -37,16 +37,16 @@ import {
 } from 'lucide-react';
 
 // Custom Time Input without browser dashed lines (--:-- --), with clean text typing and AM / PM options
-function TimeSelectInput({ value, onChange, placeholder = "09:00", isCompact = false, required = false }) {
+function TimeSelectInput({ value, onChange, placeholder = "09:00", isCompact = false, required = false, defaultAmpm = "AM" }) {
   // Parse incoming 24h "HH:MM" into display 12h time and AM/PM
   const parseVal = (val) => {
     if (!val || typeof val !== 'string' || !val.includes(':')) {
-      return { timeStr: '', ampm: 'AM' };
+      return { timeStr: '', ampm: defaultAmpm };
     }
     const [hStr, mStr] = val.split(':');
     let h = parseInt(hStr, 10);
     const m = mStr ? mStr.slice(0, 2) : '00';
-    if (isNaN(h)) return { timeStr: '', ampm: 'AM' };
+    if (isNaN(h)) return { timeStr: '', ampm: defaultAmpm };
     const ampm = h >= 12 ? 'PM' : 'AM';
     let h12 = h % 12;
     if (h12 === 0) h12 = 12;
@@ -62,7 +62,7 @@ function TimeSelectInput({ value, onChange, placeholder = "09:00", isCompact = f
     const updated = parseVal(value);
     setTypedTime(updated.timeStr);
     setAmpm(updated.ampm);
-  }, [value]);
+  }, [value, defaultAmpm]);
 
   const emit24h = (rawTime, currentAmpm) => {
     if (!rawTime || !rawTime.trim()) {
@@ -109,7 +109,10 @@ function TimeSelectInput({ value, onChange, placeholder = "09:00", isCompact = f
     if (m > 59) m = 59;
 
     let h24 = h;
-    if (detectedAmpm === 'PM') {
+    if (h >= 12 && h < 24) {
+      h24 = h;
+      if (detectedAmpm !== 'PM') setAmpm('PM');
+    } else if (detectedAmpm === 'PM') {
       if (h < 12) h24 = h + 12;
     } else {
       if (h === 12) h24 = 0;
@@ -344,20 +347,75 @@ export default function PublishedDriveBoard({
       : students.filter(s => s.driveId === scheduleDriveId);
   }, [students, scheduleDriveId]);
 
-  // Day & Break Calculations (Calculated only when user manually enters timings)
+  // Day & Break Calculations (Calculated with intelligent 12h AM/PM auto-correction)
   const startMins = parseTimeToMinutes(scheduleStartTime);
-  const endMins = parseTimeToMinutes(scheduleEndTime);
+  const rawEndMins = parseTimeToMinutes(scheduleEndTime);
+  // Auto-correct PM rollover if end time was entered with AM (e.g. 05:00 AM instead of 05:00 PM)
+  const endMins = (startMins !== null && rawEndMins !== null && rawEndMins <= startMins && (rawEndMins + 720) > startMins && rawEndMins < 720)
+    ? rawEndMins + 720
+    : rawEndMins;
+
   const hasTimingInputs = Boolean(scheduleStartTime && scheduleEndTime && scheduleSlotMinutes && startMins !== null && endMins !== null && endMins > startMins);
   const totalWindowMinutes = hasTimingInputs ? Math.max(0, endMins - startMins) : 0;
 
-  const tea1StartMins = parseTimeToMinutes(teaBreak1Start);
+  const rawTea1StartMins = parseTimeToMinutes(teaBreak1Start);
+  const tea1StartMins = rawTea1StartMins;
   const tea1EndMins = tea1StartMins !== null ? tea1StartMins + teaBreak1Duration : null;
 
-  const lunchStartMins = parseTimeToMinutes(lunchBreakStart);
+  const rawLunchStartMins = parseTimeToMinutes(lunchBreakStart);
+  // Auto-correct lunch break if entered as 01:00 AM instead of 01:00 PM
+  const lunchStartMins = (rawLunchStartMins !== null && rawLunchStartMins < 720 && (rawLunchStartMins + 720) >= (startMins || 540))
+    ? rawLunchStartMins + 720
+    : rawLunchStartMins;
   const lunchEndMins = lunchStartMins !== null ? lunchStartMins + lunchBreakDuration : null;
 
-  const tea2StartMins = parseTimeToMinutes(teaBreak2Start);
+  const rawTea2StartMins = parseTimeToMinutes(teaBreak2Start);
+  // Auto-correct afternoon tea if entered as 04:00 AM instead of 04:00 PM
+  const tea2StartMins = (rawTea2StartMins !== null && rawTea2StartMins < 720 && (rawTea2StartMins + 720) >= (lunchStartMins || 720))
+    ? rawTea2StartMins + 720
+    : rawTea2StartMins;
   const tea2EndMins = tea2StartMins !== null ? tea2StartMins + teaBreak2Duration : null;
+
+  // Auto-sync state if user typed times with AM instead of PM
+  useEffect(() => {
+    if (scheduleStartTime && scheduleEndTime) {
+      const sMins = parseTimeToMinutes(scheduleStartTime);
+      const eMins = parseTimeToMinutes(scheduleEndTime);
+      if (sMins !== null && eMins !== null && eMins <= sMins && eMins < 720 && (eMins + 720) > sMins) {
+        const [h, m] = scheduleEndTime.split(':');
+        const h24 = parseInt(h, 10) + 12;
+        if (h24 < 24) {
+          setScheduleEndTime(`${String(h24).padStart(2, '0')}:${m || '00'}`);
+        }
+      }
+    }
+  }, [scheduleStartTime, scheduleEndTime]);
+
+  useEffect(() => {
+    if (lunchBreakStart) {
+      const lMins = parseTimeToMinutes(lunchBreakStart);
+      if (lMins !== null && lMins < 720 && (lMins + 720) >= 720) {
+        const [h, m] = lunchBreakStart.split(':');
+        const h24 = parseInt(h, 10) + 12;
+        if (h24 < 24) {
+          setLunchBreakStart(`${String(h24).padStart(2, '0')}:${m || '00'}`);
+        }
+      }
+    }
+  }, [lunchBreakStart]);
+
+  useEffect(() => {
+    if (teaBreak2Start) {
+      const tMins = parseTimeToMinutes(teaBreak2Start);
+      if (tMins !== null && tMins < 720 && (tMins + 720) >= 720) {
+        const [h, m] = teaBreak2Start.split(':');
+        const h24 = parseInt(h, 10) + 12;
+        if (h24 < 24) {
+          setTeaBreak2Start(`${String(h24).padStart(2, '0')}:${m || '00'}`);
+        }
+      }
+    }
+  }, [teaBreak2Start]);
 
   // Active breaks that user has actually entered start times for
   const activeBreaks = useMemo(() => {
@@ -381,20 +439,29 @@ export default function PublishedDriveBoard({
 
   // Directly calculate and allocate candidates based on daily capacity from timings
   const candidatesEligibleForSchedule = useMemo(() => {
-    if (!hasTimingInputs || slotDuration <= 0 || allDriveCandidates.length === 0) return [];
+    if (allDriveCandidates.length === 0) return [];
+    if (!hasTimingInputs || slotDuration <= 0) return allDriveCandidates;
     const limit = maxDailyCapacity > 0 ? maxDailyCapacity : allDriveCandidates.length;
     return allDriveCandidates.slice(0, limit);
   }, [hasTimingInputs, slotDuration, allDriveCandidates, maxDailyCapacity]);
 
   // Synchronize selected IDs when candidate list changes
   useEffect(() => {
-    setSelectedCandidateIds(candidatesEligibleForSchedule.map(s => s.id));
+    if (candidatesEligibleForSchedule.length > 0) {
+      setSelectedCandidateIds(prev => {
+        if (!prev || prev.length === 0) return candidatesEligibleForSchedule.map(s => s.id);
+        const valid = prev.filter(id => candidatesEligibleForSchedule.some(s => s.id === id));
+        return valid.length > 0 ? valid : candidatesEligibleForSchedule.map(s => s.id);
+      });
+    }
   }, [candidatesEligibleForSchedule]);
 
   // Automatically calculate individual time slots jumping over breaks
   const calculatedTimeSlots = useMemo(() => {
     if (!hasTimingInputs || slotDuration <= 0 || startMins === null) return [];
-    const selectedStudents = candidatesEligibleForSchedule.filter(s => selectedCandidateIds.includes(s.id));
+    const selectedStudents = candidatesEligibleForSchedule.filter(s => 
+      selectedCandidateIds.length > 0 ? selectedCandidateIds.includes(s.id) : true
+    );
     let currentTime = startMins;
     const slots = [];
 
@@ -1115,16 +1182,36 @@ export default function PublishedDriveBoard({
             <button
               type="button"
               onClick={() => {
-                setScheduleDriveId(selectedDriveId || activeDrive?.id || drives[0]?.id || 'ALL');
-                setScheduleDate('');
-                setScheduleStartTime('');
-                setScheduleEndTime('');
-                setScheduleSlotMinutes('');
-                setTeaBreak1Start('');
-                setLunchBreakStart('');
-                setTeaBreak2Start('');
-                setScheduleMeetLink('');
-                setSchedulePanelist('');
+                const targetDriveId = selectedDriveId || activeDrive?.id || drives[0]?.id || 'ALL';
+                setScheduleDriveId(targetDriveId);
+                const curDrive = drives.find(d => d.id === targetDriveId) || activeDrive;
+                setScheduleDate(curDrive?.driveDate || new Date().toISOString().split('T')[0]);
+                setScheduleStartTime('09:00');
+                setScheduleEndTime('17:00');
+                setScheduleSlotMinutes(10);
+                setTeaBreak1Start('11:00');
+                setLunchBreakStart('13:00');
+                setTeaBreak2Start('16:00');
+                
+                const roomCode = Math.random().toString(36).substring(2, 5) + '-' + 
+                                 Math.random().toString(36).substring(2, 6) + '-' + 
+                                 Math.random().toString(36).substring(2, 5);
+                setScheduleMeetLink(prev => prev.trim() || `https://meet.google.com/${roomCode}`);
+                
+                setSchedulePanelist(prev => {
+                  if (prev.trim()) return prev;
+                  if (currentUser?.name) {
+                    const r = currentUser.role === 'MAIN_HR' ? 'HR Manager' : currentUser.role === 'ADMIN' ? 'Administrator' : 'HR Staff';
+                    return `${currentUser.name} (${currentUser.title || r})`;
+                  }
+                  if (hrStaffList.length > 0) {
+                    const u = hrStaffList[0];
+                    const r = u.role === 'MAIN_HR' ? 'HR Manager' : u.role === 'ADMIN' ? 'Administrator' : 'HR Staff';
+                    return `${u.name} (${u.title || r})`;
+                  }
+                  return '';
+                });
+
                 setManagerApprovalGranted(false);
                 setSelectedManagerApprover('');
                 setManagerApprovalNote('');
@@ -2137,7 +2224,7 @@ export default function PublishedDriveBoard({
                     Schedule Drive Interview Slots & Auto-Dispatch
                   </h3>
                   <div style={{ fontSize: '0.75rem', color: '#e2e8f0', marginTop: '2px' }}>
-                    Drive: <strong style={{ color: '#FFDB58' }}>{scheduleDriveId === 'ALL' ? 'All Added Drives' : (drives.find(d => d.id === scheduleDriveId)?.title || activeDrive?.title || 'Campus Placement Drive')}</strong> • {candidatesEligibleForSchedule.length} candidates ready
+                    Drive: <strong style={{ color: '#FFDB58' }}>{scheduleDriveId === 'ALL' ? 'All Added Drives' : (drives.find(d => d.id === scheduleDriveId)?.title || activeDrive?.title || 'Campus Placement Drive')}</strong> • {allDriveCandidates.length} candidate{allDriveCandidates.length === 1 ? '' : 's'} ready {calculatedTimeSlots.length > 0 ? `(${calculatedTimeSlots.length} allocated)` : ''}
                   </div>
                 </div>
               </div>
@@ -2178,6 +2265,7 @@ export default function PublishedDriveBoard({
                       value={scheduleStartTime} 
                       onChange={setScheduleStartTime}
                       placeholder="09:00"
+                      defaultAmpm="AM"
                       required 
                     />
                   </div>
@@ -2188,6 +2276,7 @@ export default function PublishedDriveBoard({
                       value={scheduleEndTime} 
                       onChange={setScheduleEndTime}
                       placeholder="05:00"
+                      defaultAmpm="PM"
                       required 
                     />
                   </div>
@@ -2258,6 +2347,7 @@ export default function PublishedDriveBoard({
                         value={teaBreak1Start} 
                         onChange={setTeaBreak1Start} 
                         placeholder="11:00"
+                        defaultAmpm="AM"
                         isCompact
                       />
                     </div>
@@ -2282,6 +2372,7 @@ export default function PublishedDriveBoard({
                         value={lunchBreakStart} 
                         onChange={setLunchBreakStart} 
                         placeholder="01:00"
+                        defaultAmpm="PM"
                         isCompact
                       />
                     </div>
@@ -2306,6 +2397,7 @@ export default function PublishedDriveBoard({
                         value={teaBreak2Start} 
                         onChange={setTeaBreak2Start} 
                         placeholder="04:00"
+                        defaultAmpm="PM"
                         isCompact
                       />
                     </div>
@@ -2520,7 +2612,21 @@ export default function PublishedDriveBoard({
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label">Google Meet Link *</label>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                      <label className="form-label" style={{ margin: 0 }}>Google Meet Link *</label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const roomCode = Math.random().toString(36).substring(2, 5) + '-' + 
+                                           Math.random().toString(36).substring(2, 6) + '-' + 
+                                           Math.random().toString(36).substring(2, 5);
+                          setScheduleMeetLink(`https://meet.google.com/${roomCode}`);
+                        }}
+                        style={{ fontSize: '0.68rem', color: '#0369a1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, padding: 0 }}
+                      >
+                        ⚡ Generate Meet Link
+                      </button>
+                    </div>
                     <div style={{ position: 'relative' }}>
                       <input 
                         type="url" 
@@ -2711,7 +2817,7 @@ export default function PublishedDriveBoard({
               <button 
                 type="button" 
                 onClick={handleConfirmSchedule}
-                disabled={isDispatching || !calculatedTimeSlots.length || (isExceedingTimeLimit && !managerApprovalGranted)}
+                disabled={isDispatching || !allDriveCandidates.length || (!calculatedTimeSlots.length && hasTimingInputs) || (isExceedingTimeLimit && !managerApprovalGranted)}
                 className="btn-mustard"
                 style={{
                   fontWeight: 800,
@@ -2729,7 +2835,7 @@ export default function PublishedDriveBoard({
                 ) : (
                   <>
                     <Send size={15} color="#154360" />
-                    {isDispatching ? 'Dispatching Invites...' : `Confirm & Dispatch Schedule (${calculatedTimeSlots.length} Students)`}
+                    {isDispatching ? 'Dispatching Invites...' : `Confirm & Dispatch Schedule (${calculatedTimeSlots.length > 0 ? calculatedTimeSlots.length : allDriveCandidates.length} Students)`}
                   </>
                 )}
               </button>
