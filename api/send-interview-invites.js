@@ -85,6 +85,7 @@ export default async function handler(req, res) {
       const recipientEmail = student.email;
       const recipientName = student.name || 'Candidate';
       const slotString = item.slotString || `${item.startFormatted} - ${item.endFormatted}` || 'Assigned Time Slot';
+      const candidateJobRole = student.jobRole || jobRole || 'CGA';
 
       if (!recipientEmail || !recipientEmail.includes('@')) {
         results.push({ email: recipientEmail, name: recipientName, status: 'SKIPPED', reason: 'No valid email address' });
@@ -106,7 +107,7 @@ export default async function handler(req, res) {
               Dear <strong>${recipientName}</strong>${student.rollNumber ? ` (${student.rollNumber})` : ''},
             </p>
             <p style="margin: 0 0 16px; font-size: 13.5px; color: #334155; line-height: 1.6;">
-              Following the campus recruitment process, we are pleased to invite you for your Technical Interview for the position of <strong>${jobRole || 'Engineering Associate'}</strong>.
+              Following the campus recruitment process, we are pleased to invite you for your Technical Interview for the position of <strong>${candidateJobRole}</strong>.
             </p>
 
             <!-- Small, Compact Interview Details & Time Slot Table -->
@@ -115,7 +116,7 @@ export default async function handler(req, res) {
                 <tr>
                   <td style="padding: 10px 14px; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; width: 50%;">
                     <div style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Position</div>
-                    <div style="font-size: 13px; font-weight: 600; color: #0f172a; margin-top: 2px;">${jobRole || 'Engineering Associate'}</div>
+                    <div style="font-size: 13px; font-weight: 600; color: #0f172a; margin-top: 2px;">${candidateJobRole}</div>
                   </td>
                   <td style="padding: 10px 14px; border-bottom: 1px solid #e2e8f0; width: 50%;">
                     <div style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Interview Mode</div>

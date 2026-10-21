@@ -266,6 +266,19 @@ export default function PublishedDriveBoard({
   // ---------------- Schedule Interviews State & Engine ----------------
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [scheduleDriveId, setScheduleDriveId] = useState(() => (selectedDriveId && selectedDriveId !== 'ALL' ? selectedDriveId : (activeDrive?.id || 'ALL')));
+  const [scheduleJobRole, setScheduleJobRole] = useState(() => {
+    const curDrive = (selectedDriveId && selectedDriveId !== 'ALL') ? drives.find(d => d.id === selectedDriveId) : activeDrive || drives[0];
+    return curDrive?.jobRole || 'CGA';
+  });
+
+  useEffect(() => {
+    const curDrive = drives.find(d => d.id === scheduleDriveId) || activeDrive || drives[0];
+    if (curDrive && curDrive.jobRole) {
+      setScheduleJobRole(curDrive.jobRole);
+    } else {
+      setScheduleJobRole('CGA');
+    }
+  }, [scheduleDriveId, activeDrive, drives]);
   const [scheduleDate, setScheduleDate] = useState('');
   const [scheduleStartTime, setScheduleStartTime] = useState('');
   const [scheduleEndTime, setScheduleEndTime] = useState('');
@@ -560,10 +573,13 @@ export default function PublishedDriveBoard({
     setIsDispatching(true);
     const cleanMeet = scheduleMeetLink.trim();
     const scheduledAt = new Date().toISOString();
+    const targetDrive = drives.find(d => d.id === scheduleDriveId) || (calculatedTimeSlots[0]?.student?.driveId ? drives.find(d => d.id === calculatedTimeSlots[0].student.driveId) : null) || activeDrive || drives[0];
+    const effectiveJobRole = (scheduleJobRole && scheduleJobRole.trim()) || targetDrive?.jobRole || 'CGA';
 
     const updatedStudents = calculatedTimeSlots.map(item => ({
       ...item.student,
       stage: 'TECH_INTERVIEW', // Moves to "3. Interview"
+      jobRole: effectiveJobRole,
       interviewDate: scheduleDate,
       interviewTime: item.slotString,
       interviewStartTime: item.startFormatted,
@@ -579,8 +595,6 @@ export default function PublishedDriveBoard({
       onBatchUpdateStudents(updatedStudents);
     }
 
-    const targetDrive = drives.find(d => d.id === scheduleDriveId) || activeDrive;
-
     // Add entry into broadcast logs for audit trail
     try {
       const existingLogs = JSON.parse(localStorage.getItem('tacrm_blast_logs') || '[]');
@@ -589,7 +603,7 @@ export default function PublishedDriveBoard({
         timestamp: scheduledAt,
         driveTitle: targetDrive?.title || 'Campus Placement Drive',
         collegeName: targetDrive?.collegeName || 'Campus',
-        jobRole: targetDrive?.jobRole || 'Engineering Associate',
+        jobRole: effectiveJobRole,
         totalDispatched: updatedStudents.length,
         interviewDate: scheduleDate,
         timeWindow: `${calculatedTimeSlots[0].startFormatted} - ${calculatedTimeSlots[calculatedTimeSlots.length - 1].endFormatted}`,
@@ -610,11 +624,17 @@ export default function PublishedDriveBoard({
         body: JSON.stringify({
           driveTitle: targetDrive?.title || 'Campus Placement Drive',
           collegeName: targetDrive?.collegeName || 'Campus',
-          jobRole: targetDrive?.jobRole || 'Engineering Associate',
+          jobRole: effectiveJobRole,
           interviewDate: scheduleDate,
           meetLink: cleanMeet,
           interviewer: schedulePanelist,
-          scheduledList: calculatedTimeSlots
+          scheduledList: calculatedTimeSlots.map(slot => ({
+            ...slot,
+            student: {
+              ...(slot.student || {}),
+              jobRole: effectiveJobRole
+            }
+          }))
         })
       });
       if (emailRes.ok) {
@@ -629,7 +649,7 @@ export default function PublishedDriveBoard({
     setDispatchConfirmationData({
       driveTitle: targetDrive?.title || 'Campus Placement Drive',
       collegeName: targetDrive?.collegeName || 'Campus',
-      jobRole: targetDrive?.jobRole || 'Engineering Associate',
+      jobRole: effectiveJobRole,
       scheduledDate: scheduleDate,
       firstSlot: calculatedTimeSlots[0].startFormatted,
       lastSlot: calculatedTimeSlots[calculatedTimeSlots.length - 1].endFormatted,
@@ -2604,13 +2624,25 @@ export default function PublishedDriveBoard({
                 </div>
               )}
 
-              {/* 4. Google Meet Room & Interviewer */}
+              {/* 4. Interview Position, Google Meet Room & Interviewer */}
               <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
                 <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#154360', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Video size={15} color="#154360" /> 4. Google Meet Room & Interviewer
+                  <Video size={15} color="#154360" /> 4. Interview Position, Google Meet Room & Panel Member
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr 1.1fr', gap: '10px' }}>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Position / Job Role *</label>
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      placeholder="e.g. CGA" 
+                      value={scheduleJobRole} 
+                      onChange={e => setScheduleJobRole(e.target.value)} 
+                      required 
+                    />
+                  </div>
+
                   <div className="form-group" style={{ marginBottom: 0 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                       <label className="form-label" style={{ margin: 0 }}>Google Meet Link *</label>

@@ -539,12 +539,17 @@ export default function App() {
   // Sanitize helper to purge any phantom or placeholder records from storage
   const sanitizeDrives = (list) => {
     if (!Array.isArray(list)) return [];
-    return list.filter(d => 
-      d && 
-      d.title && 
-      !(d.collegeName && d.collegeName === 'University Campus') &&
-      !(d.collegeName && d.collegeName === 'College Campus')
-    );
+    return list
+      .filter(d => 
+        d && 
+        d.title && 
+        !(d.collegeName && d.collegeName === 'University Campus') &&
+        !(d.collegeName && d.collegeName === 'College Campus')
+      )
+      .map(d => ({
+        ...d,
+        jobRole: (!d.jobRole || d.jobRole === 'Engineering Associate') ? 'CGA' : d.jobRole
+      }));
   };
 
   const sanitizeStudents = (list, staffList = users) => {
@@ -562,7 +567,8 @@ export default function App() {
           internName = activeStaff.name;
           internId = activeStaff.id;
         }
-        return { ...stu, internName, internId };
+        const jobRole = (!stu.jobRole || stu.jobRole === 'Engineering Associate') ? 'CGA' : stu.jobRole;
+        return { ...stu, internName, internId, jobRole };
       });
   };
 
