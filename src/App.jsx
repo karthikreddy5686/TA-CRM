@@ -37,6 +37,8 @@ import {
 
 import { 
   INITIAL_USERS, 
+  INITIAL_DRIVES,
+  INITIAL_STUDENTS,
   WORKING_DEMO_DATA,
   formatDuration 
 } from './data/mockData';
@@ -255,81 +257,208 @@ export default function App() {
     }
   }, [users]);
 
+  // Centralized Non-Destructive Safe Sync Engine
+  const safeSyncWithServerStorage = (data) => {
+    if (!data) return;
+
+    // 1. Process deleted IDs (Tombstones)
+    const deletedUserIds = Array.isArray(data.deletedUserIds) ? data.deletedUserIds.map(d => String(d).toLowerCase()) : [];
+    if (deletedUserIds.length > 0) {
+      try {
+        const cur = JSON.parse(localStorage.getItem('tacrm_deleted_user_ids') || '[]');
+        localStorage.setItem('tacrm_deleted_user_ids', JSON.stringify(Array.from(new Set([...cur, ...deletedUserIds]))));
+      } catch (e) {}
+    }
+
+    const deletedDriveIds = Array.isArray(data.deletedDriveIds) ? data.deletedDriveIds.map(d => String(d)) : [];
+    let localDeletedDriveIds = [];
+    try {
+      localDeletedDriveIds = JSON.parse(localStorage.getItem('tacrm_deleted_drive_ids') || '[]');
+      if (deletedDriveIds.length > 0) {
+        localDeletedDriveIds = Array.from(new Set([...localDeletedDriveIds, ...deletedDriveIds]));
+        localStorage.setItem('tacrm_deleted_drive_ids', JSON.stringify(localDeletedDriveIds));
+      }
+    } catch (e) {}
+
+    const deletedStudentIds = Array.isArray(data.deletedStudentIds) ? data.deletedStudentIds.map(d => String(d)) : [];
+    let localDeletedStudentIds = [];
+    try {
+      localDeletedStudentIds = JSON.parse(localStorage.getItem('tacrm_deleted_student_ids') || '[]');
+      if (deletedStudentIds.length > 0) {
+        localDeletedStudentIds = Array.from(new Set([...localDeletedStudentIds, ...deletedStudentIds]));
+        localStorage.setItem('tacrm_deleted_student_ids', JSON.stringify(localDeletedStudentIds));
+      }
+    } catch (e) {}
+
+    // 2. Safely sync Users
+    if (Array.isArray(data.users) && data.users.length > 0) {
+      const activeUsers = data.users.filter(u => {
+        if (!u) return false;
+        const keys = [u.id, u.email, u.username].filter(Boolean).map(s => String(s).toLowerCase());
+        return !deletedUserIds.some(d => keys.includes(d));
+      });
+      let localUsers = [];
+      try { localUsers = JSON.parse(localStorage.getItem('tacrm_users') || '[]'); } catch (e) {}
+      const userMap = new Map();
+      activeUsers.forEach(u => {
+        const key = u.id || (u.email && u.email.toLowerCase());
+        if (key) userMap.set(key, u);
+      });
+      localUsers.forEach(u => {
+        if (!u) return;
+        const keys = [u.id, u.email, u.username].filter(Boolean).map(s => String(s).toLowerCase());
+        if (deletedUserIds.some(d => keys.includes(d))) return;
+        const key = u.id || (u.email && u.email.toLowerCase());
+        if (key && !userMap.has(key)) userMap.set(key, u);
+      });
+      const sanitized = sanitizeUsers(Array.from(userMap.values()));
+      setUsers(sanitized);
+      try { localStorage.setItem('tacrm_users', JSON.stringify(sanitized)); } catch (e) {}
+
+      if (currentUser && !isProtectedRole(currentUser)) {
+        const currentKeys = [currentUser.id, currentUser.email, currentUser.username].filter(Boolean).map(s => String(s).toLowerCase());
+        if (deletedUserIds.some(d => d && currentKeys.includes(d))) {
+          console.warn('[AUTH REVOKED] Current employee session was deleted by Administrator. Logging out.');
+          try { localStorage.removeItem('tacrm_auth_user'); } catch (e) {}
+          setCurrentUser(null);
+        }
+      }
+    }
+
+    // 3. Safely sync Drives: NEVER wipe with empty server array!
+    setDrives(prev => {
+      let localSaved = [];
+      try { localSaved = JSON.parse(localStorage.getItem('tacrm_drives') || '[]'); } catch (e) {}
+      const driveMap = new Map();
+
+      if (Array.isArray(data.drives)) {
+        data.drives.forEach(d => {
+          if (d && d.id && !localDeletedDriveIds.includes(d.id)) {
+            driveMap.set(d.id, d);
+          }
+        });
+      }
+
+      const localCandidates = [...(Array.isArray(localSaved) ? localSaved : []), ...(Array.isArray(prev) ? prev : [])];
+      let needsReplication = false;
+      localCandidates.forEach(d => {
+        if (d && d.id && !localDeletedDriveIds.includes(d.id)) {
+          if (!driveMap.has(d.id)) {
+            driveMap.set(d.id, d);
+            needsReplication = true;
+          } else {
+            driveMap.set(d.id, { ...d, ...driveMap.get(d.id) });
+          }
+        }
+      });
+
+      if (driveMap.size === 0 && Array.isArray(INITIAL_DRIVES)) {
+        INITIAL_DRIVES.forEach(d => {
+          if (d && d.id && !localDeletedDriveIds.includes(d.id)) {
+            driveMap.set(d.id, d);
+            needsReplication = true;
+          }
+        });
+      }
+
+      const merged = sanitizeDrives(Array.from(driveMap.values()));
+      try { localStorage.setItem('tacrm_drives', JSON.stringify(merged)); } catch (e) {}
+
+      if (needsReplication && merged.length > 0) {
+        fetch('/api/storage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ drives: merged })
+        }).catch(() => {});
+      }
+
+      return merged;
+    });
+
+    // 4. Safely sync Students: NEVER wipe with empty server array!
+    setStudents(prev => {
+      let localSaved = [];
+      try { localSaved = JSON.parse(localStorage.getItem('tacrm_students') || '[]'); } catch (e) {}
+      const studentMap = new Map();
+
+      if (Array.isArray(data.students)) {
+        data.students.forEach(s => {
+          if (s && s.id && !localDeletedStudentIds.includes(s.id)) {
+            studentMap.set(s.id, s);
+          }
+        });
+      }
+
+      const localCandidates = [...(Array.isArray(localSaved) ? localSaved : []), ...(Array.isArray(prev) ? prev : [])];
+      let needsReplication = false;
+      localCandidates.forEach(s => {
+        if (s && s.id && !localDeletedStudentIds.includes(s.id)) {
+          if (!studentMap.has(s.id)) {
+            studentMap.set(s.id, s);
+            needsReplication = true;
+          } else {
+            studentMap.set(s.id, { ...s, ...studentMap.get(s.id) });
+          }
+        }
+      });
+
+      if (studentMap.size === 0 && Array.isArray(INITIAL_STUDENTS)) {
+        INITIAL_STUDENTS.forEach(s => {
+          if (s && s.id && !localDeletedStudentIds.includes(s.id)) {
+            studentMap.set(s.id, s);
+            needsReplication = true;
+          }
+        });
+      }
+
+      const merged = sanitizeStudents(Array.from(studentMap.values()));
+      try { localStorage.setItem('tacrm_students', JSON.stringify(merged)); } catch (e) {}
+
+      if (needsReplication && merged.length > 0) {
+        fetch('/api/storage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ students: merged })
+        }).catch(() => {});
+      }
+
+      return merged;
+    });
+
+    // 5. TPOs, FollowUps, CallSessions - safe sync without destructive wiping
+    if (Array.isArray(data.tpos)) {
+      setTpos(prev => {
+        if (data.tpos.length === 0 && prev.length > 0) return prev;
+        const clean = sanitizeTpos(data.tpos);
+        try { localStorage.setItem('tacrm_tpos', JSON.stringify(clean)); } catch (e) {}
+        return clean;
+      });
+    }
+    if (Array.isArray(data.followUps)) {
+      setFollowUps(prev => {
+        if (data.followUps.length === 0 && prev.length > 0) return prev;
+        const clean = sanitizeFollowUps(data.followUps);
+        try { localStorage.setItem('tacrm_followups', JSON.stringify(clean)); } catch (e) {}
+        return clean;
+      });
+    }
+    if (Array.isArray(data.callSessions)) {
+      setCallSessions(prev => {
+        if (data.callSessions.length === 0 && prev.length > 0) return prev;
+        const clean = sanitizeCalls(data.callSessions);
+        try { localStorage.setItem('tacrm_calls', JSON.stringify(clean)); } catch (e) {}
+        return clean;
+      });
+    }
+  };
+
   // Pull latest users and database from centralized server storage & cloud on initial app load
   useEffect(() => {
     fetch('/api/storage')
       .then(res => res.ok ? res.json() : null)
       .then(data => {
         if (!data) return;
-        const deletedIds = Array.isArray(data.deletedUserIds) ? data.deletedUserIds.map(d => String(d).toLowerCase()) : [];
-        if (deletedIds.length > 0) {
-          try {
-            const curLocalDeleted = JSON.parse(localStorage.getItem('tacrm_deleted_user_ids') || '[]');
-            const comb = Array.from(new Set([...curLocalDeleted, ...deletedIds]));
-            localStorage.setItem('tacrm_deleted_user_ids', JSON.stringify(comb));
-          } catch (e) {}
-        }
-
-        if (Array.isArray(data.users) && data.users.length > 0) {
-          // Server users - filter out deleted accounts
-          const activeUsers = data.users.filter(u => {
-            if (!u) return false;
-            const keys = [u.id, u.email, u.username].filter(Boolean).map(s => String(s).toLowerCase());
-            return !deletedIds.some(d => keys.includes(d));
-          });
-
-          // Merge server users with local users (preserves locally provisioned staff across cold starts)
-          let localUsers = [];
-          try {
-            localUsers = JSON.parse(localStorage.getItem('tacrm_users') || '[]');
-          } catch (e) {}
-          const userMap = new Map();
-          activeUsers.forEach(u => {
-            const key = u.id || (u.email && u.email.toLowerCase());
-            if (key) userMap.set(key, u);
-          });
-          localUsers.forEach(u => {
-            if (!u) return;
-            const keys = [u.id, u.email, u.username].filter(Boolean).map(s => String(s).toLowerCase());
-            if (deletedIds.some(d => keys.includes(d))) return;
-            const key = u.id || (u.email && u.email.toLowerCase());
-            if (key && !userMap.has(key)) {
-              userMap.set(key, u);
-            }
-          });
-
-          const sanitized = sanitizeUsers(Array.from(userMap.values()));
-          setUsers(sanitized);
-          try {
-            localStorage.setItem('tacrm_users', JSON.stringify(sanitized));
-          } catch (e) {}
-
-          // Real-time security revocation: if logged in user is deleted, terminate session
-          if (currentUser && !isProtectedRole(currentUser)) {
-            const currentKeys = [currentUser.id, currentUser.email, currentUser.username].filter(Boolean).map(s => String(s).toLowerCase());
-            const isRevoked = deletedIds.some(d => d && currentKeys.includes(d));
-            if (isRevoked) {
-              console.warn('[AUTH REVOKED] Current employee session was deleted by Administrator. Logging out.');
-              try { localStorage.removeItem('tacrm_auth_user'); } catch (e) {}
-              setCurrentUser(null);
-            }
-          }
-        }
-        if (Array.isArray(data.drives)) {
-          setDrives(sanitizeDrives(data.drives));
-        }
-        if (Array.isArray(data.students)) {
-          setStudents(sanitizeStudents(data.students));
-        }
-        if (Array.isArray(data.tpos)) {
-          setTpos(sanitizeTpos(data.tpos));
-        }
-        if (Array.isArray(data.followUps)) {
-          setFollowUps(sanitizeFollowUps(data.followUps));
-        }
-        if (Array.isArray(data.callSessions)) {
-          setCallSessions(sanitizeCalls(data.callSessions));
-        }
+        safeSyncWithServerStorage(data);
       })
       .catch(() => {});
 
@@ -386,86 +515,7 @@ export default function App() {
         .then(res => res.ok ? res.json() : null)
         .then(data => {
           if (!data) return;
-          if (Array.isArray(data.drives)) {
-            const cleanDrives = sanitizeDrives(data.drives);
-            setDrives(cleanDrives);
-            try { localStorage.setItem('tacrm_drives', JSON.stringify(cleanDrives)); } catch (e) {}
-          }
-          if (Array.isArray(data.students)) {
-            const cleanStudents = sanitizeStudents(data.students);
-            setStudents(cleanStudents);
-            try { localStorage.setItem('tacrm_students', JSON.stringify(cleanStudents)); } catch (e) {}
-          }
-          if (Array.isArray(data.tpos)) {
-            const cleanTpos = sanitizeTpos(data.tpos);
-            setTpos(cleanTpos);
-            try { localStorage.setItem('tacrm_tpos', JSON.stringify(cleanTpos)); } catch (e) {}
-          }
-          if (Array.isArray(data.followUps)) {
-            const cleanFollowUps = sanitizeFollowUps(data.followUps);
-            setFollowUps(cleanFollowUps);
-            try { localStorage.setItem('tacrm_followups', JSON.stringify(cleanFollowUps)); } catch (e) {}
-          }
-          if (Array.isArray(data.callSessions)) {
-            const cleanCalls = sanitizeCalls(data.callSessions);
-            setCallSessions(cleanCalls);
-            try { localStorage.setItem('tacrm_calls', JSON.stringify(cleanCalls)); } catch (e) {}
-          }
-          const deletedIds = Array.isArray(data.deletedUserIds) ? data.deletedUserIds.map(d => String(d).toLowerCase()) : [];
-          if (deletedIds.length > 0) {
-            try {
-              const curLocalDeleted = JSON.parse(localStorage.getItem('tacrm_deleted_user_ids') || '[]');
-              const comb = Array.from(new Set([...curLocalDeleted, ...deletedIds]));
-              localStorage.setItem('tacrm_deleted_user_ids', JSON.stringify(comb));
-            } catch (e) {}
-          }
-
-          if (data && Array.isArray(data.users)) {
-            // Ground truth server users - filter out deleted accounts
-            const activeUsers = data.users.filter(u => {
-              if (!u) return false;
-              const keys = [u.id, u.email, u.username].filter(Boolean).map(s => String(s).toLowerCase());
-              return !deletedIds.some(d => keys.includes(d));
-            });
-
-            // Merge server users with local users
-            let localUsers = [];
-            try {
-              localUsers = JSON.parse(localStorage.getItem('tacrm_users') || '[]');
-            } catch (e) {}
-            const userMap = new Map();
-            activeUsers.forEach(u => {
-              const key = u.id || (u.email && u.email.toLowerCase());
-              if (key) userMap.set(key, u);
-            });
-            localUsers.forEach(u => {
-              if (!u) return;
-              const keys = [u.id, u.email, u.username].filter(Boolean).map(s => String(s).toLowerCase());
-              if (deletedIds.some(d => keys.includes(d))) return;
-              const key = u.id || (u.email && u.email.toLowerCase());
-              if (key && !userMap.has(key)) {
-                userMap.set(key, u);
-              }
-            });
-
-            const next = sanitizeUsers(Array.from(userMap.values()));
-            setUsers(next);
-            try { localStorage.setItem('tacrm_users', JSON.stringify(next)); } catch (e) {}
-
-            // Real-time security revocation: if logged in user is deleted, terminate session
-            const curSession = (() => {
-              try { return JSON.parse(localStorage.getItem('tacrm_auth_user')); } catch { return currentUser; }
-            })();
-            if (curSession && !isProtectedRole(curSession)) {
-              const currentKeys = [curSession.id, curSession.email, curSession.username].filter(Boolean).map(s => String(s).toLowerCase());
-              const isRevoked = deletedIds.some(d => d && currentKeys.includes(d));
-              if (isRevoked) {
-                console.warn('[AUTH REVOKED] Current employee session was deleted by Administrator. Logging out.');
-                try { localStorage.removeItem('tacrm_auth_user'); } catch (e) {}
-                setCurrentUser(null);
-              }
-            }
-          }
+          safeSyncWithServerStorage(data);
         })
         .catch(() => {});
     };
@@ -614,25 +664,43 @@ export default function App() {
   });
 
   const [drives, setDrives] = useState(() => {
-    const saved = localStorage.getItem('tacrm_drives');
-    if (!saved) return [];
+    let deletedDriveIds = [];
     try {
-      const parsed = JSON.parse(saved);
-      return Array.isArray(parsed) ? sanitizeDrives(parsed) : [];
-    } catch {
-      return [];
+      deletedDriveIds = JSON.parse(localStorage.getItem('tacrm_deleted_drive_ids') || '[]');
+    } catch (e) {}
+
+    const saved = localStorage.getItem('tacrm_drives');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const filtered = parsed.filter(d => d && !deletedDriveIds.includes(d.id));
+          if (filtered.length > 0) return sanitizeDrives(filtered);
+        }
+      } catch (e) {}
     }
+    const fallback = (INITIAL_DRIVES || []).filter(d => d && !deletedDriveIds.includes(d.id));
+    return sanitizeDrives(fallback);
   });
 
   const [students, setStudents] = useState(() => {
-    const saved = localStorage.getItem('tacrm_students');
-    if (!saved) return [];
+    let deletedStudentIds = [];
     try {
-      const parsed = JSON.parse(saved);
-      return Array.isArray(parsed) ? sanitizeStudents(parsed) : [];
-    } catch {
-      return [];
+      deletedStudentIds = JSON.parse(localStorage.getItem('tacrm_deleted_student_ids') || '[]');
+    } catch (e) {}
+
+    const saved = localStorage.getItem('tacrm_students');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const filtered = parsed.filter(s => s && !deletedStudentIds.includes(s.id));
+          if (filtered.length > 0) return sanitizeStudents(filtered);
+        }
+      } catch (e) {}
     }
+    const fallback = (INITIAL_STUDENTS || []).filter(s => s && !deletedStudentIds.includes(s.id));
+    return sanitizeStudents(fallback);
   });
 
   const [followUps, setFollowUps] = useState(() => {
@@ -719,31 +787,7 @@ export default function App() {
       .then(res => res.ok ? res.json() : null)
       .then(data => {
         if (!data) return;
-        if (Array.isArray(data.drives)) {
-          const cleanDrives = sanitizeDrives(data.drives);
-          setDrives(cleanDrives);
-          try { localStorage.setItem('tacrm_drives', JSON.stringify(cleanDrives)); } catch (e) {}
-        }
-        if (Array.isArray(data.students)) {
-          const cleanStudents = sanitizeStudents(data.students);
-          setStudents(cleanStudents);
-          try { localStorage.setItem('tacrm_students', JSON.stringify(cleanStudents)); } catch (e) {}
-        }
-        if (Array.isArray(data.tpos)) {
-          const cleanTpos = sanitizeTpos(data.tpos);
-          setTpos(cleanTpos);
-          try { localStorage.setItem('tacrm_tpos', JSON.stringify(cleanTpos)); } catch (e) {}
-        }
-        if (Array.isArray(data.followUps)) {
-          const cleanFollowUps = sanitizeFollowUps(data.followUps);
-          setFollowUps(cleanFollowUps);
-          try { localStorage.setItem('tacrm_followups', JSON.stringify(cleanFollowUps)); } catch (e) {}
-        }
-        if (Array.isArray(data.callSessions)) {
-          const cleanCalls = sanitizeCalls(data.callSessions);
-          setCallSessions(cleanCalls);
-          try { localStorage.setItem('tacrm_calls', JSON.stringify(cleanCalls)); } catch (e) {}
-        }
+        safeSyncWithServerStorage(data);
       })
       .catch(() => {});
   };
@@ -1695,29 +1739,51 @@ export default function App() {
 
   // Individual Item Deletion Handlers with Full Multi-Account & Server Sync
   const handleDeleteStudent = (studentId) => {
+    let curDeleted = [];
+    try {
+      curDeleted = JSON.parse(localStorage.getItem('tacrm_deleted_student_ids') || '[]');
+    } catch (e) {}
+    const nextDeleted = Array.from(new Set([...curDeleted, studentId]));
+    try { localStorage.setItem('tacrm_deleted_student_ids', JSON.stringify(nextDeleted)); } catch (e) {}
+
     const nextStudents = students.filter(s => s.id !== studentId);
     setStudents(nextStudents);
     try { localStorage.setItem('tacrm_students', JSON.stringify(nextStudents)); } catch (e) {}
     fetch('/api/storage', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ students: nextStudents })
+      body: JSON.stringify({ students: nextStudents, deletedStudentIds: nextDeleted })
     }).catch(() => {});
     addToast('Candidate removed from roster & synced across accounts', 'info');
   };
 
   const handleClearAllStudents = () => {
+    let curDeleted = [];
+    try {
+      curDeleted = JSON.parse(localStorage.getItem('tacrm_deleted_student_ids') || '[]');
+    } catch (e) {}
+    const studentIdsToClear = students.map(s => s.id).filter(Boolean);
+    const nextDeleted = Array.from(new Set([...curDeleted, ...studentIdsToClear]));
+    try { localStorage.setItem('tacrm_deleted_student_ids', JSON.stringify(nextDeleted)); } catch (e) {}
+
     setStudents([]);
     try { localStorage.setItem('tacrm_students', JSON.stringify([])); } catch (e) {}
     fetch('/api/storage', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ students: [] })
+      body: JSON.stringify({ students: [], deletedStudentIds: nextDeleted })
     }).catch(() => {});
     addToast('All student candidates cleared (0 candidates)', 'info');
   };
 
   const handleDeleteDrive = (driveId) => {
+    let curDeleted = [];
+    try {
+      curDeleted = JSON.parse(localStorage.getItem('tacrm_deleted_drive_ids') || '[]');
+    } catch (e) {}
+    const nextDeleted = Array.from(new Set([...curDeleted, driveId]));
+    try { localStorage.setItem('tacrm_deleted_drive_ids', JSON.stringify(nextDeleted)); } catch (e) {}
+
     const nextDrives = drives.filter(d => d.id !== driveId);
     const nextStudents = students.filter(s => s.driveId !== driveId);
     const nextResponses = formResponses.filter(r => r.driveId !== driveId);
@@ -1738,13 +1804,26 @@ export default function App() {
     fetch('/api/storage', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ drives: nextDrives, students: nextStudents, formResponses: nextResponses })
+      body: JSON.stringify({
+        drives: nextDrives,
+        students: nextStudents,
+        formResponses: nextResponses,
+        deletedDriveIds: nextDeleted
+      })
     }).catch(() => {});
 
     addToast('Campus drive and linked candidate records removed', 'info');
   };
 
   const handleClearAllDrives = () => {
+    let curDeleted = [];
+    try {
+      curDeleted = JSON.parse(localStorage.getItem('tacrm_deleted_drive_ids') || '[]');
+    } catch (e) {}
+    const driveIdsToClear = drives.map(d => d.id).filter(Boolean);
+    const nextDeleted = Array.from(new Set([...curDeleted, ...driveIdsToClear]));
+    try { localStorage.setItem('tacrm_deleted_drive_ids', JSON.stringify(nextDeleted)); } catch (e) {}
+
     setDrives([]);
     setStudents([]);
     setFormResponses([]);
@@ -1756,7 +1835,7 @@ export default function App() {
     fetch('/api/storage', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ drives: [], students: [], formResponses: [] })
+      body: JSON.stringify({ drives: [], students: [], formResponses: [], deletedDriveIds: nextDeleted })
     }).catch(() => {});
     addToast('All campus recruitment drives cleared (0 drives)', 'info');
   };
@@ -1977,13 +2056,22 @@ export default function App() {
     addToast(`Updated lead stage to ${newStatus.replace(/_/g, ' ')}`, 'success');
   };
   const handleCreateDrive = (newDrive) => {
+    let curDeleted = [];
+    try {
+      curDeleted = JSON.parse(localStorage.getItem('tacrm_deleted_drive_ids') || '[]');
+    } catch (e) {}
+    if (curDeleted.includes(newDrive.id)) {
+      curDeleted = curDeleted.filter(id => id !== newDrive.id);
+      try { localStorage.setItem('tacrm_deleted_drive_ids', JSON.stringify(curDeleted)); } catch (e) {}
+    }
+
     setDrives(prev => {
-      const next = [newDrive, ...prev];
+      const next = [newDrive, ...prev.filter(d => d.id !== newDrive.id)];
       try { localStorage.setItem('tacrm_drives', JSON.stringify(next)); } catch (e) {}
       fetch('/api/storage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ drives: next })
+        body: JSON.stringify({ drives: next, deletedDriveIds: curDeleted })
       }).catch(() => {});
       return next;
     });
@@ -2003,13 +2091,24 @@ export default function App() {
   };
   const handleAddStudentsBatch = (newStudents) => {
     if (!newStudents || !newStudents.length) return;
+    const addedIds = newStudents.map(s => s.id).filter(Boolean);
+    let curDeleted = [];
+    try {
+      curDeleted = JSON.parse(localStorage.getItem('tacrm_deleted_student_ids') || '[]');
+    } catch (e) {}
+    if (addedIds.some(id => curDeleted.includes(id))) {
+      curDeleted = curDeleted.filter(id => !addedIds.includes(id));
+      try { localStorage.setItem('tacrm_deleted_student_ids', JSON.stringify(curDeleted)); } catch (e) {}
+    }
+
     setStudents(prev => {
-      const next = [...newStudents, ...prev];
+      const prevFiltered = prev.filter(s => !addedIds.includes(s.id));
+      const next = [...newStudents, ...prevFiltered];
       try { localStorage.setItem('tacrm_students', JSON.stringify(next)); } catch (e) {}
       fetch('/api/storage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ students: next })
+        body: JSON.stringify({ students: next, deletedStudentIds: curDeleted })
       }).catch(() => {});
       return next;
     });

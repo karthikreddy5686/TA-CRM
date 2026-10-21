@@ -29,8 +29,73 @@ export const INITIAL_USERS = [
 // Clean Empty Data Sets (User manual mode)
 export const INITIAL_COLLEGES = [];
 export const INITIAL_TPOS = [];
-export const INITIAL_DRIVES = [];
-export const INITIAL_STUDENTS = [];
+export const INITIAL_DRIVES = [
+  {
+    id: "drv-rrr-aits",
+    title: "RRR",
+    collegeId: "col-aits",
+    collegeName: "aits",
+    jobRole: "Engineering Associate",
+    ctc: "Competitive",
+    criteria: "Eligible candidates",
+    driveDate: "2026-10-21",
+    status: "CONFIRMED",
+    registeredStudents: 2,
+    shortlistedStudents: 2,
+    createdById: "admin",
+    mode: "Offline"
+  }
+];
+export const INITIAL_STUDENTS = [
+  {
+    id: "stu-karthik-21701a0463",
+    driveId: "drv-rrr-aits",
+    driveTitle: "RRR",
+    collegeId: "col-aits",
+    collegeName: "aits",
+    name: "KARTHIK",
+    rollNumber: "21701a0463",
+    email: "karthikreddy5686@gmail.com",
+    phone: "9876543210",
+    branch: "CSE",
+    cgpa: 8.5,
+    stage: "TECH_INTERVIEW",
+    interviewDate: "2026-10-21",
+    interviewTime: "9:00 AM - 9:10 AM",
+    interviewStartTime: "09:00 AM",
+    interviewEndTime: "09:10 AM",
+    meetLink: "https://meet.google.com/6o1-v4oq-mx6",
+    interviewPanel: "karthik (Talent Acquisition Manager)",
+    interviewStatus: "SCHEDULED",
+    internId: "hr-karthik",
+    internName: "karthik",
+    notes: "Scheduled interview candidate"
+  },
+  {
+    id: "stu-candidate-2-rrr",
+    driveId: "drv-rrr-aits",
+    driveTitle: "RRR",
+    collegeId: "col-aits",
+    collegeName: "aits",
+    name: "Candidate 2",
+    rollNumber: "21701a0464",
+    email: "candidate2@example.com",
+    phone: "9876543211",
+    branch: "ECE",
+    cgpa: 8.2,
+    stage: "TECH_INTERVIEW",
+    interviewDate: "2026-10-21",
+    interviewTime: "9:10 AM - 9:20 AM",
+    interviewStartTime: "09:10 AM",
+    interviewEndTime: "09:20 AM",
+    meetLink: "https://meet.google.com/6o1-v4oq-mx6",
+    interviewPanel: "karthik (Talent Acquisition Manager)",
+    interviewStatus: "SCHEDULED",
+    internId: "hr-karthik",
+    internName: "karthik",
+    notes: "Scheduled interview candidate"
+  }
+];
 export const INITIAL_FOLLOW_UPS = [];
 export const INITIAL_CALL_SESSIONS = [];
 export const INITIAL_FORM_RESPONSES = [];

@@ -76,6 +76,22 @@ export default async function handler(req, res) {
         });
       }
 
+      let deletedDriveIds = Array.isArray(current.deletedDriveIds) ? [...current.deletedDriveIds] : [];
+      if (Array.isArray(incoming.deletedDriveIds)) {
+        incoming.deletedDriveIds.forEach(id => {
+          const cleanId = (id || '').trim();
+          if (cleanId && !deletedDriveIds.includes(cleanId)) deletedDriveIds.push(cleanId);
+        });
+      }
+
+      let deletedStudentIds = Array.isArray(current.deletedStudentIds) ? [...current.deletedStudentIds] : [];
+      if (Array.isArray(incoming.deletedStudentIds)) {
+        incoming.deletedStudentIds.forEach(id => {
+          const cleanId = (id || '').trim();
+          if (cleanId && !deletedStudentIds.includes(cleanId)) deletedStudentIds.push(cleanId);
+        });
+      }
+
       let mergedUsers = current.users || [];
       if (Array.isArray(incoming.users)) {
         mergedUsers = incoming.users;
@@ -94,11 +110,39 @@ export default async function handler(req, res) {
         });
       }
 
+      // Merge drives: combine incoming and current, excluding deleted
+      let mergedDrives = current.drives || [];
+      if (Array.isArray(incoming.drives)) {
+        const driveMap = new Map();
+        mergedDrives.forEach(d => { if (d && d.id) driveMap.set(d.id, d); });
+        incoming.drives.forEach(d => { if (d && d.id) driveMap.set(d.id, { ...(driveMap.get(d.id) || {}), ...d }); });
+        mergedDrives = Array.from(driveMap.values());
+      }
+      if (deletedDriveIds.length > 0) {
+        mergedDrives = mergedDrives.filter(d => d && !deletedDriveIds.includes(d.id));
+      }
+
+      // Merge students: combine incoming and current, excluding deleted
+      let mergedStudents = current.students || [];
+      if (Array.isArray(incoming.students)) {
+        const studentMap = new Map();
+        mergedStudents.forEach(s => { if (s && s.id) studentMap.set(s.id, s); });
+        incoming.students.forEach(s => { if (s && s.id) studentMap.set(s.id, { ...(studentMap.get(s.id) || {}), ...s }); });
+        mergedStudents = Array.from(studentMap.values());
+      }
+      if (deletedStudentIds.length > 0) {
+        mergedStudents = mergedStudents.filter(s => s && !deletedStudentIds.includes(s.id));
+      }
+
       const updated = {
         ...current,
         ...incoming,
         users: mergedUsers,
         deletedUserIds: deletedIds,
+        deletedDriveIds,
+        deletedStudentIds,
+        drives: mergedDrives,
+        students: mergedStudents,
         updatedAt: new Date().toISOString()
       };
 
